@@ -10,5 +10,6 @@
 #include <curl/curl.h> /* http request and response */
 #include <oauth.h> /* for oauth authentication */
 #include <wordexp.h> /* to expand filename */
+#include <json-glib/json-glib.h> /* json parser */
 
 #endif /* __TWEETPTS_H_ */

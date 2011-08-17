@@ -14,6 +14,7 @@ AC_PROG_CC
 PKG_CHECK_MODULES([glib], [glib-2.0], [], [AC_MSG_ERROR([libglib mot found])])
 PKG_CHECK_MODULES([libcurl], [libcurl], [], [AC_MSG_ERROR([libcurl mot found])])
 PKG_CHECK_MODULES([oauth], [oauth], [], [AC_MSG_ERROR([liboauth mot found])])
+PKG_CHECK_MODULES([jsonglib], [json-glib-1.0], [], [AC_MSG_ERROR([libjson-glib-1.0 mot found])])
 
 # Checks for header files.
 AC_CHECK_HEADER([stdlib.h], [], [AC_MSG_ERROR([stdlib.h not includable])])

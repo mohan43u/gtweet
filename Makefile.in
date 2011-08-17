@@ -37,7 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 bin_PROGRAMS = tweetpts$(EXEEXT)
 subdir = .
-DIST_COMMON = $(am__configure_deps) $(include_HEADERS) \
+DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(srcdir)/config.h.in $(top_srcdir)/configure depcomp \
 	install-sh missing
@@ -55,7 +55,7 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(includedir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_tweetpts_OBJECTS = tweetpts-tweetpts.$(OBJEXT) \
 	tweetpts-oauth.$(OBJEXT) tweetpts-curl.$(OBJEXT) \
-	tweetpts-xml.$(OBJEXT) tweetpts-tweet.$(OBJEXT)
+	tweetpts-json.$(OBJEXT) tweetpts-tweet.$(OBJEXT)
 tweetpts_OBJECTS = $(am_tweetpts_OBJECTS)
 tweetpts_LDADD = $(LDADD)
 tweetpts_LINK = $(CCLD) $(tweetpts_CFLAGS) $(CFLAGS) \
@@ -181,6 +181,8 @@ htmldir = @htmldir@
 includedir = @includedir@
 infodir = @infodir@
 install_sh = @install_sh@
+jsonglib_CFLAGS = @jsonglib_CFLAGS@
+jsonglib_LIBS = @jsonglib_LIBS@
 libcurl_CFLAGS = @libcurl_CFLAGS@
 libcurl_LIBS = @libcurl_LIBS@
 libdir = @libdir@
@@ -205,9 +207,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 include_HEADERS = tweetpts.h
-tweetpts_SOURCES = tweetpts.c oauth.c curl.c xml.c tweet.c tweetpts.h
-tweetpts_CFLAGS = $(glib_CFLAGS) $(readline_CFLAGS) $(libcurl_CFLAGS) $(oauth_CFLAGS)
-tweetpts_LDFLAGS = $(glib_LIBS) $(readline_LIBS) $(libcurl_LIBS) $(oauth_LIBS)
+tweetpts_SOURCES = tweetpts.c oauth.c curl.c json.c tweet.c tweetpts.h
+tweetpts_CFLAGS = $(glib_CFLAGS) $(readline_CFLAGS) $(libcurl_CFLAGS) $(oauth_CFLAGS) $(jsonglib_CFLAGS)
+tweetpts_LDFLAGS = $(glib_LIBS) $(readline_LIBS) $(libcurl_LIBS) $(oauth_LIBS) $(jsonglib_LIBS)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -312,10 +314,10 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tweetpts-curl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tweetpts-json.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tweetpts-oauth.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tweetpts-tweet.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tweetpts-tweetpts.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tweetpts-xml.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -373,19 +375,19 @@ tweetpts-curl.obj: curl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -c -o tweetpts-curl.obj `if test -f 'curl.c'; then $(CYGPATH_W) 'curl.c'; else $(CYGPATH_W) '$(srcdir)/curl.c'; fi`
 
-tweetpts-xml.o: xml.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -MT tweetpts-xml.o -MD -MP -MF $(DEPDIR)/tweetpts-xml.Tpo -c -o tweetpts-xml.o `test -f 'xml.c' || echo '$(srcdir)/'`xml.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tweetpts-xml.Tpo $(DEPDIR)/tweetpts-xml.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xml.c' object='tweetpts-xml.o' libtool=no @AMDEPBACKSLASH@
+tweetpts-json.o: json.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -MT tweetpts-json.o -MD -MP -MF $(DEPDIR)/tweetpts-json.Tpo -c -o tweetpts-json.o `test -f 'json.c' || echo '$(srcdir)/'`json.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tweetpts-json.Tpo $(DEPDIR)/tweetpts-json.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='json.c' object='tweetpts-json.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -c -o tweetpts-xml.o `test -f 'xml.c' || echo '$(srcdir)/'`xml.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -c -o tweetpts-json.o `test -f 'json.c' || echo '$(srcdir)/'`json.c
 
-tweetpts-xml.obj: xml.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -MT tweetpts-xml.obj -MD -MP -MF $(DEPDIR)/tweetpts-xml.Tpo -c -o tweetpts-xml.obj `if test -f 'xml.c'; then $(CYGPATH_W) 'xml.c'; else $(CYGPATH_W) '$(srcdir)/xml.c'; fi`
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tweetpts-xml.Tpo $(DEPDIR)/tweetpts-xml.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='xml.c' object='tweetpts-xml.obj' libtool=no @AMDEPBACKSLASH@
+tweetpts-json.obj: json.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -MT tweetpts-json.obj -MD -MP -MF $(DEPDIR)/tweetpts-json.Tpo -c -o tweetpts-json.obj `if test -f 'json.c'; then $(CYGPATH_W) 'json.c'; else $(CYGPATH_W) '$(srcdir)/json.c'; fi`
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/tweetpts-json.Tpo $(DEPDIR)/tweetpts-json.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='json.c' object='tweetpts-json.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -c -o tweetpts-xml.obj `if test -f 'xml.c'; then $(CYGPATH_W) 'xml.c'; else $(CYGPATH_W) '$(srcdir)/xml.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -c -o tweetpts-json.obj `if test -f 'json.c'; then $(CYGPATH_W) 'json.c'; else $(CYGPATH_W) '$(srcdir)/json.c'; fi`
 
 tweetpts-tweet.o: tweet.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tweetpts_CFLAGS) $(CFLAGS) -MT tweetpts-tweet.o -MD -MP -MF $(DEPDIR)/tweetpts-tweet.Tpo -c -o tweetpts-tweet.o `test -f 'tweet.c' || echo '$(srcdir)/'`tweet.c
