@@ -55,7 +55,8 @@ static void jsonwalk(JsonNode *root, GString *output)
     case JSON_NODE_ARRAY:
       {
 	JsonArray *array = json_node_get_array(root);
-	g_string_append_c(output, '\n');
+	if(output->len > 0) /* to prevent newlines at the start */
+	  g_string_append_c(output, '\n');
 	json_array_foreach_element(array,
 				   arraycallback,
 				   (gpointer) output);
@@ -64,7 +65,8 @@ static void jsonwalk(JsonNode *root, GString *output)
     case JSON_NODE_OBJECT:
       {
 	JsonObject *object = json_node_get_object(root);
-	g_string_append_c(output, '\n');
+	if(output->len > 0) /* to prevent newlines at the start */
+	  g_string_append_c(output, '\n');
 	json_object_foreach_member(object,
 				   objectcallback,
 				   (gpointer) output);
