@@ -8,39 +8,27 @@
 #define OAUTH_KEYS_FILE "~/.tweetpts"
 
 void tweetpts_gen_url(GString *url,
-			   GString *req_token,
-			   GString *req_secret,
-			   GString *signed_url,
-			   GString *post)
+		      GString *parameters,
+		      const gchar *http_method,
+		      GString *req_token,
+		      GString *req_secret,
+		      GString *signed_url)
 {
   gchar *l_signed_url = NULL;
-  if(post != NULL)
-    {
-      gchar *l_post = NULL;
-      l_signed_url = oauth_sign_url2(url->str,
-				     &l_post,
-				     OA_HMAC,
-				     NULL,
-				     CON_KEY,
-				     CON_SECRET,
-				     req_token->str,
-				     req_secret->str);
-      g_string_assign(signed_url, l_signed_url);
-      g_string_assign(post, l_post);
-      g_free(l_post);
-    }
-  else
-    {
-      l_signed_url = oauth_sign_url2(url->str,
-				     NULL,
-				     OA_HMAC,
-				     NULL,
-				     CON_KEY,
-				     CON_SECRET,
-				     req_token->str,
-				     req_secret->str);
-      g_string_assign(signed_url, l_signed_url);
-    }
+  gchar *l_parameters = NULL;
+
+  l_signed_url = oauth_sign_url2(url->str,
+				 &l_parameters,
+				 OA_HMAC,
+				 http_method,
+				 CON_KEY,
+				 CON_SECRET,
+				 req_token->str,
+				 req_secret->str);
+  g_string_assign(signed_url, l_signed_url);
+  g_string_assign(parameters, l_parameters);
+
+  g_free(l_parameters);
   g_free(l_signed_url);
 }
 
@@ -115,12 +103,12 @@ static void gen_access_keys(GString *access_token,
   gboolean returnvalue;
 
 
-  tweetpts_gen_url(con_req_tok_url, request_token, request_secret, signed_con_req_tok_url, post);
+  tweetpts_gen_url(con_req_tok_url, post, "POST", request_token, request_secret, signed_con_req_tok_url);
   tweetpts_curl(signed_con_req_tok_url, post, output);
   gen_keys(output, request_token, request_secret);
   get_pin(con_auth_url, request_token, pin);
   g_string_append_printf(con_ac_tok_url, "/?oauth_verifier=%s",pin->str);
-  tweetpts_gen_url(con_ac_tok_url, request_token, request_secret, signed_con_ac_tok_url, post2);
+  tweetpts_gen_url(con_ac_tok_url, post2, "POST", request_token, request_secret, signed_con_ac_tok_url);
   tweetpts_curl(signed_con_ac_tok_url, post2, output2);
   gen_keys(output2, access_token, access_secret);
 
