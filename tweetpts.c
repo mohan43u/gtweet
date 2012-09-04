@@ -1,34 +1,50 @@
 #include <tweetpts.h>
 
+static gpointer mainloop_init(gpointer data)
+{
+  GMainLoop *mainloop = (GMainLoop *) data;
+  if(mainloop)
+    g_main_loop_run(mainloop);
+}
+
+static void tweetpts_init(void)
+{
+  GThread *mainloopthread = NULL;
+
+  oauthapi_init();
+  twitterapi_init();
+  cursesapi_init();
+  jsonapi_init();
+
+  tweetpts_mainloop = g_main_loop_new(NULL, TRUE);
+  mainloopthread = g_thread_new("mainloopthread",
+				mainloop_init,
+				tweetpts_mainloop);
+}
+
+static void tweetpts_free(void)
+{
+  jsonapi_free();
+  cursesapi_free();
+  twitterapi_free();
+  oauthapi_free();
+
+  g_main_loop_quit(tweetpts_mainloop);
+}
+
 int main(int argc, char *argv[])
 {
-  GString *access_token = g_string_new(NULL);
-  GString *access_secret = g_string_new(NULL);
-  GPtrArray *args = g_ptr_array_new_with_free_func(g_free);
-  gint iter = 0;
-  const gchar *usage = "%s tweetcommand|help [tweetcommandoptions|help]\n"
-    "tweetcommand:\n"
-    "\thome_timeline\n";
-  if(argc < 2 || g_strcmp0("help", argv[1]) == 0)
-    {
-      g_print(usage, argv[0]);
-      exit(1);
-    }
-  while(iter < argc)
-    {
-      if(g_strcmp0("",argv[iter]) == 0)
-	g_ptr_array_add(args, NULL);
-      else
-	g_ptr_array_add(args, g_strdup(argv[iter]));
-      iter++;
-    }
+  GPtrArray *plist = NULL;
 
-  tweetpts_oauth(access_token, access_secret);
-  tweetpts_tweet(access_token, access_secret, args);
+  setlocale(LC_ALL, "");
+  bindtextdomain(PACKAGE, LOCALEDIR);
+  textdomain(PACKAGE);
+  tweetpts_init();
 
-  g_string_free(access_token, TRUE);
-  g_string_free(access_secret, TRUE);
-  g_ptr_array_free(args, TRUE);
+  plist = cursesapi_create_baselayout();
+  cursesapi_userinput(plist);
+  cursesapi_destroy_baselayout(plist);
 
+  tweetpts_free();
   return(0);
 }
