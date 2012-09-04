@@ -1,9 +1,0 @@
-tweetpts:
-	commandline twitter client
-
-synopsis:
-	tweetpts 1=home_timeline/2=update [statusmessage]
-
-description:
-	nothing more to say. Just a simple twitter client to get
-	top statuses and update status.
