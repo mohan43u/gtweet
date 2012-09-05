@@ -25,10 +25,11 @@ gchar* twitterapi_get_woeid(gchar *countryname);
 
 
 #define T_FIELD "text|..text," \
-  "screenname|.user.screen_name," \
-  "time|.created_at," \
+  "screenname|.user.screen_name|| [http://www.twitter.com/%s]," \
+  "time|.created_at|time," \
   "postid|.id_str," \
   "userid|.user.id_str," \
+  "url|..url," \
   "desc|.user.description," \
   "location|.user.location," \
   "source|.source," \
@@ -49,7 +50,7 @@ gchar* twitterapi_get_woeid(gchar *countryname);
 #define T_TRENDS_FIELD "location|..locations..name," \
   "woeid|..locations..woeid|int," \
   "trends|..trends..name," \
-  "as_of|..as_of"
+  "as_of|..as_of|timez"
 
 #define TRENDUPDATESEC 60
 

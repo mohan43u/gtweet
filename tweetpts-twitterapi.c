@@ -270,25 +270,25 @@ gchar* twitterapi_get_woeid(gchar *countryname)
 
   if(countryname)
     {
-  url = g_strdup_printf("%s/places.q(%s)?appid=%s&format=json",
-			Y_R_WOEID,
-			countryname,
-			YAHOO_APPID);
-  result = curlapi_http(url, NULL);
-  if(result && strlen(result) && (result[0] == '[' || result[0] == '{'))
-    {
-      JsonParser *parser = jsonapi_parser();
-      JsonNode *node = jsonapi_decode(parser, result);
-      woeid = jsonapi_get_value(node, "..woeid|int");
-    }
-  else
-    woeid = g_strdup_printf("url=%s, result=%s", url, result);
-  g_free(url);
+      url = g_strdup_printf("%s/places.q(%s)?appid=%s&format=json",
+			    Y_R_WOEID,
+			    countryname,
+			    YAHOO_APPID);
+      result = curlapi_http(url, NULL);
+      if(result && strlen(result) && (result[0] == '[' || result[0] == '{'))
+	{
+	  JsonParser *parser = jsonapi_parser();
+	  JsonNode *node = jsonapi_decode(parser, result);
+	  woeid = jsonapi_get_value(node, "..woeid|int");
+	}
+      else
+	woeid = g_strdup_printf("url=%s, result=%s", url, result);
+      g_free(url);
     }
   else
     {
       if(twitterapi_woeid->fields->len)
-	woeid = g_strdup_printf(" %s", twitterapi_woeid->fields->str);
+	woeid = g_strdup(twitterapi_woeid->fields->str);
       else
 	woeid = NULL;
     }

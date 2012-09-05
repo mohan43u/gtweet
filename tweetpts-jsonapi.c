@@ -9,19 +9,20 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
       JsonArray *nodearray = NULL;
       guint length = 0;
       guint iter = 0;
-      gchar *string = NULL;
-      GString *buffer = g_string_new(NULL);
+      GString *string = g_string_new(NULL);
       gchar **typev = NULL;
-      gchar delimiter = '|';
+      guint argc = 0;
+      gchar *format = NULL;
 
       nodearray = json_node_get_array(node);
       length = json_array_get_length(nodearray);
 
       if(type)
 	{
-	  typev = g_strsplit(type, "|", 2);
-	  if(typev[1] && g_strcmp0("newline", typev[1]) == 0)
-	    delimiter = '\n';
+	  typev = g_strsplit(type, "|", 0);
+	  while(typev[argc]) argc++;
+	  if(argc >= 2)
+	    format = g_strdup_printf("%s", typev[1]);
 	}
 
       for(iter = 0; iter < length; iter++)
@@ -29,41 +30,56 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 	  if(typev && typev[0] && g_strcmp0("boolean", typev[0]) == 0)
 	    {
 	      gboolean value = json_array_get_boolean_element(nodearray, iter);
-	      string = g_strdup_printf("%d", value);
+	      g_string_append_printf(string, "%d", value);
+	      if(format)
+		g_string_append_printf(string, format, value);
 	    }
 	  else if(typev && typev[0] && g_strcmp0("double", typev[0]) == 0)
 	    {
 	      gdouble value = json_array_get_double_element(nodearray, iter);
-	      string = g_strdup_printf("%lf", value);
+	      g_string_append_printf(string, "%lf", value);
+	      if(format)
+		g_string_append_printf(string, format, value);
 	    }
 	  else if(typev && typev[0] && g_strcmp0("int", typev[0]) == 0)
 	    {
 	      gint64 value = json_array_get_int_element(nodearray, iter);
-	      string = g_strdup_printf("%ld", value);
+	      g_string_append_printf(string, "%ld", value);
+	      if(format)
+		g_string_append_printf(string, format, value);
+	    }
+	  else if(typev && typev[0] && g_str_has_prefix(typev[0], "time") == TRUE)
+	    {
+	      const gchar *value = json_array_get_string_element(nodearray, iter);
+	      struct tm utctime;
+	      time_t time;
+	      gchar *localtime = NULL;
+	      memset(&utctime, 0, sizeof(struct tm));
+	      if(g_strcmp0("timez", typev[0]) == 0)
+		strptime(value, "%FT%TZ", &utctime);
+	      else
+		strptime(value, "%a %b %d %T %z %Y", &utctime);
+	      time = timegm(&utctime);
+	      localtime = ctime(&time);
+	      g_string_append_printf(string, "%s", g_strstrip(localtime));
+	      if(format)
+		g_string_append_printf(string, format, localtime);
 	    }
 	  else
 	    {
 	      const gchar *value = json_array_get_string_element(nodearray, iter);
-	      string = g_strdup(value);
+	      g_string_append_printf(string, "%s", value);
+	      if(format)
+		g_string_append_printf(string, format, value);
 	    }
-	  if(delimiter == '\n')
-	    {
-	      g_string_append_printf(buffer, "\n%s", string);
-	      g_free(string);
-	    }
-	  else
-	    {
-	      if((iter + 1) == length)
-		g_string_append_printf(buffer, " %s", string);
-	      else
-		g_string_append_printf(buffer, " %s %c", string, delimiter);
-	      g_free(string);
-	    }
+	  if((iter + 1) != length)
+	    g_string_append(string, " | ");
 	}
+      g_free(format);
 
-      result = g_strdup(buffer->str);
+      result = g_strdup(string->str);
       g_strfreev(typev);
-      g_string_free(buffer, TRUE);
+      g_string_free(string, TRUE);
     }
   return(result);
 }

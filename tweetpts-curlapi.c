@@ -9,7 +9,7 @@ static size_t curlapi_http_write_cb(char *ptr,
   GString *buffer = NULL;
   GSList *args = NULL;
   GSList *threadargs = NULL;
-  void (*write_cb)(GSList *args) = NULL;
+  gboolean (*write_cb)(GSList *args) = NULL;
   gchar *string = NULL;
   gchar *fullstring = NULL;
   
@@ -28,7 +28,11 @@ static size_t curlapi_http_write_cb(char *ptr,
       g_string_set_size(buffer, 0);
       threadargs = g_slist_copy(g_slist_nth(args, 2));
       threadargs = g_slist_append(threadargs, fullstring);
-      write_cb(threadargs);
+
+      //Make sure write_cb returns true, else die.
+      if(write_cb(threadargs) == FALSE)
+	length = 0;
+
       g_free(fullstring);
       g_slist_free(threadargs);
     }
@@ -37,15 +41,6 @@ static size_t curlapi_http_write_cb(char *ptr,
       g_string_append(buffer, string);
       g_free(string);
     }
-
-  /* 
-   * //For Debugging Purpose
-   * threadargs = g_slist_copy(g_slist_nth(args, 2));
-   * threadargs = g_slist_append(threadargs, string);
-   * write_cb(threadargs);
-   * g_free(string);
-   * g_slist_free(threadargs);
-   */
 
   return(length);
 }
@@ -77,7 +72,8 @@ void curlapi_http_cb(gchar *url, gchar *params, GSList *args)
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
 
-  if((returncode = curl_easy_perform(curlapi)) != 0)
+  returncode = curl_easy_perform(curlapi);
+  if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
     {
       gchar *httperror = NULL;
       void (*write_cb)(GSList *args) = NULL;

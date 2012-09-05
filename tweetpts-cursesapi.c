@@ -3,7 +3,7 @@
 static void cursesapi_set_pause(XPANEL *panel);
 static void cursesapi_remove_pause(XPANEL *panel);
 static void cursesapi_toggle_pause(XPANEL *panel);
-static void cursesapi_swap(XPANEL *tobottom, XPANEL *totop);
+static void cursesapi_top(XPANEL *panel);
 static void cursesapi_panel_refresh(XPANEL *panel, guint clear);
 static void cursesapi_panel_refresh_all(GPtrArray *plist, guint clear);
 static XPANEL* cursesapi_panel_new(gushort line,
@@ -16,16 +16,17 @@ static XPANEL* cursesapi_panel_new(gushort line,
 				   GFunc poolfunc);
 static void cursesapi_panel_del(XPANEL *panel);
 static void cursesapi_panel_move(XPANEL *panel, guint y, guint x);
-static void cursesapi_push_string(XPANEL *panel, gchar *string);
+static void cursesapi_push_string(XPANEL *panel,
+				  gchar *string,
+				  gushort format);
 static void cursesapi_push_string_pager(XPANEL *panel, gchar *string);
-static void cursesapi_push_line(XPANEL *panel);
 static void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields);
 static void cursesapi_push_array(XPANEL *panel,
 				 JsonNode *root,
 				 gchar *fields,
 				 gboolean prompt);
 static void cursesapi_stream_write(gpointer data, gpointer user_data);
-static void cursesapi_write_cb(GSList *args);
+static gboolean cursesapi_write_cb(GSList *args);
 static void cursesapi_rest_write(gpointer data, gpointer user_data);
 static void cursesapi_usertrends(XPANEL *panel, gchar *woeid);
 static gboolean cursesapi_usertrends_cb(gpointer user_data);
@@ -104,12 +105,10 @@ static void cursesapi_panel_refresh_all(GPtrArray *plist, guint clear)
     }
 }
 
-static void cursesapi_swap(XPANEL *tobottom, XPANEL *totop)
+static void cursesapi_top(XPANEL *panel)
 {
-  //cursesapi_set_pause(tobottom);
-  //cursesapi_remove_pause(totop);
-  top_panel(P(totop));
-  cursesapi_panel_refresh(totop, 0);
+  top_panel(P(panel));
+  cursesapi_panel_refresh(panel, 0);
 }
 
 static XPANEL* cursesapi_panel_new(gushort line,
@@ -128,6 +127,7 @@ static XPANEL* cursesapi_panel_new(gushort line,
   g_mutex_init(&(newpanel->mutex));
   g_cond_init(&(newpanel->wait));
   newpanel->lockstatus = FALSE;
+  newpanel->stopthread = FALSE;
   if(poolfunc)
     newpanel->pool = g_thread_pool_new((GFunc) poolfunc,
 				       newpanel,
@@ -156,6 +156,7 @@ static void cursesapi_panel_del(XPANEL *panel)
   g_mutex_clear(&(panel->mutex));
   if(panel->defaultstring)
     g_free(panel->defaultstring);
+  panel->stopthread = TRUE;
   del_panel(P(panel));
   delwin(W(panel));
   g_free(panel);
@@ -167,16 +168,68 @@ static void cursesapi_panel_move(XPANEL *panel, guint y, guint x)
   cursesapi_panel_refresh(panel, 0);
 }
 
-static void cursesapi_push_string(XPANEL *panel, gchar *string)
+static void cursesapi_push_string(XPANEL *panel,
+				  gchar *string,
+				  gushort format)
 {
-  gunichar *ucs4string = NULL;
-  ucs4string = g_utf8_to_ucs4_fast(string, -1, NULL);
-  waddwstr(W(panel), ucs4string);
-  g_free(ucs4string);
+  if(format == 0)
+    waddstr(W(panel), string);
+  if(format == 1)
+    {
+      gchar *fstring = g_strdup_printf("%*s", FIELDWIDTH, string);
+      wmove(W(panel), Y(panel), 0);
+      wrefresh(W(panel));
+      waddstr(W(panel), fstring);
+      g_free(fstring);
+    }
+  if(format == 2)
+    {
+      guint valuelength =  0;
+      guint pos = 0;
+      guint length = 0;
+      gunichar *ucs4string = NULL;
+      wchar_t *newlinechar = NULL;
+      gchar **stringv = NULL;
+      gchar *jstring = NULL;
+
+      stringv = g_strsplit(string, "\n", 0);
+      jstring = g_strjoinv(" ", stringv);
+      valuelength = VALUE_LINE_LEN(panel)  - 2;
+      
+      ucs4string = g_utf8_to_ucs4_fast(jstring, -1, NULL);
+      length = wcslen(ucs4string);
+      if(length > valuelength)
+	{
+	  while(pos < length)
+	    {
+	      gunichar *line = NULL;
+	      line = g_new0(gunichar, valuelength + 1);
+	      wcsncpy(line, &(ucs4string[pos]), valuelength);
+	      line[valuelength] = L'\0';
+	      newlinechar = line;
+	      pos = pos + (valuelength);
+	      wmove(W(panel), Y(panel), VALUE_LINE_BEG(panel));
+	      wrefresh(W(panel));
+	      waddwstr(W(panel), line);
+	      if(pos < length)
+		waddwstr(W(panel), L"\n");
+	      g_free(line);
+	    }
+	}
+      else
+	{
+	  wmove(W(panel), Y(panel), VALUE_LINE_BEG(panel));
+	  wrefresh(W(panel));
+	  ucs4string = g_utf8_to_ucs4_fast(jstring, -1, NULL);
+	  waddwstr(W(panel), ucs4string);
+	  g_free(ucs4string);
+	}
+    }
+
   cursesapi_panel_refresh(panel, 0);
 }
 
-static void cursesapi_push_string_pager(XPANEL *panel,gchar *string)
+static void cursesapi_push_string_pager(XPANEL *panel, gchar *string)
 {
   if(string && strlen(string))
     {
@@ -204,16 +257,6 @@ static void cursesapi_push_string_pager(XPANEL *panel,gchar *string)
     }
 }
 
-static void cursesapi_push_line(XPANEL *panel)
-{
-  gchar *line = NULL;
-
-  line = g_strnfill(MX(panel) + 1, '-');
-  line[0] = '\n';
-  cursesapi_push_string(panel, line);
-  g_free(line);
-}
-
 static void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 {
   if(fields && JSON_NODE_HOLDS_OBJECT(node))
@@ -238,13 +281,13 @@ static void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 		  g_strfreev(fielddict);
 
 		  wattrset(W(panel), A_BOLD);
-		  cursesapi_push_string(panel, outfield);
+		  cursesapi_push_string(panel, outfield, 1);
 		  wstandend(W(panel));
 		  g_free(outfield);
 
-		  cursesapi_push_string(panel, value);
+		  cursesapi_push_string(panel, value, 2);
 		  if(fieldarray[iter + 1])
-		    cursesapi_push_string(panel, "\n");
+		    cursesapi_push_string(panel, "\n", 0);
 		}
 	      g_free(value);
 	    }
@@ -267,24 +310,23 @@ static void cursesapi_push_array(XPANEL *panel,
       JsonNode *node = jsonapi_get_element(root, iter);
 
       cursesapi_push_element(panel, node, fields);
-      if(prompt)
-	cursesapi_push_line(panel);
+      cursesapi_push_string(panel, "\n", 0);
       if(length - (iter + 1))
 	{
 	  if(prompt)
 	    {
-	      infostring = g_strdup_printf("Press 'q' to quit, "
+	      infostring = g_strdup_printf("\nPress 'q' to quit, "
 					   "any other key to contine, "
 					   "%d remaining to show..",
 					   length - (iter + 1));
-	      cursesapi_push_string(panel, infostring);
+	      cursesapi_push_string(panel, infostring, 0);
 	      g_free(infostring);
 	    }
 	}
       else
 	{
 	  if(prompt)
-	    cursesapi_push_string(panel, "Press any key to finish..");
+	    cursesapi_push_string(panel, "\nPress any key to finish..", 0);
 	}
 
       if(prompt)
@@ -306,8 +348,8 @@ static void cursesapi_stream_write(gpointer data, gpointer user_data)
   gchar *string = NULL;
 
   panel = (XPANEL *) user_data;
-  g_mutex_lock(&(panel->mutex));
 
+  g_mutex_lock(&(panel->mutex));
   poolargs = (GPtrArray *) data;
   fields = g_ptr_array_index(poolargs, 0);
   string = g_ptr_array_index(poolargs, 1);
@@ -318,13 +360,13 @@ static void cursesapi_stream_write(gpointer data, gpointer user_data)
 	  JsonParser *parser = jsonapi_parser();
 	  JsonNode *root = jsonapi_decode(parser, string);
 	  cursesapi_push_element(panel, root, fields);
-	  cursesapi_push_line(panel);
+	  cursesapi_push_string(panel, "\n\n\n", 0);
 	  g_object_unref(parser);
 	}
       else
 	{
 	  cursesapi_push_string_pager(panel, string);
-	  cursesapi_push_line(panel);
+	  cursesapi_push_string(panel, "\n", 0);
 	}
     }
   g_ptr_array_free(poolargs, TRUE);
@@ -332,16 +374,25 @@ static void cursesapi_stream_write(gpointer data, gpointer user_data)
   g_mutex_unlock(&(panel->mutex));
 }
 
-static void cursesapi_write_cb(GSList *args)
+static gboolean cursesapi_write_cb(GSList *args)
 {
   XPANEL *panel = (g_slist_nth(args, 0))->data;
   gchar *fields = (g_slist_nth(args, 1))->data;
   gchar *string = (g_slist_nth(args, 2))->data;
 
+  // someone asked me to die! ok, done..
+  if(panel->stopthread == TRUE)
+    {
+      panel->stopthread = FALSE;
+      return(FALSE);
+    }
+
   GPtrArray *poolargs = g_ptr_array_new();
   g_ptr_array_add(poolargs, g_strdup(fields));
   g_ptr_array_add(poolargs, g_strdup(string));
   g_thread_pool_push(panel->pool, poolargs, NULL);
+
+  return(TRUE);
 }
 
 static void cursesapi_rest_write(gpointer data, gpointer user_data)
@@ -365,31 +416,33 @@ static void cursesapi_rest_write(gpointer data, gpointer user_data)
   cursesapi_set_pause(input);
   cursesapi_set_pause(tobottom);
   cursesapi_set_pause(totop);
+			
+  cursesapi_top(totop);
+  cursesapi_panel_refresh(totop, 1);
+  cursesapi_push_string(totop,
+			"streaming has been stopped.."
+			"You have to resume after finishing this view..\n\n",
+			0);
   if(string && strlen(string))
     {
       if(string[0] == '[' && fields && g_strcmp0("raw", fields) != 0)
 	{
 	  JsonParser *parser = jsonapi_parser();
 	  JsonNode *root = jsonapi_decode(parser, string);
-	  cursesapi_swap(tobottom, totop);
-	  cursesapi_panel_refresh(totop, 1);
 	  cursesapi_push_array(totop, root, fields, TRUE);
-	  cursesapi_swap(totop, tobottom);
 	  g_object_unref(parser);
 	}
       else
 	{
-	  cursesapi_swap(tobottom, totop);
-	  cursesapi_panel_refresh(totop, 1);
-	  cursesapi_push_string(totop, string);
+	  cursesapi_push_string(totop, string, 0);
 	  wgetch(W(totop));
 	  flushinp();
-	  cursesapi_swap(totop, tobottom);
 	}
     }
   g_free(fields);
   g_free(string);
   g_ptr_array_free(poolargs, FALSE);
+  cursesapi_top(tobottom);
   cursesapi_remove_pause(totop);
   cursesapi_remove_pause(input);
 }
@@ -426,7 +479,7 @@ static void cursesapi_usersettings(XPANEL *panel)
       else
 	{
 	  top_panel(P(panel));
-	  cursesapi_push_string(panel, string);
+	  cursesapi_push_string(panel, string, 0);
 	}
     }
   g_free(fields);
@@ -460,7 +513,7 @@ static void cursesapi_usertrends(XPANEL *panel, gchar *woeid)
       else
 	{
 	  top_panel(P(panel));
-	  cursesapi_push_string(panel, string);
+	  cursesapi_push_string(panel, string, 0);
 	}
     }
   g_free(fields);
@@ -487,7 +540,7 @@ static void cursesapi_get_trends(XPANEL *totop,
   GPtrArray *poolargs = g_ptr_array_new();
 
   woeid = twitterapi_get_woeid(country);
-  if(woeid && strlen(woeid) && woeid[0] == ' ')
+  if(woeid && strlen(woeid) && g_str_has_prefix(woeid, "url=") != TRUE)
     {
       woeidv = g_strsplit(woeid, "|", 0);
       while(woeidv[iter])
@@ -508,6 +561,11 @@ static void cursesapi_get_trends(XPANEL *totop,
 	  string = twitterapi_get_usertrends(swoeid);
 	  if(string && strlen(string))
 	    {
+	      if(g_str_has_prefix(string, "CURL") == TRUE)
+		{
+		  g_free(fields);
+		  fields = g_strdup("raw");
+		}
 	      g_ptr_array_add(poolargs, tobottom);
 	      g_ptr_array_add(poolargs, input);
 	      g_ptr_array_add(poolargs, fields);
@@ -544,10 +602,10 @@ static void cursesapi_userinput_thread(gpointer data)
 void cursesapi_userinput(GPtrArray *plist)
 {
   XPANEL *helppanel = g_ptr_array_index(plist, 0);
-  XPANEL *userpanel = g_ptr_array_index(plist, 1);
-  XPANEL *trendspanel = g_ptr_array_index(plist, 2);
-  XPANEL *restpanel = g_ptr_array_index(plist, 3);
-  XPANEL *streampanel = g_ptr_array_index(plist, 4);
+  XPANEL *restpanel = g_ptr_array_index(plist, 1);
+  XPANEL *streampanel = g_ptr_array_index(plist, 2);
+  XPANEL *userpanel = g_ptr_array_index(plist, 3);
+  XPANEL *trendspanel = g_ptr_array_index(plist, 4);
   XPANEL *inputpanel = g_ptr_array_index(plist, 5);
   XPANEL *statuspanel = g_ptr_array_index(plist, 6);
   GPtrArray *threadarray = g_ptr_array_new();
@@ -562,12 +620,14 @@ void cursesapi_userinput(GPtrArray *plist)
       g_mutex_lock(&(inputpanel->mutex));
       input = wgetch(W(inputpanel));
       g_mutex_unlock(&(inputpanel->mutex));
+
       if(input == 'c')
 	{
 	  gchar cmd[BUFFERSIZE];
 	  wordexp_t cmdexp;
 
-	  cursesapi_push_string(statuspanel, "[commandline=on]");
+	  cursesapi_push_string(statuspanel, "\ncommandline mode..", 0);
+	  cursesapi_top(inputpanel);
 	  echo();
 	  flushinp();
 	  wgetstr(W(inputpanel), cmd);
@@ -678,6 +738,9 @@ void cursesapi_userinput(GPtrArray *plist)
 		      g_ptr_array_add(poolargs, fields);
 		      g_ptr_array_add(poolargs, string);
 		      g_thread_pool_push(restpanel->pool, poolargs, NULL);
+		      cursesapi_push_string(statuspanel,
+					    "\nstreaming paused..",
+					    0);
 		    }
 
 		  if(g_strcmp0("timelinestream", cmdv[0]) == 0)
@@ -706,12 +769,13 @@ void cursesapi_userinput(GPtrArray *plist)
 				       inputpanel,
 				       country);
 		  cursesapi_usertrends(trendspanel, NULL);
+		  cursesapi_push_string(statuspanel, "\nstreaming paused..", 0);
 		}
 
 	      if(g_strcmp0("usersettings", cmdv[0]) == 0)
 		cursesapi_usersettings(userpanel);
 
-	      cursesapi_push_string(statuspanel, "[commandline=off]");
+	      cursesapi_push_string(statuspanel, "\nleaving commandline..", 0);
 	      wordfree(&cmdexp);
 	    }
 	}
@@ -720,9 +784,15 @@ void cursesapi_userinput(GPtrArray *plist)
 	{
 	  cursesapi_toggle_pause(streampanel);
 	  if(streampanel->lockstatus == TRUE)
-	    cursesapi_push_string(statuspanel, "[paused]");
+	    cursesapi_push_string(statuspanel, "\nstreaming paused..", 0);
 	  else
-	    cursesapi_push_string(statuspanel, "[resumed]");
+	    cursesapi_push_string(statuspanel, "\nstreaming resumed..", 0);
+	}
+
+      if(input == 'f')
+	{
+	  streampanel->stopthread = TRUE;
+	  cursesapi_push_string(statuspanel, "\nstreaming closed..", 0);
 	}
 
       if(input == 'r')
@@ -764,21 +834,46 @@ GPtrArray* cursesapi_create_baselayout(void)
   stdscrpanel = g_new0(XPANEL, 1);
   stdscrpanel->panel = new_panel(stdscr);
 
-  helppanel = cursesapi_panel_new(1,
+  helppanel = cursesapi_panel_new(2,
 				  XP(stdscrpanel, 100),
 				  0,
 				  0,
 				  colorpair++,
-				  COLOR_BLACK,
-				  COLOR_YELLOW,
+				  COLOR_WHITE,
+				  COLOR_GREEN,
 				  NULL);
   g_ptr_array_add(plist, helppanel);
-  helppanel->defaultstring = g_strdup("c-commandmode|r-refresh|l-clear|q-quit");
+  helppanel->defaultstring = g_strdup("c=(commandmode)"
+				      " [space]=(pause/resume streaming)"
+				      " f=(finish streaming)"
+				      " r=(refresh)"
+				      " l=(clear)"
+				      " q=(quit)");
   cursesapi_panel_refresh(helppanel, 1);
+
+  restpanel = cursesapi_panel_new(MY(stdscrpanel) - 12,
+				  XP(stdscrpanel, 100),
+				  MY(helppanel),
+				  0,
+				  colorpair++,
+				  COLOR_WHITE,
+				  COLOR_BLACK,
+				  cursesapi_rest_write);
+  g_ptr_array_add(plist, restpanel);
+
+  streampanel = cursesapi_panel_new(MY(stdscrpanel) - 12,
+				    XP(stdscrpanel, 100),
+				    MY(helppanel),
+				    0,
+				    colorpair++,
+				    COLOR_WHITE,
+				    COLOR_BLACK,
+				    cursesapi_stream_write);
+  g_ptr_array_add(plist, streampanel);
 
   userpanel = cursesapi_panel_new(6,
 				  XP(stdscrpanel, 20),
-				  MY(helppanel),
+				  MY(helppanel) + MY(restpanel),
 				  0,
 				  colorpair++,
 				  COLOR_WHITE,
@@ -788,36 +883,15 @@ GPtrArray* cursesapi_create_baselayout(void)
 
   trendspanel = cursesapi_panel_new(6,
 				    XP(stdscrpanel, 80) + 1,
-				    MY(helppanel),
+				    MY(helppanel) + MY(restpanel),
 				    MX(userpanel),
 				    colorpair++,
 				    COLOR_WHITE,
-				    COLOR_GREEN,
+				    COLOR_MAGENTA,
 				    NULL);
   g_ptr_array_add(plist, trendspanel);
-  
 
-  restpanel = cursesapi_panel_new(MY(stdscrpanel) - 12,
-				  XP(stdscrpanel, 100),
-				  MY(helppanel) + MY(userpanel),
-				  0,
-				  colorpair++,
-				  COLOR_BLACK,
-				  COLOR_YELLOW,
-				  cursesapi_rest_write);
-  g_ptr_array_add(plist, restpanel);
-
-  streampanel = cursesapi_panel_new(MY(stdscrpanel) - 12,
-				    XP(stdscrpanel, 100),
-				    MY(helppanel) + MY(userpanel),
-				    0,
-				    colorpair++,
-				    COLOR_WHITE,
-				    COLOR_BLUE,
-				    cursesapi_stream_write);
-  g_ptr_array_add(plist, streampanel);
-
-  inputpanel = cursesapi_panel_new(4,
+  inputpanel = cursesapi_panel_new(2,
 				   XP(stdscrpanel, 100),
 				   MY(helppanel) +
 				   MY(userpanel) +
@@ -825,11 +899,11 @@ GPtrArray* cursesapi_create_baselayout(void)
 				   0,
 				   colorpair++,
 				   COLOR_WHITE,
-				   COLOR_MAGENTA,
+				   COLOR_BLUE,
 				   NULL);
   g_ptr_array_add(plist, inputpanel);
 
-  statuspanel = cursesapi_panel_new(1,
+  statuspanel = cursesapi_panel_new(2,
 				    XP(stdscrpanel, 100),
 				    MY(helppanel) +
 				    MY(userpanel) +
@@ -837,8 +911,8 @@ GPtrArray* cursesapi_create_baselayout(void)
 				    MY(inputpanel),
 				    0,
 				    colorpair++,
-				    COLOR_BLACK,
-				    COLOR_YELLOW,
+				    COLOR_WHITE,
+				    COLOR_GREEN,
 				    NULL);
   g_ptr_array_add(plist, statuspanel);
 

@@ -14,16 +14,11 @@
 #define XB(panel) getbegx(W(panel))
 #define Y(panel) getcury(W(panel))
 #define X(panel) getcurx(W(panel))
-#define MYP(panel, p) (YB(panel) + (MY(panel) - YP(panel, p)))
-#define MXP(panel, p) (XB(panel) + (MX(panel) - XP(panel, p)))
 
-#define HCHAR '|'
-#define VCHAR '-'
 #define CURSESAPI_PAIR 1
-#define LMAXOFFSET 1
-#define CMAXOFFSET 1
-#define LASTLINE(w) (MY(w) - LMAXOFFSET)
-#define LASTCOL(w) (MX(w) - CMAXOFFSET)
+#define FIELDWIDTH 12
+#define VALUE_LINE_BEG(panel) (FIELDWIDTH)
+#define VALUE_LINE_LEN(panel) (MX(panel) - FIELDWIDTH)
 
 typedef struct cursesapi_panel XPANEL;
 struct cursesapi_panel
@@ -35,6 +30,7 @@ struct cursesapi_panel
   GThreadPool *pool;
   void (*defaultfunc)(XPANEL *panel);
   gchar *defaultstring;
+  gboolean stopthread;
 };
 
 typedef struct cursesapi_thread
