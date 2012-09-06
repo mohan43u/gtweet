@@ -33,8 +33,7 @@ gchar* twitterapi_get_woeid(gchar *countryname);
   "desc|.user.description,"					\
   "location|.user.location,"					\
   "source|.source,"						\
-  "image|.user.profile_image_url_https,"			\
-  "background|.user.profile_background_image_url_https"
+  "image|.user.profile_image_url_https"
 
 #define T_FILTER_FIELD T_FIELD
 #define T_SAMPLE_FIELD T_FIELD

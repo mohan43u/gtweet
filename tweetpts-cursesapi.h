@@ -50,9 +50,9 @@ typedef struct cursesapi_thread
 GPtrArray *threadarray;
 
 /* defined in tweetpts-cursesapi-display.c */
-void cursesapi_set_pause(XPANEL *panel);
-void cursesapi_remove_pause(XPANEL *panel);
-void cursesapi_toggle_pause(XPANEL *panel);
+void cursesapi_lock(XPANEL *panel);
+void cursesapi_unlock(XPANEL *panel);
+void cursesapi_toggle_lock(XPANEL *panel);
 void cursesapi_top(XPANEL *panel);
 void cursesapi_panel_refresh(XPANEL *panel, guint clear);
 void cursesapi_panel_refresh_all(guint clear);
@@ -70,6 +70,7 @@ void cursesapi_push_string(XPANEL *panel,
 				  gchar *string,
 				  gushort format);
 void cursesapi_push_string_pager(XPANEL *panel, gchar *string);
+void cursesapi_push_line(XPANEL *panel);
 void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields);
 void cursesapi_push_array(XPANEL *panel,
 				 JsonNode *root,

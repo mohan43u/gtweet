@@ -83,16 +83,15 @@ gboolean cursesapi_get_trendspanel_cb(gpointer user_data)
 }
 
 void cursesapi_get_trends(XPANEL *totop,
-				 XPANEL *tobottom,
-				 XPANEL *input,
-				 gchar *country)
+			  XPANEL *tobottom,
+			  XPANEL *input,
+			  gchar *country)
 {
   gchar *woeid = NULL;
   gchar **woeidv = NULL;
   guint iter = 0;
   GPtrArray *poolargs = g_ptr_array_new();
 
-  cursesapi_set_pause(input);
   woeid = twitterapi_get_woeid(country);
   if(woeid && strlen(woeid) && g_str_has_prefix(woeid, "url=") != TRUE)
     {
@@ -124,6 +123,7 @@ void cursesapi_get_trends(XPANEL *totop,
 	      g_ptr_array_add(poolargs, input);
 	      g_ptr_array_add(poolargs, fields);
 	      g_ptr_array_add(poolargs, string);
+	      cursesapi_lock(input);
 	      g_thread_pool_push(totop->pool, poolargs, NULL);
 	    }
 	  iter++;
@@ -138,6 +138,7 @@ void cursesapi_get_trends(XPANEL *totop,
       g_ptr_array_add(poolargs, input);
       g_ptr_array_add(poolargs, fields);
       g_ptr_array_add(poolargs, string);
+      cursesapi_lock(input);
       g_thread_pool_push(totop->pool, poolargs, NULL);
     }
 
@@ -255,10 +256,8 @@ void cursesapi_timeline(guint cmdc, gchar **cmdv)
       g_ptr_array_add(poolargs, inputpanel);
       g_ptr_array_add(poolargs, fields);
       g_ptr_array_add(poolargs, string);
+      cursesapi_lock(inputpanel);
       g_thread_pool_push(restpanel->pool, poolargs, NULL);
-      cursesapi_push_string(statuspanel,
-			    "\nstreaming paused..",
-			    0);
     }
   if(g_strcmp0("timelinestream", cmdv[0]) == 0)
     {
@@ -286,7 +285,6 @@ void cursesapi_trends(guint cmdc, gchar **cmdv)
 		       inputpanel,
 		       country);
   cursesapi_get_trendspanel(trendspanel, NULL);
-  cursesapi_push_string(statuspanel, "\nstreaming paused..", 0);
 }
 
 void cursesapi_usersettings(guint cmdc, gchar **cmdv)
@@ -296,11 +294,16 @@ void cursesapi_usersettings(guint cmdc, gchar **cmdv)
 
 void cursesapi_space(void)
 {
-  cursesapi_toggle_pause(streampanel);
-  if(streampanel->lockstatus == TRUE)
-    cursesapi_push_string(statuspanel, "\nstreaming paused..", 0);
+  gchar *string = NULL;
+  cursesapi_toggle_lock(streampanel);
+  if(streampanel->lockstatus > 0)
+    string = g_strdup_printf("\nstreaming paused(%d)..",
+			     streampanel->lockstatus);
   else
-    cursesapi_push_string(statuspanel, "\nstreaming resumed..", 0);
+    string = g_strdup_printf("\nstreaming resumed(%d)..",
+			     streampanel->lockstatus);
+  cursesapi_push_string(statuspanel, string, 0);
+  g_free(string);
 }
 
 void cursesapi_finish(void)
@@ -349,7 +352,7 @@ void cursesapi_help(void)
   g_ptr_array_add(poolargs, NULL);
   g_ptr_array_add(poolargs, string);
 
-  cursesapi_set_pause(inputpanel);
+  cursesapi_lock(inputpanel);
   g_thread_pool_push(restpanel->pool, poolargs, NULL);
 
   g_string_free(help, TRUE);
@@ -439,11 +442,11 @@ void cursesapi_userinput(void)
   while(iter < threadarray->len)
     {
       XTHREAD *thread = g_ptr_array_index(threadarray, iter);
-      cursesapi_set_pause(streampanel);
-      cursesapi_set_pause(restpanel);
+      cursesapi_lock(streampanel);
+      cursesapi_lock(restpanel);
       g_slist_free(thread->args);
-      cursesapi_remove_pause(restpanel);
-      cursesapi_remove_pause(streampanel);
+      cursesapi_unlock(restpanel);
+      cursesapi_unlock(streampanel);
       iter++;
     }
   g_ptr_array_free(threadarray, FALSE);

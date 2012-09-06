@@ -1,29 +1,25 @@
 #include <tweetpts.h>
 
-void cursesapi_set_pause(XPANEL *panel)
+void cursesapi_lock(XPANEL *panel)
 {
-  if(panel->lockstatus == FALSE)
-    {
-      g_mutex_lock(&(panel->mutex));
-      panel->lockstatus = TRUE;
-    }
+  if(panel->lockstatus <= 0)
+    g_mutex_lock(&(panel->mutex));
+  panel->lockstatus += 1;
 }
 
-void cursesapi_remove_pause(XPANEL *panel)
+void cursesapi_unlock(XPANEL *panel)
 {
-  if(panel->lockstatus == TRUE)
-    {
-      panel->lockstatus = FALSE;
+  panel->lockstatus -= 1;
+  if(panel->lockstatus <= 0)
       g_mutex_unlock(&(panel->mutex));
-    }
 }
 
-void cursesapi_toggle_pause(XPANEL *panel)
+void cursesapi_toggle_lock(XPANEL *panel)
 {
-  if(panel->lockstatus == FALSE)
-    cursesapi_set_pause(panel);
+  if(panel->lockstatus <= 0)
+    cursesapi_lock(panel);
   else
-    cursesapi_remove_pause(panel);
+    cursesapi_unlock(panel);
 }
 
 void cursesapi_panel_refresh(XPANEL *panel, guint clear)
@@ -75,7 +71,7 @@ XPANEL* cursesapi_panel_new(gushort line,
   newpanel = g_new0(XPANEL, 1);
   g_mutex_init(&(newpanel->mutex));
   g_cond_init(&(newpanel->wait));
-  newpanel->lockstatus = FALSE;
+  newpanel->lockstatus = 0;
   newpanel->stopthread = FALSE;
   if(poolfunc)
     newpanel->pool = g_thread_pool_new((GFunc) poolfunc,
@@ -206,6 +202,17 @@ void cursesapi_push_string_pager(XPANEL *panel, gchar *string)
     }
 }
 
+void cursesapi_push_line(XPANEL *panel)
+{
+  gchar *line = g_strnfill(MX(panel), '-');
+  waddch(W(panel), '\n');
+  wattrset(W(panel), A_BOLD);
+  waddstr(W(panel), line);
+  wstandend(W(panel));
+  wrefresh(W(panel));
+  g_free(line);
+}
+
 void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 {
   if(fields && JSON_NODE_HOLDS_OBJECT(node))
@@ -259,12 +266,13 @@ void cursesapi_push_array(XPANEL *panel,
       JsonNode *node = jsonapi_get_element(root, iter);
 
       cursesapi_push_element(panel, node, fields);
-      cursesapi_push_string(panel, "\n", 0);
+      if(prompt)
+	cursesapi_push_line(panel);
       if(length - (iter + 1))
 	{
 	  if(prompt)
 	    {
-	      infostring = g_strdup_printf("\nPress 'q' to quit, "
+	      infostring = g_strdup_printf("Press 'q' to quit, "
 					   "any other key to contine, "
 					   "%d remaining to show..",
 					   length - (iter + 1));
@@ -275,7 +283,7 @@ void cursesapi_push_array(XPANEL *panel,
       else
 	{
 	  if(prompt)
-	    cursesapi_push_string(panel, "\nPress any key to finish..", 0);
+	    cursesapi_push_string(panel, "Press any key to finish..", 0);
 	}
 
       if(prompt)
@@ -297,8 +305,8 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
   gchar *string = NULL;
 
   panel = (XPANEL *) user_data;
-
   g_mutex_lock(&(panel->mutex));
+
   poolargs = (GPtrArray *) data;
   fields = g_ptr_array_index(poolargs, 0);
   string = g_ptr_array_index(poolargs, 1);
@@ -309,7 +317,7 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	  JsonParser *parser = jsonapi_parser();
 	  JsonNode *root = jsonapi_decode(parser, string);
 	  cursesapi_push_element(panel, root, fields);
-	  cursesapi_push_string(panel, "\n\n\n", 0);
+	  cursesapi_push_line(panel);
 	  g_object_unref(parser);
 	}
       else
@@ -319,7 +327,6 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	}
     }
   g_ptr_array_free(poolargs, TRUE);
-
   g_mutex_unlock(&(panel->mutex));
 }
 
@@ -362,16 +369,11 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
   string = g_ptr_array_index(poolargs, 3);
 
 
-  cursesapi_set_pause(input);
-  cursesapi_set_pause(tobottom);
-  cursesapi_set_pause(totop);
+  cursesapi_lock(tobottom);
+  cursesapi_lock(totop);
 			
   cursesapi_top(totop);
   cursesapi_panel_refresh(totop, 1);
-  cursesapi_push_string(totop,
-			"streaming has been stopped.."
-			"You have to resume after finishing this view..\n\n",
-			0);
   if(string && strlen(string))
     {
       if(string[0] == '[' && fields && g_strcmp0("raw", fields) != 0)
@@ -392,8 +394,9 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
   g_free(string);
   g_ptr_array_free(poolargs, FALSE);
   cursesapi_top(tobottom);
-  cursesapi_remove_pause(totop);
-  cursesapi_remove_pause(input);
+  cursesapi_unlock(totop);
+  cursesapi_unlock(input);
+  cursesapi_unlock(tobottom);
 }
 
 void cursesapi_create_baselayout(void)
