@@ -5,11 +5,12 @@ INCLUDES += -I"." $(shell pkg-config --cflags $(PKGMODS))
 LIBS += $(shell pkg-config --libs $(PKGMODS)) -lreadline
 DEFS += -DPACKAGE='"tweetpts"' -DLOCALEDIR='"."'
 CFLAGS += -O0 -ggdb
-SOURCES := tweetpts.c 		\
-	tweetpts-cursesapi.c 	\
-	tweetpts-oauthapi.c 	\
-	tweetpts-curlapi.c	\
-	tweetpts-twitterapi.c	\
+SOURCES := tweetpts.c 			\
+	tweetpts-cursesapi-display.c	\
+	tweetpts-cursesapi-keyboard.c	\
+	tweetpts-oauthapi.c 		\
+	tweetpts-curlapi.c		\
+	tweetpts-twitterapi.c		\
 	tweetpts-jsonapi.c
 HEADERS := tweetpts.h 		\
 	tweetpts-cursesapi.h 	\

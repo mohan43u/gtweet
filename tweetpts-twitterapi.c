@@ -230,11 +230,11 @@ gchar* twitterapi_get_usersettings(void)
 {
   gchar *url = NULL;
 
-  url = oauthapi_sign(T_R_USERSETTINGS, NULL);
+  url = oauthapi_sign(T_R_ACCOUNTSETTINGS, NULL);
   return(curlapi_http(url, NULL));
 }
 
-gchar* twitterapi_get_usertrends(gchar *woeid)
+gchar* twitterapi_get_trends(gchar *woeid)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;

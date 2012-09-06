@@ -11,6 +11,7 @@ static void tweetpts_init(void)
 {
   GThread *mainloopthread = NULL;
 
+  g_type_init();
   oauthapi_init();
   twitterapi_init();
   cursesapi_init();
@@ -28,7 +29,6 @@ static void tweetpts_free(void)
   cursesapi_free();
   twitterapi_free();
   oauthapi_free();
-
   g_main_loop_quit(tweetpts_mainloop);
 }
 
@@ -40,11 +40,7 @@ int main(int argc, char *argv[])
   bindtextdomain(PACKAGE, LOCALEDIR);
   textdomain(PACKAGE);
   tweetpts_init();
-
-  plist = cursesapi_create_baselayout();
-  cursesapi_userinput(plist);
-  cursesapi_destroy_baselayout(plist);
-
+  cursesapi_userinput();
   tweetpts_free();
   return(0);
 }

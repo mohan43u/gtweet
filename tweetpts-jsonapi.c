@@ -29,28 +29,33 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 	{
 	  if(typev && typev[0] && g_strcmp0("boolean", typev[0]) == 0)
 	    {
-	      gboolean value = json_array_get_boolean_element(nodearray, iter);
+	      gboolean value = 0;
+	      value = json_array_get_boolean_element(nodearray, iter);
 	      g_string_append_printf(string, "%d", value);
 	      if(format)
 		g_string_append_printf(string, format, value);
 	    }
 	  else if(typev && typev[0] && g_strcmp0("double", typev[0]) == 0)
 	    {
-	      gdouble value = json_array_get_double_element(nodearray, iter);
+	      gdouble value = 0;
+	      value = json_array_get_double_element(nodearray, iter);
 	      g_string_append_printf(string, "%lf", value);
 	      if(format)
 		g_string_append_printf(string, format, value);
 	    }
 	  else if(typev && typev[0] && g_strcmp0("int", typev[0]) == 0)
 	    {
-	      gint64 value = json_array_get_int_element(nodearray, iter);
+	      gint64 value = 0;
+	      value = json_array_get_int_element(nodearray, iter);
 	      g_string_append_printf(string, "%ld", value);
 	      if(format)
 		g_string_append_printf(string, format, value);
 	    }
-	  else if(typev && typev[0] && g_str_has_prefix(typev[0], "time") == TRUE)
+	  else if(typev && typev[0] &&
+		  g_str_has_prefix(typev[0], "time") == TRUE)
 	    {
-	      const gchar *value = json_array_get_string_element(nodearray, iter);
+	      const gchar *value = NULL;
+	      value = json_array_get_string_element(nodearray, iter);
 	      struct tm utctime;
 	      time_t time;
 	      gchar *localtime = NULL;
@@ -67,10 +72,25 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 	    }
 	  else
 	    {
-	      const gchar *value = json_array_get_string_element(nodearray, iter);
-	      g_string_append_printf(string, "%s", value);
-	      if(format)
-		g_string_append_printf(string, format, value);
+	      JsonNode *node = json_array_get_element(nodearray, iter);
+	      if(JSON_NODE_HOLDS_VALUE(node))
+		{
+		  const gchar *value = NULL;
+		  value = json_node_get_string(node);
+		  g_string_append_printf(string, "%s", value);
+		  if(format)
+		    g_string_append_printf(string, format, value);
+		}
+	      /* 
+               * else
+	       * 	{
+	       * 	  JsonNodeType type = JSON_NODE_TYPE(node);
+	       * 	  gchar *value = g_strdup_printf("JsonNodeType=%d", type);
+	       * 	  g_string_append_printf(string, "%s", value);
+	       * 	  if(format)
+	       * 	    g_string_append_printf(string, format, value);
+	       * 	}
+               */
 	    }
 	  if((iter + 1) != length)
 	    g_string_append(string, " | ");
