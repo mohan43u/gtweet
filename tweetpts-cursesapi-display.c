@@ -380,7 +380,7 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
     {
       JsonParser *parser = jsonapi_parser();
       JsonNode *root = jsonapi_decode(parser, string);
-      if(g_strcmp0(fields, "raw") != 0)
+      if(fields && g_strcmp0(fields, "raw") != 0)
 	{
 	  gchar **fieldsv = NULL;
 	  JsonNode *child = NULL;
@@ -397,8 +397,8 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
 	  cursesapi_push_string(totop, "\n", 0);
 	  wgetch(W(totop));
 	}
+      g_free(fields);
     }
-  g_free(fields);
   g_free(string);
   g_ptr_array_free(poolargs, FALSE);
   cursesapi_top(tobottom);
@@ -475,8 +475,8 @@ void cursesapi_create_baselayout(void)
 				    MY(inputpanel),
 				    0,
 				    colorpair++,
+				    COLOR_BLACK,
 				    COLOR_WHITE,
-				    COLOR_GREEN,
 				    NULL);
   g_ptr_array_add(plist, statuspanel);
   statuspanel->defaultstring = g_strdup("\npress h for help..");

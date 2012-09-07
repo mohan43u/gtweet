@@ -293,15 +293,13 @@ gchar* twitterapi_r_woeid(gchar *countryname)
 			    countryname,
 			    YAHOO_APPID);
       result = curlapi_http(url, NULL);
-      /* 
-       * if(result && strlen(result) && (result[0] == '[' || result[0] == '{'))
-       * 	{
-       * 	  JsonParser *parser = jsonapi_parser();
-       * 	  JsonNode *node = jsonapi_decode(parser, result);
-       * 	  woeid = jsonapi_get_value(node, "..woeid|int");
-       * 	}
-       * else
-       */
+      if(result && strlen(result) && result[0] == '{')
+      	{
+      	  JsonParser *parser = jsonapi_parser();
+      	  JsonNode *node = jsonapi_decode(parser, result);
+      	  woeid = jsonapi_get_value(node, "$..woeid|int");
+      	}
+      else
 	woeid = g_strdup_printf("url=%s, result=%s", url, result);
       g_free(url);
       g_free(result);
