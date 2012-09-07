@@ -208,16 +208,36 @@ void twitterapi_s_timeline(GSList *args)
   g_free(url);
 }
 
-gchar* twitterapi_r_timeline(gchar *count)
+gchar* twitterapi_r_timeline(gchar *count,
+			     gchar *since_id,
+			     gchar *max_id)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
+  GString *getargs = NULL;
   gchar *result = NULL;
 
+  getargs = g_string_new(NULL);
   if(count && strlen(count))
-    geturl = g_strdup_printf("%s?count=%s", T_R_TIMELINE, count);
+    {
+      g_string_append_printf(getargs, "&count=%s", count);
+      g_free(count);
+    }
+  if(since_id && strlen(since_id))
+    {
+      g_string_append_printf(getargs, "&since_id=%s", since_id);
+      g_free(since_id);
+    }
+  if(max_id && strlen(max_id))
+    {
+      g_string_append_printf(getargs, "&max_id=%s", max_id);
+      g_free(max_id);
+    }
+  if(getargs->len)
+    geturl = g_strdup_printf("%s?%s", T_R_TIMELINE, &(getargs->str[1]));
   else
     geturl = g_strdup(T_R_TIMELINE);
+  g_string_free(getargs, TRUE);
 
   url = oauthapi_sign(geturl, NULL);
   g_free(geturl);
@@ -226,7 +246,7 @@ gchar* twitterapi_r_timeline(gchar *count)
   return(result);
 }
 
-gchar* twitterapi_get_usersettings(void)
+gchar* twitterapi_r_usersettings(void)
 {
   gchar *url = NULL;
 
@@ -234,7 +254,7 @@ gchar* twitterapi_get_usersettings(void)
   return(curlapi_http(url, NULL));
 }
 
-gchar* twitterapi_get_trends(gchar *woeid)
+gchar* twitterapi_r_trends(gchar *woeid)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -250,21 +270,19 @@ gchar* twitterapi_get_trends(gchar *woeid)
       else
 	finalwoeid = g_strdup("1");
     }
-
   geturl = g_strdup_printf(T_R_TRENDS, finalwoeid);
   g_free(finalwoeid);
+
   url = oauthapi_sign(geturl, NULL);
   g_free(geturl);
   result = curlapi_http(url, NULL);
   g_free(url);
-
   return(result);
 }
 
-gchar* twitterapi_get_woeid(gchar *countryname)
+gchar* twitterapi_r_woeid(gchar *countryname)
 {
   gchar *url = NULL;
-  gchar *geturl = NULL;
   gchar *result = NULL;
   gchar *woeid = NULL;
 
@@ -275,15 +293,18 @@ gchar* twitterapi_get_woeid(gchar *countryname)
 			    countryname,
 			    YAHOO_APPID);
       result = curlapi_http(url, NULL);
-      if(result && strlen(result) && (result[0] == '[' || result[0] == '{'))
-	{
-	  JsonParser *parser = jsonapi_parser();
-	  JsonNode *node = jsonapi_decode(parser, result);
-	  woeid = jsonapi_get_value(node, "..woeid|int");
-	}
-      else
+      /* 
+       * if(result && strlen(result) && (result[0] == '[' || result[0] == '{'))
+       * 	{
+       * 	  JsonParser *parser = jsonapi_parser();
+       * 	  JsonNode *node = jsonapi_decode(parser, result);
+       * 	  woeid = jsonapi_get_value(node, "..woeid|int");
+       * 	}
+       * else
+       */
 	woeid = g_strdup_printf("url=%s, result=%s", url, result);
       g_free(url);
+      g_free(result);
     }
   else
     {
@@ -294,4 +315,78 @@ gchar* twitterapi_get_woeid(gchar *countryname)
     }
 
   return(woeid);
+}
+
+gchar* twitterapi_r_search(gchar *q,
+			   gchar *count,
+			   gchar *geocode,
+			   gchar *lang,
+			   gchar *locale,
+			   gchar *result_type,
+			   gchar *until,
+			   gchar *since_id,
+			   gchar *max_id)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  GString *getargs = NULL;
+  gchar *result = NULL;
+
+  getargs = g_string_new(NULL);
+  if(q && strlen(q))
+    {
+      g_string_append_printf(getargs, "&q=%s", q);
+      g_free(q);
+    }
+  if(geocode && strlen(geocode))
+    {
+      g_string_append_printf(getargs, "&geocode=%s", geocode);
+      g_free(geocode);
+    }
+  if(lang && strlen(lang))
+    {
+      g_string_append_printf(getargs, "&lang=%s", lang);
+      g_free(lang);
+    }
+  if(locale && strlen(locale))
+    {
+      g_string_append_printf(getargs, "&locale=%s", locale);
+      g_free(locale);
+    }
+  if(result_type && strlen(result_type))
+    {
+      g_string_append_printf(getargs, "&result_type=%s", result_type);
+      g_free(result_type);
+    }
+  if(count && strlen(count))
+    {
+      g_string_append_printf(getargs, "&count=%s", count);
+      g_free(count);
+    }
+  if(until && strlen(until))
+    {
+      g_string_append_printf(getargs, "&until=%s", until);
+      g_free(until);
+    }
+  if(since_id && strlen(since_id))
+    {
+      g_string_append_printf(getargs, "&since_id=%s", since_id);
+      g_free(since_id);
+    }
+  if(max_id && strlen(max_id))
+    {
+      g_string_append_printf(getargs, "&max_id=%s", max_id);
+      g_free(max_id);
+    }
+  if(getargs->len)
+    geturl = g_strdup_printf("%s?%s", T_R_SEARCH, &(getargs->str[1]));
+  else
+    geturl = g_strdup(T_R_SEARCH);
+  g_string_free(getargs, TRUE);
+
+  url = oauthapi_sign(geturl, NULL);
+  g_free(geturl);
+  result = curlapi_http(url, NULL);
+  g_free(url);
+  return(result);
 }

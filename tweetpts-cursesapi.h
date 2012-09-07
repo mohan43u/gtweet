@@ -85,13 +85,15 @@ void cursesapi_init(void);
 void cursesapi_free(void);
 
 /* defined in tweetpts-cursesapi-keyboard.c */
+void cursesapi_call_rest_write(XPANEL *totop,
+			       XPANEL *tobottom,
+			       XPANEL *input,
+			       gchar *inputfields,
+			       gchar *inputstring);
 void cursesapi_get_usersettings(XPANEL *panel);
 void cursesapi_get_trendspanel(XPANEL *panel, gchar *woeid);
 gboolean cursesapi_get_trendspanel_cb(gpointer user_data);
-void cursesapi_get_trends(XPANEL *totop,
-				 XPANEL *tobottom,
-				 XPANEL *input,
-			  gchar *country);
+void cursesapi_get_trends(gchar *country);
 void cursesapi_userinput_thread(gpointer data);
 void cursesapi_setfields(guint cmdc, gchar **cmdv);
 void cursesapi_filter(guint cmdc, gchar **cmdv);

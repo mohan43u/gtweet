@@ -81,16 +81,6 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		  if(format)
 		    g_string_append_printf(string, format, value);
 		}
-	      /* 
-               * else
-	       * 	{
-	       * 	  JsonNodeType type = JSON_NODE_TYPE(node);
-	       * 	  gchar *value = g_strdup_printf("JsonNodeType=%d", type);
-	       * 	  g_string_append_printf(string, "%s", value);
-	       * 	  if(format)
-	       * 	    g_string_append_printf(string, format, value);
-	       * 	}
-               */
 	    }
 	  if((iter + 1) != length)
 	    g_string_append(string, " | ");
@@ -109,18 +99,30 @@ gchar* jsonapi_get_value(JsonNode *root, gchar *field)
   gchar *string = NULL;
   JsonNode *result = NULL;
 
-  if(root && field)
+  if(root && field && strlen(field))
     {
-      gchar *jsonpath = NULL;
       gchar **fieldv = g_strsplit(field, "|", 2);
-      jsonpath = g_strdup_printf("$%s", fieldv[0]);
-      result = json_path_query(jsonpath, root, NULL);
-      g_free(jsonpath);
+      result = json_path_query(fieldv[0], root, NULL);
       string = jsonapi_stringify(result, fieldv[1]);
       json_node_free(result);
       g_strfreev(fieldv);
     }
   return(string);
+}
+
+JsonNode* jsonapi_get_object(JsonNode *root, gchar *field)
+{
+  JsonNode *result = NULL;
+
+  if(root && field)
+    {
+      gchar *jsonpath = NULL;
+      result = json_path_query(field, root, NULL);
+      if(JSON_NODE_HOLDS_ARRAY(result))
+	result = json_array_get_element(json_node_get_array(result), 0);
+    }
+
+  return(result);
 }
 
 JsonNode* jsonapi_decode(JsonParser *parser, gchar *string)
@@ -139,24 +141,31 @@ JsonParser* jsonapi_parser(void)
 
 guint jsonapi_length(JsonNode *root)
 {
+  guint returnvalue = 0;
   if(JSON_NODE_HOLDS_ARRAY(root))
     {
       JsonArray *array = json_node_get_array(root);
-      return(json_array_get_length(array));
+      returnvalue = json_array_get_length(array);
     }
-  else
-    return(0);
+  else if(json_node_is_null(root) != TRUE)
+    returnvalue = 1;
+
+  return(returnvalue);
 }
 
 JsonNode* jsonapi_get_element(JsonNode *root, guint index)
 {
+  JsonNode *returnNode = NULL;
+
   if(JSON_NODE_HOLDS_ARRAY(root))
     {
       JsonArray *array = json_node_get_array(root);
-      return(json_array_get_element(array, index));
+      returnNode = json_array_get_element(array, index);
     }
-  else
-    return(NULL);
+  if(JSON_NODE_HOLDS_OBJECT(root))
+    returnNode = root;
+
+  return(returnNode);
 }
 
 void jsonapi_init(void)

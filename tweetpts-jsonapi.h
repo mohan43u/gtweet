@@ -5,6 +5,7 @@
 
 void jsonapi_init(void);
 gchar* jsonapi_get_value(JsonNode *root, gchar *field);
+JsonNode* jsonapi_get_object(JsonNode *root, gchar *field);
 JsonNode* jsonapi_decode(JsonParser *parser, gchar *string);
 JsonParser* jsonapi_parser(void);
 guint jsonapi_length(JsonNode *root);

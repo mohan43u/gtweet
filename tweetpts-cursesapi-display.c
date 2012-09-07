@@ -316,8 +316,10 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	{
 	  JsonParser *parser = jsonapi_parser();
 	  JsonNode *root = jsonapi_decode(parser, string);
-	  cursesapi_push_element(panel, root, fields);
+	  gchar **fieldsv = g_strsplit(fields, "|", 2);
+	  cursesapi_push_element(panel, root, fieldsv[1]);
 	  cursesapi_push_line(panel);
+	  g_free(fieldsv);
 	  g_object_unref(parser);
 	}
       else
@@ -376,11 +378,17 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
   cursesapi_panel_refresh(totop, 1);
   if(string && strlen(string))
     {
-      if(string[0] == '[' && fields && g_strcmp0("raw", fields) != 0)
+      JsonParser *parser = jsonapi_parser();
+      JsonNode *root = jsonapi_decode(parser, string);
+      if(g_strcmp0(fields, "raw") != 0)
 	{
-	  JsonParser *parser = jsonapi_parser();
-	  JsonNode *root = jsonapi_decode(parser, string);
-	  cursesapi_push_array(totop, root, fields, TRUE);
+	  gchar **fieldsv = NULL;
+	  JsonNode *child = NULL;
+
+	  fieldsv = g_strsplit(fields, "|", 2);
+	  child = jsonapi_get_object(root, fieldsv[0]);
+	  cursesapi_push_array(totop, child, fieldsv[1] , TRUE);
+	  g_strfreev(fieldsv);
 	  g_object_unref(parser);
 	}
       else
