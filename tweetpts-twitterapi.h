@@ -40,7 +40,6 @@ gchar* twitterapi_r_search(gchar *q,
   "screenname|$.user.screen_name|| [http://www.twitter.com/%s],"	\
   "time|$.created_at|time,"						\
   "postid|$.id_str,"							\
-  "userid|$.user.id_str,"						\
   "url|$..url,"								\
   "desc|$.user.description,"						\
   "location|$.user.location,"						\
@@ -62,14 +61,13 @@ gchar* twitterapi_r_search(gchar *q,
 
 #define T_TRENDS_FIELD "$.*|location|$..locations..name,"	\
   "woeid|$..locations..woeid|int,"				\
-  "trends|$..trends..name,"					\
-  "as_of|$..as_of|timez"
+  "as_of|$..as_of|timez,"					\
+  "trends|$..trends..name"
 
 #define T_SEARCH_FIELD "$.statuses.*|text|$..text,"			\
   "screenname|$.user.screen_name|| [http://www.twitter.com/%s],"	\
   "time|$.created_at|time,"						\
   "postid|$.id_str,"							\
-  "userid|$.user.id_str,"						\
   "url|$..url,"								\
   "desc|$.user.description,"						\
   "location|$.user.location,"						\

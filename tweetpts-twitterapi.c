@@ -87,7 +87,7 @@ void twitterapi_s_stat_filter(GSList *args)
   g_string_free(postargs, TRUE);
 
   if(twitterapi_userfields->fields->len)
-    fields = twitterapi_get_userfields();
+    fields = g_strdup(twitterapi_get_userfields());
   else
     fields = g_strdup(T_FILTER_FIELD);
 
@@ -249,9 +249,12 @@ gchar* twitterapi_r_timeline(gchar *count,
 gchar* twitterapi_r_usersettings(void)
 {
   gchar *url = NULL;
+  gchar *result = NULL;
 
   url = oauthapi_sign(T_R_ACCOUNTSETTINGS, NULL);
-  return(curlapi_http(url, NULL));
+  result = curlapi_http(url, NULL);
+  g_free(url);
+  return(result);
 }
 
 gchar* twitterapi_r_trends(gchar *woeid)

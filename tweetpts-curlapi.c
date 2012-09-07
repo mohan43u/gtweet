@@ -32,9 +32,6 @@ static size_t curlapi_http_write_cb(char *ptr,
       //Make sure write_cb returns true, else die.
       if(write_cb(threadargs) == FALSE)
 	length = 0;
-
-      g_free(fullstring);
-      g_slist_free(threadargs);
     }
   else
     {

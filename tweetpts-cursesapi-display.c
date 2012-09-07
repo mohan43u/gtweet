@@ -114,8 +114,8 @@ void cursesapi_panel_move(XPANEL *panel, guint y, guint x)
 }
 
 void cursesapi_push_string(XPANEL *panel,
-				  gchar *string,
-				  gushort format)
+			   gchar *string,
+			   gushort format)
 {
   if(format == 0)
     waddstr(W(panel), string);
@@ -139,6 +139,7 @@ void cursesapi_push_string(XPANEL *panel,
 
       stringv = g_strsplit(string, "\n", 0);
       jstring = g_strjoinv(" ", stringv);
+      g_strfreev(stringv);
       valuelength = VALUE_LINE_LEN(panel)  - 2;
       
       ucs4string = g_utf8_to_ucs4_fast(jstring, -1, NULL);
@@ -165,10 +166,10 @@ void cursesapi_push_string(XPANEL *panel,
 	{
 	  wmove(W(panel), Y(panel), VALUE_LINE_BEG(panel));
 	  wrefresh(W(panel));
-	  ucs4string = g_utf8_to_ucs4_fast(jstring, -1, NULL);
 	  waddwstr(W(panel), ucs4string);
-	  g_free(ucs4string);
 	}
+      g_free(jstring);
+      g_free(ucs4string);
     }
 
   cursesapi_panel_refresh(panel, 0);
@@ -234,7 +235,6 @@ void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 	      if(value && strlen(value))
 		{
 		  outfield = g_strdup_printf("%s ", fielddict[0]);
-		  g_strfreev(fielddict);
 
 		  wattrset(W(panel), A_BOLD);
 		  cursesapi_push_string(panel, outfield, 1);
@@ -247,8 +247,10 @@ void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 		}
 	      g_free(value);
 	    }
+	  g_strfreev(fielddict);
 	  iter++;
 	}
+      g_strfreev(fieldarray);
     }
 }
 
@@ -328,6 +330,8 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	  cursesapi_push_string(panel, "\n", 0);
 	}
     }
+  g_free(fields);
+  g_free(string);
   g_ptr_array_free(poolargs, TRUE);
   g_mutex_unlock(&(panel->mutex));
 }
@@ -350,6 +354,8 @@ gboolean cursesapi_write_cb(GSList *args)
   g_ptr_array_add(poolargs, g_strdup(string));
   g_thread_pool_push(panel->pool, poolargs, NULL);
 
+  g_slist_free(args);
+  g_free(string);
   return(TRUE);
 }
 
@@ -388,6 +394,7 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
 	  fieldsv = g_strsplit(fields, "|", 2);
 	  child = jsonapi_get_object(root, fieldsv[0]);
 	  cursesapi_push_array(totop, child, fieldsv[1] , TRUE);
+	  json_node_free(child);
 	  g_strfreev(fieldsv);
 	  g_object_unref(parser);
 	}
