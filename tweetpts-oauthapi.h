@@ -38,7 +38,4 @@ void oauthapi_access_token_from_file(void);
 void oauthapi_access_token_to_file(void);
 void oauthapi_free(void);
 
-
-
-
 #endif

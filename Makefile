@@ -11,13 +11,17 @@ SOURCES := tweetpts.c 			\
 	tweetpts-oauthapi.c 		\
 	tweetpts-curlapi.c		\
 	tweetpts-twitterapi.c		\
-	tweetpts-jsonapi.c
+	tweetpts-jsonapi.c		\
+	tweetpts-glibapi.c
+
 HEADERS := tweetpts.h 		\
 	tweetpts-cursesapi.h 	\
 	tweetpts-oauthapi.h 	\
 	tweetpts-curlapi.h	\
 	tweetpts-twitterapi.h	\
-	tweetpts-jsonapi.h
+	tweetpts-jsonapi.h	\
+	tweetpts-glibapi.h
+
 PROGRAM := tweetpts
 
 CC = gcc

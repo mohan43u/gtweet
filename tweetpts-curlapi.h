@@ -1,5 +1,5 @@
-#ifndef __TWEETPTS_CURL__
-#define __TWEETPTS_CURL__
+#ifndef __TWEETPTS_CURLAPI__
+#define __TWEETPTS_CURLAPI__
 
 #include <curl/curl.h>
 

@@ -294,7 +294,7 @@ void cursesapi_firehose(guint cmdc, gchar **cmdv)
 
 void cursesapi_timeline(guint cmdc, gchar **cmdv)
 {
-      gchar *fields = NULL;
+  gchar *fields = NULL;
   gchar *timeline = NULL;
   gchar *count = NULL;
   gchar *since_id = NULL;
@@ -350,9 +350,59 @@ void cursesapi_trends(guint cmdc, gchar **cmdv)
   cursesapi_get_trendspanel(trendspanel, NULL);
 }
 
-void cursesapi_usersettings(guint cmdc, gchar **cmdv)
+void cursesapi_start_recording(guint cmdc, gchar **cmdv)
 {
-  cursesapi_get_usersettings(userpanel);
+  gchar *filename = NULL;
+  filename = (cmdc >= 2 ? g_strdup(cmdv[1]) : g_strdup("tweets.json"));
+  glibapi_start_recording(filename);
+}
+
+void cursesapi_stop_recording(guint cmdc, gchar **cmdv)
+{
+  glibapi_stop_recording();
+}
+
+static gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
+{
+  if(string && string[0] == '{')
+    {
+      JsonParser *parser = jsonapi_parser();
+      JsonNode *root = jsonapi_decode(parser, string);
+      gchar **fieldsv = g_strsplit(fields, "|", 2);
+      cursesapi_push_array(restpanel, root, fieldsv[1], FALSE);
+      cursesapi_push_line(restpanel);
+      g_strfreev(fieldsv);
+    }
+  else
+    {
+      cursesapi_push_string_pager(restpanel, string);
+      cursesapi_push_string(restpanel, "\n", 0);
+    }
+  g_free(string);
+
+  waddstr(W(restpanel), "press 'q' to quit, any other key to continue..");
+  if(wgetch(W(restpanel)) == 'q')
+    return(FALSE);
+  else
+    return(TRUE);
+}
+
+void cursesapi_playback(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = g_strdup(T_FILTER_FIELD);
+  gchar *filename = NULL;
+
+  filename = (cmdc >= 2 ? g_strdup(cmdv[1]) : g_strdup("tweets.json"));
+
+  cursesapi_lock(streampanel);
+  cursesapi_lock(restpanel);
+  cursesapi_top(restpanel);
+  cursesapi_panel_refresh(restpanel, 1);
+  glibapi_read_tweets(fields, filename, cursesapi_playback_cb);
+  cursesapi_top(streampanel);
+  cursesapi_unlock(streampanel);
+  cursesapi_unlock(inputpanel);
+  cursesapi_unlock(restpanel);
 }
 
 void cursesapi_space(void)
@@ -502,6 +552,15 @@ void cursesapi_userinput(void)
 
 	  if(g_strcmp0("trends", cmdv[0]) == 0)
 	    cursesapi_trends(cmdc, cmdv);
+
+	  if(g_strcmp0("startrecord", cmdv[0]) == 0)
+	    cursesapi_start_recording(cmdc, cmdv);
+
+	  if(g_strcmp0("stoprecord", cmdv[0]) == 0)
+	    cursesapi_stop_recording(cmdc, cmdv);
+
+	  if(g_strcmp0("playback", cmdv[0]) == 0)
+	    cursesapi_playback(cmdc, cmdv);
 
 	  wordfree(&cmdexp);
 	}

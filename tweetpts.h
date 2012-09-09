@@ -10,9 +10,6 @@
 #include <tweetpts-twitterapi.h>
 #include <tweetpts-jsonapi.h>
 #include <tweetpts-cursesapi.h>
-
-#define BUFFERSIZE 4098
-
-GMainLoop *tweetpts_mainloop;
+#include <tweetpts-glibapi.h>
 
 #endif

@@ -321,7 +321,7 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	  gchar **fieldsv = g_strsplit(fields, "|", 2);
 	  cursesapi_push_element(panel, root, fieldsv[1]);
 	  cursesapi_push_line(panel);
-	  g_free(fieldsv);
+	  g_strfreev(fieldsv);
 	  g_object_unref(parser);
 	}
       else
@@ -341,6 +341,7 @@ gboolean cursesapi_write_cb(GSList *args)
   XPANEL *panel = (g_slist_nth(args, 0))->data;
   gchar *fields = (g_slist_nth(args, 1))->data;
   gchar *string = (g_slist_nth(args, 2))->data;
+  GPtrArray *poolargs = g_ptr_array_new();
 
   // someone asked me to die! ok, done..
   if(panel->stopthread == TRUE)
@@ -349,10 +350,11 @@ gboolean cursesapi_write_cb(GSList *args)
       return(FALSE);
     }
 
-  GPtrArray *poolargs = g_ptr_array_new();
   g_ptr_array_add(poolargs, g_strdup(fields));
   g_ptr_array_add(poolargs, g_strdup(string));
   g_thread_pool_push(panel->pool, poolargs, NULL);
+  if(glibapi_iochannel->iochannel)
+    glibapi_write_tweets(g_strdup(string));
 
   g_slist_free(args);
   g_free(string);

@@ -15,6 +15,7 @@
 #define Y(panel) getcury(W(panel))
 #define X(panel) getcurx(W(panel))
 
+#define BUFFERSIZE 4098
 #define CURSESAPI_PAIR 1
 #define FIELDWIDTH 12
 #define VALUE_LINE_BEG(panel) (FIELDWIDTH)
@@ -101,6 +102,10 @@ void cursesapi_sample(guint cmdc, gchar **cmdv);
 void cursesapi_firehose(guint cmdc, gchar **cmdv);
 void cursesapi_timeline(guint cmdc, gchar **cmdv);
 void cursesapi_trends(guint cmdc, gchar **cmdv);
+void cursesapi_start_recording(guint cmdc, gchar **cmdv);
+void cursesapi_stop_recording(guint cmdc, gchar **cmdv);
+void cursesapi_playback(guint cmdc, gchar **cmdv);
+
 void cursesapi_usersettings(guint cmdc, gchar **cmdv);
 void cursesapi_space(void);
 void cursesapi_finish(void);

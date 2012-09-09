@@ -92,7 +92,7 @@ void curlapi_http_cb(gchar *url, gchar *params, GSList *args)
 
       threadargs = g_slist_remove(threadargs, buffer);
       write_cb = (g_slist_nth(threadargs, 0))->data;
-      threadargs = g_slist_append(threadargs, buffer->str);
+      threadargs = g_slist_append(threadargs, g_strdup(buffer->str));
       write_cb(g_slist_nth(threadargs, 1));
     }
       
