@@ -31,34 +31,48 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 	    {
 	      gboolean value = 0;
 	      value = json_array_get_boolean_element(nodearray, iter);
-	      g_string_append_printf(string, "%d", value);
-	      if(format)
-		g_string_append_printf(string, format, value);
+	      if(value)
+		{
+		  g_string_append_printf(string, "%d", value);
+		  if(format)
+		    g_string_append_printf(string, format, value);
+		}
 	    }
 	  else if(typev && typev[0] && g_strcmp0("double", typev[0]) == 0)
 	    {
 	      gdouble value = 0;
 	      value = json_array_get_double_element(nodearray, iter);
-	      g_string_append_printf(string, "%lf", value);
-	      if(format)
-		g_string_append_printf(string, format, value);
+	      if(value)
+		{
+		  g_string_append_printf(string, "%lf", value);
+		  if(format)
+		    g_string_append_printf(string, format, value);
+		  if((iter + 1) != length)
+		    g_string_append(string, " | ");
+		}
 	    }
 	  else if(typev && typev[0] && g_strcmp0("int", typev[0]) == 0)
 	    {
 	      gint64 value = 0;
 	      value = json_array_get_int_element(nodearray, iter);
-	      g_string_append_printf(string, "%ld", value);
-	      if(format)
-		g_string_append_printf(string, format, value);
+	      if(value)
+		{
+		  g_string_append_printf(string, "%ld", value);
+		  if(format)
+		    g_string_append_printf(string, format, value);
+		  if((iter + 1) != length)
+		    g_string_append(string, " | ");
+		}
 	    }
 	  else if(typev && typev[0] &&
 		  g_str_has_prefix(typev[0], "time") == TRUE)
 	    {
 	      const gchar *value = NULL;
-	      value = json_array_get_string_element(nodearray, iter);
 	      struct tm utctime;
 	      time_t time;
 	      gchar *localtime = NULL;
+
+	      value = json_array_get_string_element(nodearray, iter);
 	      memset(&utctime, 0, sizeof(struct tm));
 	      if(g_strcmp0("timez", typev[0]) == 0)
 		strptime(value, "%FT%TZ", &utctime);
@@ -66,9 +80,14 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		strptime(value, "%a %b %d %T %z %Y", &utctime);
 	      time = timegm(&utctime);
 	      localtime = ctime(&time);
-	      g_string_append_printf(string, "%s", g_strstrip(localtime));
-	      if(format)
-		g_string_append_printf(string, format, localtime);
+	      if(localtime && strlen(localtime))
+		{
+		  g_string_append_printf(string, "%s", g_strstrip(localtime));
+		  if(format)
+		    g_string_append_printf(string, format, localtime);
+		  if((iter + 1) != length)
+		    g_string_append(string, " | ");
+		}
 	    }
 	  else
 	    {
@@ -77,13 +96,16 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		{
 		  const gchar *value = NULL;
 		  value = json_node_get_string(node);
-		  g_string_append_printf(string, "%s", value);
-		  if(format)
-		    g_string_append_printf(string, format, value);
+		  if(value && strlen(value))
+		    {
+		      g_string_append_printf(string, "%s", value);
+		      if(format)
+			g_string_append_printf(string, format, value);
+		      if((iter + 1) != length)
+			g_string_append(string, " | ");
+		    }
 		}
 	    }
-	  if((iter + 1) != length)
-	    g_string_append(string, " | ");
 	}
       g_free(format);
 

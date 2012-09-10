@@ -50,10 +50,7 @@ void cursesapi_get_usersettings(XPANEL *panel)
 	  gchar *woeid = NULL;
 	  gchar **fieldsv = NULL;
 
-	  fieldsv = g_strsplit(fields, "|", 2);
-	  cursesapi_push_array(panel, root, fieldsv[1], FALSE);
-	  g_strfreev(fieldsv);
-
+	  cursesapi_push_node(panel, root, fields, FALSE);
 	  if(twitterapi_woeid->fields->len == 0)
 	    {
 	      woeid = jsonapi_get_value(root, "$.trend_location[*].woeid|int");
@@ -93,19 +90,13 @@ void cursesapi_get_trendspanel(XPANEL *panel, gchar *woeid)
     {
       JsonParser *parser = jsonapi_parser();
       JsonNode *root = jsonapi_decode(parser, string);
-      gchar **fieldsv = NULL;
   
       cursesapi_panel_refresh(panel, 1);
-      fieldsv = g_strsplit(fields, "|", 2);
-      cursesapi_push_array(panel, root, fieldsv[1], FALSE);
-      g_strfreev(fieldsv);
+      cursesapi_push_node(panel, root, fields, FALSE);
       g_object_unref(parser);
     }
   else
-    {
-      top_panel(P(panel));
       cursesapi_push_string(panel, string, 0);
-    }
   g_free(fields);
   g_free(string);
 
@@ -210,10 +201,10 @@ void cursesapi_filter(guint cmdc, gchar **cmdv)
   g_ptr_array_add(threadarray, thread);
 }
 
-void cursesapi_search(guint cmdc, gchar **cmdv)
+void cursesapi_tweetsearch(guint cmdc, gchar **cmdv)
 {
   gchar *fields = NULL;
-  gchar *search = NULL;
+  gchar *tweetsearch = NULL;
   gchar *q = NULL;
   gchar *geocode = NULL;
   gchar *lang = NULL;
@@ -234,24 +225,24 @@ void cursesapi_search(guint cmdc, gchar **cmdv)
   since_id = (cmdc >= 9 ? g_strdup(cmdv[8]) : NULL);
   max_id = (cmdc >= 10 ? g_strdup(cmdv[9]) : NULL);
 
-  search = twitterapi_r_search(q,
-			       count,
+  tweetsearch = twitterapi_r_tweetsearch(q,
 			       geocode,
 			       lang,
 			       locale,
 			       result_type,
+			       count,
 			       until,
 			       since_id,
 			       max_id);
-  if(search && strlen(search) && search[0] == '{')
-    fields = g_strdup(T_SEARCH_FIELD);
+  if(tweetsearch && strlen(tweetsearch) && tweetsearch[0] == '{')
+    fields = g_strdup(T_TWEETSEARCH_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(restpanel,
 			    streampanel,
 			    inputpanel,
 			    fields,
-			    search);
+			    tweetsearch);
 }
 
 void cursesapi_sample(guint cmdc, gchar **cmdv)
@@ -362,31 +353,6 @@ void cursesapi_stop_recording(guint cmdc, gchar **cmdv)
   glibapi_stop_recording();
 }
 
-static gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
-{
-  if(string && string[0] == '{')
-    {
-      JsonParser *parser = jsonapi_parser();
-      JsonNode *root = jsonapi_decode(parser, string);
-      gchar **fieldsv = g_strsplit(fields, "|", 2);
-      cursesapi_push_array(restpanel, root, fieldsv[1], FALSE);
-      cursesapi_push_line(restpanel);
-      g_strfreev(fieldsv);
-    }
-  else
-    {
-      cursesapi_push_string_pager(restpanel, string);
-      cursesapi_push_string(restpanel, "\n", 0);
-    }
-  g_free(string);
-
-  waddstr(W(restpanel), "press 'q' to quit, any other key to continue..");
-  if(wgetch(W(restpanel)) == 'q')
-    return(FALSE);
-  else
-    return(TRUE);
-}
-
 void cursesapi_playback(guint cmdc, gchar **cmdv)
 {
   gchar *fields = g_strdup(T_FILTER_FIELD);
@@ -403,6 +369,52 @@ void cursesapi_playback(guint cmdc, gchar **cmdv)
   cursesapi_unlock(streampanel);
   cursesapi_unlock(inputpanel);
   cursesapi_unlock(restpanel);
+}
+
+void cursesapi_lookup(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = NULL;
+  gchar *screenname = NULL;
+  gchar *user_id = NULL;
+  gchar *lookup = NULL;
+
+  screenname = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+  user_id = (cmdc >= 3? g_strdup(cmdv[2]) : NULL);
+
+  lookup = twitterapi_r_lookup(screenname, user_id);
+  if(lookup && strlen(lookup) && lookup[0] == '[')
+    fields = g_strdup(T_LOOKUP_FIELD);
+  else
+    fields = g_strdup("raw");
+  cursesapi_call_rest_write(restpanel,
+			    streampanel,
+			    inputpanel,
+			    fields,
+			    lookup);
+}
+
+void cursesapi_usersearch(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = NULL;
+  gchar *q = NULL;
+  gchar *page = NULL;
+  gchar *count = NULL;
+  gchar *usersearch = NULL;
+
+  q = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+  page = (cmdc >= 3? g_strdup(cmdv[2]) : NULL);
+  count = (cmdc >= 4? g_strdup(cmdv[3]) : NULL);
+
+  usersearch = twitterapi_r_usersearch(q, page, count);
+  if(usersearch && strlen(usersearch) && usersearch[0] == '[')
+    fields = g_strdup(T_USERSEARCH_FIELD);
+  else
+    fields = g_strdup("raw");
+  cursesapi_call_rest_write(restpanel,
+			    streampanel,
+			    inputpanel,
+			    fields,
+			    usersearch);
 }
 
 void cursesapi_space(void)
@@ -431,33 +443,46 @@ void cursesapi_help(void)
   GPtrArray *poolargs = g_ptr_array_new();
   gchar *string = NULL;
 
-  g_string_append(help, "h \t this help message\n");
   g_string_append(help, "' ' \t pause/resume streaming\n");
-  g_string_append(help, "ctrl+f \t finish streaming\n");
-  g_string_append(help, "ctrl+r \t refresh streen\n");
-  g_string_append(help, "ctrl+l \t clear streen\n");
-  g_string_append(help, "ESC \t exit\n\n");
-  g_string_append(help, "setfields [fieldformat|raw|default]\n");
-  g_string_append(help, "\t to set json fields for next apicall\n");
-  g_string_append(help, "\t fieldformat - string which can be understandable\n");
-  g_string_append(help, "\t  \t by jsonapi_get_value() function\n");
-  g_string_append(help, "\t raw - direct json text\n");
-  g_string_append(help, "\t default - default fields for that apicall\n\n");
-  g_string_append(help, "filter [track] [follow] [location]\n");
-  g_string_append(help, "\t to get tweets about some string, or person, or location\n");
-  g_string_append(help, "\t track - string to track\n");
-  g_string_append(help, "\t follow - person's uid to follow\n");
-  g_string_append(help, "\t location - location defailt see https://dev.twitter.com/docs/streaming-apis/parameters#locations\n\n");
+  g_string_append(help, "ctrl+f \t stop streaming\n");
+  g_string_append(help, "ctrl+r \t refresh screen\n");
+  g_string_append(help, "ctrl+l \t clear screen\n");
+  g_string_append(help, "esc \t exit\n");
+  g_string_append(help, "h \t this help text\n");
+  g_string_append(help, "\n");
+  g_string_append(help, "setfields [jsonfield]\n");
+  g_string_append(help, "\t json field specification understandable by jsonapi_get_value() function\n");
+  g_string_append(help, "\n");
+  g_string_append(help, "filter [track] [follow] [locations]\n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/post/statuses/filter \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "tweetsearch [q] [geocode] [lang] [locale] [result_type] [count] [until] [since_id] [max_id]\n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/search/tweets \n");
+  g_string_append(help, "\n");
   g_string_append(help, "sample\n");
-  g_string_append(help, "\t streaming tweet sample, be careful, your screen will roll heavily\n\n");
-  g_string_append(help, "timeline|timelinestream [track] [location] [count]\n");
-  g_string_append(help, "\t to see current user's home timeline, if timelinestream, update if any of his friend tweets\n");
-  g_string_append(help, "\t track - see filter command\n");
-  g_string_append(help, "\t location - see filter command\n");
-  g_string_append(help, "\t count - restrict number of tweets to show in timeline\n\n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/statuses/sample \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "firehose [count]\n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/statuses/firehose \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "timeline [count] [since_id] [max_id]\n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "timelinestream [track] [locations]\n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/user \n");
+  g_string_append(help, "\n");
   g_string_append(help, "trends [country]\n");
-  g_string_append(help, "\t see whats trending\n");
-  g_string_append(help, "\t country - trends for this country, it also updates the country track, if not give, it defaults to current user's country\n");
+  g_string_append(help, "\t show what is trending in specific [country]. give 'world' as 'country' to get what is trending globally\n");
+  g_string_append(help, "\n");
+  g_string_append(help, "startrecord [filename]\n");
+  g_string_append(help, "\t start saving all streaming tweets into a json file. Defaults to 'tweets.json' in current directory\n");
+  g_string_append(help, "\n");
+  g_string_append(help, "stoprecord\n");
+  g_string_append(help, "\t stop saving tweets.\n");
+  g_string_append(help, "\n");
+  g_string_append(help, "playback [filename]\n");
+  g_string_append(help, "\t display those stored json tweets in [filename] back in the screen. Defaults to 'tweets.json' file in current directory \n");
+  g_string_append(help, "\n");
 
   string = g_strdup(help->str);
   g_ptr_array_add(poolargs, streampanel);
@@ -535,8 +560,8 @@ void cursesapi_userinput(void)
 	  if(g_strcmp0("filter", cmdv[0]) == 0)
 	    cursesapi_filter(cmdc, cmdv);
 
-	  if(g_strcmp0("search", cmdv[0]) == 0)
-	    cursesapi_search(cmdc, cmdv);
+	  if(g_strcmp0("tsearch", cmdv[0]) == 0)
+	    cursesapi_tweetsearch(cmdc, cmdv);
 
 	  if(g_strcmp0("sample", cmdv[0]) == 0)
 	    cursesapi_sample(cmdc, cmdv);
@@ -561,6 +586,12 @@ void cursesapi_userinput(void)
 
 	  if(g_strcmp0("playback", cmdv[0]) == 0)
 	    cursesapi_playback(cmdc, cmdv);
+
+	  if(g_strcmp0("lookup", cmdv[0]) == 0)
+	    cursesapi_lookup(cmdc, cmdv);
+
+	  if(g_strcmp0("usearch", cmdv[0]) == 0)
+	    cursesapi_usersearch(cmdc, cmdv);
 
 	  wordfree(&cmdexp);
 	}

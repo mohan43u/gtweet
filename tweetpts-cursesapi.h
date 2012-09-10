@@ -73,13 +73,14 @@ void cursesapi_push_string(XPANEL *panel,
 void cursesapi_push_string_pager(XPANEL *panel, gchar *string);
 void cursesapi_push_line(XPANEL *panel);
 void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields);
-void cursesapi_push_array(XPANEL *panel,
+void cursesapi_push_node(XPANEL *panel,
 				 JsonNode *root,
 				 gchar *fields,
 				 gboolean prompt);
 void cursesapi_stream_write(gpointer data, gpointer user_data);
 gboolean cursesapi_write_cb(GSList *args);
 void cursesapi_rest_write(gpointer data, gpointer user_data);
+gboolean cursesapi_playback_cb(gchar *fields, gchar *string);
 void cursesapi_create_baselayout(void);
 void cursesapi_destroy_baselayout(void);
 void cursesapi_init(void);
@@ -105,7 +106,6 @@ void cursesapi_trends(guint cmdc, gchar **cmdv);
 void cursesapi_start_recording(guint cmdc, gchar **cmdv);
 void cursesapi_stop_recording(guint cmdc, gchar **cmdv);
 void cursesapi_playback(guint cmdc, gchar **cmdv);
-
 void cursesapi_usersettings(guint cmdc, gchar **cmdv);
 void cursesapi_space(void);
 void cursesapi_finish(void);

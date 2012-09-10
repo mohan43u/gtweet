@@ -41,10 +41,8 @@ gchar* twitterapi_get_userfields(void)
 
   if(twitterapi_userfields->fields->len)
     {
-      g_mutex_lock(&(twitterapi_userfields->mutex));
       string = g_strdup(twitterapi_userfields->fields->str);
       g_string_set_size(twitterapi_userfields->fields, 0);
-      g_mutex_unlock(&(twitterapi_userfields->mutex));
     }
   return(string);
 }
@@ -96,8 +94,8 @@ void twitterapi_s_stat_filter(GSList *args)
   threadargs = g_slist_append(threadargs, fields);
   curlapi_http_cb(url, searchpattern, threadargs);
   g_slist_free(threadargs);
-  g_free(fields);
   g_free(searchpattern);
+  g_free(fields);
   g_free(url);
 }
 
@@ -318,12 +316,12 @@ gchar* twitterapi_r_woeid(gchar *countryname)
   return(woeid);
 }
 
-gchar* twitterapi_r_search(gchar *q,
-			   gchar *count,
+gchar* twitterapi_r_tweetsearch(gchar *q,
 			   gchar *geocode,
 			   gchar *lang,
 			   gchar *locale,
 			   gchar *result_type,
+			   gchar *count,
 			   gchar *until,
 			   gchar *since_id,
 			   gchar *max_id)
@@ -380,9 +378,79 @@ gchar* twitterapi_r_search(gchar *q,
       g_free(max_id);
     }
   if(getargs->len)
-    geturl = g_strdup_printf("%s?%s", T_R_SEARCH, &(getargs->str[1]));
+    geturl = g_strdup_printf("%s?%s", T_R_TWEETSEARCH, &(getargs->str[1]));
   else
-    geturl = g_strdup(T_R_SEARCH);
+    geturl = g_strdup(T_R_TWEETSEARCH);
+  g_string_free(getargs, TRUE);
+
+  url = oauthapi_sign(geturl, NULL);
+  g_free(geturl);
+  result = curlapi_http(url, NULL);
+  g_free(url);
+  return(result);
+}
+
+gchar* twitterapi_r_lookup(gchar *screenname,
+			   gchar *user_id)
+{
+  gchar *url = NULL;
+  gchar *postparams = NULL;
+  GString *postargs = NULL;
+  gchar *result = NULL;
+
+  postargs = g_string_new(NULL);
+  if(screenname && strlen(screenname))
+    {
+      g_string_append_printf(postargs, "&screen_name=%s", screenname);
+      g_free(screenname);
+    }
+  if(user_id && strlen(user_id))
+    {
+      g_string_append_printf(postargs, "&user_id=%s", user_id);
+      g_free(user_id);
+    }
+  if(postargs->len)
+    postparams = g_strdup(&(postargs->str[1]));
+  else
+    postparams = g_strdup("");
+  g_string_free(postargs, TRUE);
+
+  url = oauthapi_sign(T_R_LOOKUP, &postparams);
+  result = curlapi_http(url, postparams);
+  g_free(url);
+  g_free(postparams);
+  return(result);
+}
+
+gchar* twitterapi_r_usersearch(gchar *q,
+			       gchar *page,
+			       gchar *count)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  GString *getargs = NULL;
+  gchar *result = NULL;
+
+  getargs = g_string_new(NULL);
+  if(q && strlen(q))
+    {
+      g_string_append_printf(getargs, "&q=%s", q);
+      g_free(q);
+    }
+  if(page && strlen(page))
+    {
+      g_string_append_printf(getargs, "&page=%s", page);
+      g_free(page);
+    }
+  if(count && strlen(count))
+    {
+      g_string_append_printf(getargs, "&count=%s", count);
+      g_free(count);
+    }
+  if(getargs->len)
+    geturl = g_strdup_printf("%s?%s", T_R_USERSEARCH, &(getargs->str[1]));
+  else
+    geturl = g_strdup(T_R_USERSEARCH);
   g_string_free(getargs, TRUE);
 
   url = oauthapi_sign(geturl, NULL);

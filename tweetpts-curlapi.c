@@ -19,7 +19,7 @@ static size_t curlapi_http_write_cb(char *ptr,
   write_cb = (g_slist_nth(args, 1))->data;
   string = g_strndup(ptr, length);
   
-  if(g_strcmp0("\r\n", &string[length -2]) == 0)
+  if(g_strcmp0("\r\n", &string[length - 2]) == 0)
     {
       string[length - 2] = '\0';
       g_string_append(buffer, string);
@@ -28,7 +28,6 @@ static size_t curlapi_http_write_cb(char *ptr,
       g_string_set_size(buffer, 0);
       threadargs = g_slist_copy(g_slist_nth(args, 2));
       threadargs = g_slist_append(threadargs, fullstring);
-
       //Make sure write_cb returns true, else die.
       if(write_cb(threadargs) == FALSE)
 	length = 0;
@@ -65,7 +64,6 @@ void curlapi_http_cb(gchar *url, gchar *params, GSList *args)
   curl_easy_setopt(curlapi, CURLOPT_WRITEFUNCTION, curlapi_http_write_cb);
   curl_easy_setopt(curlapi, CURLOPT_WRITEDATA, threadargs);
   curl_easy_setopt(curlapi, CURLOPT_URL, url);
-  curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
 
@@ -113,7 +111,7 @@ gchar* curlapi_http(gchar *url, gchar *params)
   curl_easy_setopt(curlapi, CURLOPT_URL, url);
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-  if((returncode = curl_easy_perform(curlapi)) != 0)
+  if((returncode = curl_easy_perform(curlapi)) != CURLE_OK)
     {
       g_string_append_printf(buffer,
 			     "CURLcode=%d,"

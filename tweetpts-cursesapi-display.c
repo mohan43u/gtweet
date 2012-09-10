@@ -254,7 +254,7 @@ void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
     }
 }
 
-void cursesapi_push_array(XPANEL *panel,
+void cursesapi_push_node(XPANEL *panel,
 				 JsonNode *root,
 				 gchar *fields,
 				 gboolean prompt)
@@ -318,16 +318,15 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	{
 	  JsonParser *parser = jsonapi_parser();
 	  JsonNode *root = jsonapi_decode(parser, string);
-	  gchar **fieldsv = g_strsplit(fields, "|", 2);
-	  cursesapi_push_element(panel, root, fieldsv[1]);
+	  cursesapi_push_node(panel, root, fields, FALSE);
 	  cursesapi_push_line(panel);
-	  g_strfreev(fieldsv);
 	  g_object_unref(parser);
 	}
       else
 	{
 	  cursesapi_push_string_pager(panel, string);
 	  cursesapi_push_string(panel, "\n", 0);
+	  wgetch(W(panel));
 	}
     }
   g_free(fields);
@@ -378,10 +377,8 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
   fields = g_ptr_array_index(poolargs, 2);
   string = g_ptr_array_index(poolargs, 3);
 
-
   cursesapi_lock(tobottom);
   cursesapi_lock(totop);
-			
   cursesapi_top(totop);
   cursesapi_panel_refresh(totop, 1);
   if(string && strlen(string))
@@ -390,14 +387,18 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
       JsonNode *root = jsonapi_decode(parser, string);
       if(fields && g_strcmp0(fields, "raw") != 0)
 	{
-	  gchar **fieldsv = NULL;
-	  JsonNode *child = NULL;
-
-	  fieldsv = g_strsplit(fields, "|", 2);
-	  child = jsonapi_get_object(root, fieldsv[0]);
-	  cursesapi_push_array(totop, child, fieldsv[1] , TRUE);
-	  json_node_free(child);
-	  g_strfreev(fieldsv);
+	  if(fields[0] == '$')
+	    {
+	      gchar **fieldsv = NULL;
+	      JsonNode *child = NULL;
+	      fieldsv = g_strsplit(fields, "|", 2);
+	      child = jsonapi_get_object(root, fieldsv[0]);
+	      cursesapi_push_node(totop, child, fieldsv[1] , TRUE);
+	      json_node_free(child);
+	      g_strfreev(fieldsv);
+	    }
+	  else
+	    cursesapi_push_node(totop, root, fields, TRUE);
 	  g_object_unref(parser);
 	}
       else
@@ -414,6 +415,29 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
   cursesapi_unlock(totop);
   cursesapi_unlock(input);
   cursesapi_unlock(tobottom);
+}
+
+gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
+{
+  if(string && string[0] == '{')
+    {
+      JsonParser *parser = jsonapi_parser();
+      JsonNode *root = jsonapi_decode(parser, string);
+      cursesapi_push_node(restpanel, root, fields, FALSE);
+      cursesapi_push_line(restpanel);
+    }
+  else
+    {
+      cursesapi_push_string_pager(restpanel, string);
+      cursesapi_push_string(restpanel, "\n", 0);
+    }
+  g_free(string);
+
+  waddstr(W(restpanel), "press 'q' to quit, any other key to continue..");
+  if(wgetch(W(restpanel)) == 'q')
+    return(FALSE);
+  else
+    return(TRUE);
 }
 
 void cursesapi_create_baselayout(void)
