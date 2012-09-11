@@ -1,26 +1,26 @@
 #include <tweetpts.h>
 
 gchar* oauthapi_sign(gchar *url,
-		   gchar **params)
+		     gchar **params)
 {
-  gchar *signed_url = NULL;
-  gchar *request = NULL;
+  gchar *requesturl = NULL;
+  gchar *resulturl = NULL;
 
   if(params)
-    request = g_strdup_printf("%s?%s", url, *params);
+    requesturl = g_strdup_printf("%s?%s", url, *params);
   else
-    request = g_strdup(url);
+    requesturl = g_strdup(url);
 
-  signed_url = oauth_sign_url2(request,
-			       params,
-			       OA_HMAC,
-			       NULL,
-			       CONSUMER_KEY,
-			       CONSUMER_SECRET,
-			       access_key,
-			       access_secret);
-  g_free(request);
-  return(signed_url);
+  resulturl = oauth_sign_url2(requesturl,
+			      params,
+			      OA_HMAC,
+			      NULL,
+			      CONSUMER_KEY,
+			      CONSUMER_SECRET,
+			      access_key,
+			      access_secret);
+  g_free(requesturl);
+  return(resulturl);
 }
 
 void oauthapi_request_token(void)
@@ -43,7 +43,7 @@ void oauthapi_request_token(void)
 		  NULL);
   g_free(request);
 
-  response = curlapi_http(REQ_TOKEN_URL, postarg);
+  response = curlapi_http(REQ_TOKEN_URL, postarg, TRUE);
   g_free(postarg);
 
   argc = oauth_split_post_paramters(response, &argv, 0);
@@ -112,7 +112,7 @@ void oauthapi_access_token(void)
 		  request_secret);
   g_free(request);
 
-  response = curlapi_http(ACCESS_TOKEN_URL, postarg);
+  response = curlapi_http(ACCESS_TOKEN_URL, postarg, TRUE);
   g_free(postarg);
 
   argc = oauth_split_post_paramters(response, &argv, 0);

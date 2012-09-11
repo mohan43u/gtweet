@@ -242,6 +242,7 @@ void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 		  g_free(outfield);
 
 		  cursesapi_push_string(panel, value, 2);
+
 		  if(fieldarray[iter + 1])
 		    cursesapi_push_string(panel, "\n", 0);
 		}
@@ -399,7 +400,6 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
 	    }
 	  else
 	    cursesapi_push_node(totop, root, fields, TRUE);
-	  g_object_unref(parser);
 	}
       else
 	{
@@ -408,6 +408,7 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
 	  wgetch(W(totop));
 	}
       g_free(fields);
+      g_object_unref(parser);
     }
   g_free(string);
   g_ptr_array_free(poolargs, FALSE);

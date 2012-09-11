@@ -27,8 +27,7 @@ gchar *access_key;
 gchar *access_secret;
 gchar *pin;
 
-gchar* oauthapi_sign(gchar *url,
-		   gchar **params);
+gchar* oauthapi_sign(gchar *url, gchar **params);
 void oauthapi_request_token(void);
 void oauthapi_authenticate(void);
 void oauthapi_access_token(void);

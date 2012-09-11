@@ -92,7 +92,7 @@ void twitterapi_s_stat_filter(GSList *args)
   url = oauthapi_sign(T_S_STAT_FILTER, &searchpattern);
   threadargs = g_slist_copy(g_slist_nth(args, 3));
   threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, searchpattern, threadargs);
+  curlapi_http_cb(url, searchpattern, threadargs, TRUE);
   g_slist_free(threadargs);
   g_free(searchpattern);
   g_free(fields);
@@ -113,7 +113,7 @@ void twitterapi_s_stat_sample(GSList *args)
   url = oauthapi_sign(T_S_STAT_SAMPLE, NULL);
   threadargs = g_slist_copy(g_slist_nth(args, 0));
   threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, NULL, threadargs);
+  curlapi_http_cb(url, NULL, threadargs, TRUE);
   g_slist_free(threadargs);
   g_free(fields);
   g_free(url);
@@ -151,7 +151,7 @@ void twitterapi_s_stat_firehose(GSList *args)
   g_free(geturl);
   threadargs = g_slist_copy(g_slist_nth(args, 1));
   threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, NULL, threadargs);
+  curlapi_http_cb(url, NULL, threadargs, TRUE);
   g_slist_free(threadargs);
   g_free(fields);
   g_free(url);
@@ -200,7 +200,7 @@ void twitterapi_s_timeline(GSList *args)
   g_free(geturl);
   threadargs = g_slist_copy(g_slist_nth(args, 2));
   threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, NULL, threadargs);
+  curlapi_http_cb(url, NULL, threadargs, TRUE);
   g_slist_free(threadargs);
   g_free(fields);
   g_free(url);
@@ -239,7 +239,7 @@ gchar* twitterapi_r_timeline(gchar *count,
 
   url = oauthapi_sign(geturl, NULL);
   g_free(geturl);
-  result = curlapi_http(url, NULL);
+  result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
@@ -250,7 +250,7 @@ gchar* twitterapi_r_usersettings(void)
   gchar *result = NULL;
 
   url = oauthapi_sign(T_R_ACCOUNTSETTINGS, NULL);
-  result = curlapi_http(url, NULL);
+  result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
@@ -276,7 +276,7 @@ gchar* twitterapi_r_trends(gchar *woeid)
 
   url = oauthapi_sign(geturl, NULL);
   g_free(geturl);
-  result = curlapi_http(url, NULL);
+  result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
@@ -293,7 +293,7 @@ gchar* twitterapi_r_woeid(gchar *countryname)
 			    Y_R_WOEID,
 			    countryname,
 			    YAHOO_APPID);
-      result = curlapi_http(url, NULL);
+      result = curlapi_http(url, NULL, FALSE);
       if(result && strlen(result) && result[0] == '{')
       	{
       	  JsonParser *parser = jsonapi_parser();
@@ -385,7 +385,7 @@ gchar* twitterapi_r_tweetsearch(gchar *q,
 
   url = oauthapi_sign(geturl, NULL);
   g_free(geturl);
-  result = curlapi_http(url, NULL);
+  result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
@@ -416,7 +416,7 @@ gchar* twitterapi_r_lookup(gchar *screenname,
   g_string_free(postargs, TRUE);
 
   url = oauthapi_sign(T_R_LOOKUP, &postparams);
-  result = curlapi_http(url, postparams);
+  result = curlapi_http(url, postparams, TRUE);
   g_free(url);
   g_free(postparams);
   return(result);
@@ -455,7 +455,7 @@ gchar* twitterapi_r_usersearch(gchar *q,
 
   url = oauthapi_sign(geturl, NULL);
   g_free(geturl);
-  result = curlapi_http(url, NULL);
+  result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
