@@ -417,6 +417,41 @@ void cursesapi_usersearch(guint cmdc, gchar **cmdv)
 			    usersearch);
 }
 
+void cursesapi_following(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = NULL;
+  gchar *userid = NULL;
+  gchar *screenname = NULL;
+  gchar *cursor = NULL;
+  gchar *following = NULL;
+  gchar **followingv = NULL;
+  guint iter = 0;
+
+  userid = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+  screenname = (cmdc >= 3? g_strdup(cmdv[2]) : NULL);
+  cursor = (cmdc >= 4? g_strdup(cmdv[3]) : NULL);
+
+  following = twitterapi_r_following(userid, screenname, cursor);
+  if(following && strlen(following))
+    fields = g_strdup(T_FOLLOWING_FIELD);
+  else
+    fields = g_strdup("raw");
+
+  followingv = g_strsplit(following, "\n", 0);
+  while(followingv[iter])
+    {
+      cursesapi_call_rest_write(restpanel,
+				streampanel,
+				inputpanel,
+				g_strdup(fields),
+				g_strdup(followingv[iter]));
+      iter++;
+    }
+  g_free(fields);
+  g_free(following);
+  g_strfreev(followingv);
+}
+
 void cursesapi_space(void)
 {
   gchar *string = NULL;
@@ -592,6 +627,9 @@ void cursesapi_userinput(void)
 
 	  if(g_strcmp0("usearch", cmdv[0]) == 0)
 	    cursesapi_usersearch(cmdc, cmdv);
+
+	  if(g_strcmp0("following", cmdv[0]) == 0)
+	    cursesapi_following(cmdc, cmdv);
 
 	  wordfree(&cmdexp);
 	}

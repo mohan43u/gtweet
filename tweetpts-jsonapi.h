@@ -10,6 +10,7 @@ JsonNode* jsonapi_decode(JsonParser *parser, gchar *string);
 JsonParser* jsonapi_parser(void);
 guint jsonapi_length(JsonNode *root);
 JsonNode* jsonapi_get_element(JsonNode *root, guint index);
+gchar* jsonapi_get_array(JsonNode *root, gchar *fields);
 void jsonapi_free(void);
 
 #endif

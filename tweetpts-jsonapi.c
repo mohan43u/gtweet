@@ -190,6 +190,33 @@ JsonNode* jsonapi_get_element(JsonNode *root, guint index)
   return(returnNode);
 }
 
+gchar* jsonapi_get_array(JsonNode *root, gchar *fields)
+{
+  gchar *result = NULL;
+  GString *string = NULL;
+  if(JSON_NODE_HOLDS_ARRAY(root))
+    {
+      guint iter = 0;
+      guint length = jsonapi_length(root);
+
+      string = g_string_new(NULL);
+      while(iter < length)
+	{
+	  JsonNode *node = jsonapi_get_element(root, iter);
+	  gchar *value = jsonapi_get_value(node, fields);
+	  g_string_append_printf(string, "%s,", value);
+	  g_free(value);
+	  iter++;
+	}
+      g_string_truncate(string, string->len - 1);
+      result = g_strdup(string->str);
+      g_string_free(string, TRUE);
+    }
+
+  return(result);
+}
+
+
 void jsonapi_init(void)
 {
   g_type_init();

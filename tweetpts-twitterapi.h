@@ -11,6 +11,7 @@
 #define T_R_TWEETSEARCH "https://api.twitter.com/1.1/search/tweets.json"
 #define T_R_LOOKUP "https://api.twitter.com/1.1/users/lookup.json"
 #define T_R_USERSEARCH "https://api.twitter.com/1.1/users/search.json"
+#define T_R_FOLLOWING "https://api.twitter.com/1.1/friends/ids.json"
 #define Y_R_WOEID "http://where.yahooapis.com/v1"
 
 void twitterapi_init(void);
@@ -41,6 +42,9 @@ gchar* twitterapi_r_lookup(gchar *screenname,
 gchar* twitterapi_r_usersearch(gchar *q,
 			       gchar *page,
 			       gchar *count);
+gchar* twitterapi_r_following(gchar *userid,
+			       gchar *screenname,
+			       gchar *cursor);
 
 
 #define T_FIELD "text|$..text,"						\
@@ -90,6 +94,7 @@ gchar* twitterapi_r_usersearch(gchar *q,
   "source|$.status.source"
 
 #define T_USERSEARCH_FIELD T_LOOKUP_FIELD
+#define T_FOLLOWING_FIELD T_LOOKUP_FIELD
 
 #define TRENDUPDATESEC (5*60)
 
