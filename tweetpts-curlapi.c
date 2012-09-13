@@ -202,7 +202,6 @@ void curlapi_http_cb(gchar *inputurl,
 
   g_free(url);
   g_free(params);
-  g_slist_free(threadargs);
   g_string_free(buffer, TRUE);
   if(oauthheader)
     curl_slist_free_all(oauthheader);
@@ -229,6 +228,7 @@ gchar* curlapi_http(gchar *inputurl,
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
   curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   returncode = curl_easy_perform(curlapi);
   if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
     {
