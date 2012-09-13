@@ -162,7 +162,7 @@ void cursesapi_get_trends(gchar *country)
 void cursesapi_userinput_thread(gpointer data)
 {
   GSList *args = (GSList *) data;
-  void (*twitterapi_function)(GSList *args) = (g_slist_nth(args, 0))->data;
+  void (*twitterapi_function)(GSList *args) = g_slist_nth_data(args, 0);
   GSList *threadargs = g_slist_copy(g_slist_nth(args, 1));
   twitterapi_function(threadargs);
   g_slist_free(threadargs);

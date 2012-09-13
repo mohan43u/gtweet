@@ -15,8 +15,8 @@ static size_t curlapi_http_write_cb(char *ptr,
   
   length = size * nmemb;
   args = (GSList *) userdata;
-  buffer = (g_slist_nth(args, 0))->data;
-  write_cb = (g_slist_nth(args, 1))->data;
+  buffer = g_slist_nth_data(args, 0);
+  write_cb = g_slist_nth_data(args, 1);
   string = g_strndup(ptr, length);
   
   if(g_strcmp0("\r\n", &string[length - 2]) == 0)
@@ -194,7 +194,7 @@ void curlapi_http_cb(gchar *inputurl,
 				  params,
 				  buffer->str);
       threadargs = g_slist_remove(threadargs, buffer);
-      write_cb = (g_slist_nth(threadargs, 0))->data;
+      write_cb = g_slist_nth_data(threadargs, 0);
       threadargs = g_slist_append(threadargs, g_strdup(httperror));
       write_cb(g_slist_nth(threadargs, 1));
       g_free(httperror);

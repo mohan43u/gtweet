@@ -58,9 +58,9 @@ void twitterapi_s_stat_filter(GSList *args)
   gchar *follow = NULL;
   gchar *locations = NULL;
 
-  track = (g_slist_nth(args, 0))->data;
-  follow = (g_slist_nth(args, 1))->data;
-  locations = (g_slist_nth(args, 2))->data;
+  track = g_slist_nth_data(args, 0);
+  follow = g_slist_nth_data(args, 1);
+  locations = g_slist_nth_data(args, 2);
 
   postargs = g_string_new(NULL);
   if(track && strlen(track))
@@ -128,7 +128,7 @@ void twitterapi_s_stat_firehose(GSList *args)
   GSList *threadargs = NULL;
   gchar *count = NULL;
   
-  count = (g_slist_nth(args, 0))->data;
+  count = g_slist_nth_data(args, 0);
 
   getargs = g_string_new(NULL);
   if(count && strlen(count))
@@ -168,8 +168,8 @@ void twitterapi_s_timeline(GSList *args)
   gchar *locations = NULL;
 
 
-  track = (g_slist_nth(args, 0))->data;
-  locations = (g_slist_nth(args, 1))->data;
+  track = g_slist_nth_data(args, 0);
+  locations = g_slist_nth_data(args, 1);
 
   getargs = g_string_new(NULL);
   if(track && strlen(track))

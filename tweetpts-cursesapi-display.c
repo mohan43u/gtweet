@@ -338,9 +338,9 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 
 gboolean cursesapi_write_cb(GSList *args)
 {
-  XPANEL *panel = (g_slist_nth(args, 0))->data;
-  gchar *fields = (g_slist_nth(args, 1))->data;
-  gchar *string = (g_slist_nth(args, 2))->data;
+  XPANEL *panel = g_slist_nth_data(args, 0);
+  gchar *fields = g_slist_nth_data(args, 1);
+  gchar *string = g_slist_nth_data(args, 2);
   GPtrArray *poolargs = g_ptr_array_new();
 
   // someone asked me to die! ok, done..
