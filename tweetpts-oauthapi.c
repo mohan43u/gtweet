@@ -19,6 +19,7 @@ gchar* oauthapi_sign(gchar *url,
 			      CONSUMER_SECRET,
 			      access_key,
 			      access_secret);
+
   g_free(requesturl);
   return(resulturl);
 }

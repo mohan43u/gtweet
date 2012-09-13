@@ -534,9 +534,81 @@ gchar* twitterapi_r_following(gchar *userid,
       while(ids)
 	{
 	  limitids = twitterapi_strsplit(&ids, ",", 101);
-	   limitresult = twitterapi_r_lookup(NULL, limitids);
-	   g_string_append_printf(buffer, "%s\n", limitresult);
-	   g_free(limitresult);
+	  limitresult = twitterapi_r_lookup(NULL, limitids);
+	  g_string_append_printf(buffer, "%s\n", limitresult);
+	  g_free(limitresult);
+	}
+	  
+      json_node_free(child);
+      g_object_unref(parser);
+    }
+  else
+    buffer = g_string_append(buffer, result);
+
+  g_free(url);
+  g_free(result);
+  if(buffer->len)
+    {
+      g_string_truncate(buffer, buffer->len - 1);
+      finalresult = g_strdup(buffer->str);
+    }
+  g_string_free(buffer, TRUE);
+  return(finalresult);
+}
+
+gchar* twitterapi_r_followers(gchar *userid,
+			      gchar *screenname,
+			      gchar *cursor)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  GString *getargs = NULL;
+  gchar *result = NULL;
+  GString *buffer = NULL;
+  gchar *finalresult = NULL;
+
+  getargs = g_string_new(NULL);
+  if(userid && strlen(userid))
+    {
+      g_string_append_printf(getargs, "&user_id=%s", userid);
+      g_free(userid);
+    }
+  if(screenname && strlen(screenname))
+    {
+      g_string_append_printf(getargs, "&screen_name=%s", screenname);
+      g_free(screenname);
+    }
+  if(cursor && strlen(cursor))
+    {
+      g_string_append_printf(getargs, "&cursor=%s", cursor);
+      g_free(cursor);
+    }
+  if(getargs->len)
+    geturl = g_strdup_printf("%s?%s", T_R_FOLLOWERS, &(getargs->str[1]));
+  else
+    geturl = g_strdup(T_R_FOLLOWERS);
+  g_string_free(getargs, TRUE);
+
+  url = oauthapi_sign(geturl, NULL);
+  g_free(geturl);
+  result = curlapi_http(url, NULL, TRUE);
+
+  buffer = g_string_new(NULL);
+  if(result && strlen(result) && result[0] == '{')
+    {
+      JsonParser *parser = jsonapi_parser();
+      JsonNode *root = jsonapi_decode(parser, result);
+      JsonNode *child = jsonapi_get_object(root, "$.ids");
+      gchar *ids = jsonapi_get_array(child, "$.*|int");
+      gchar *limitids = NULL;
+      gchar *limitresult = NULL;
+
+      while(ids)
+	{
+	  limitids = twitterapi_strsplit(&ids, ",", 101);
+	  limitresult = twitterapi_r_lookup(NULL, limitids);
+	  g_string_append_printf(buffer, "%s\n", limitresult);
+	  g_free(limitresult);
 	}
 	  
       json_node_free(child);

@@ -50,6 +50,7 @@ static size_t curlapi_http_write(char *ptr,
   GString *buffer = userdata;
 
   g_string_append_len(buffer, ptr, length);
+  g_string_append(buffer, "\0");
   return(length);
 }
 
@@ -74,60 +75,80 @@ static struct curl_slist* curlapi_get_oauthheader(gchar **url,
 	}
       else
 	{
-	  gchar **urlv = g_strsplit(*url, "?", 2);
+	  gchar **urlv = NULL;
+
+	  urlv = g_strsplit(*url, "?", 2);
 	  baseurl = g_strdup(urlv[0]);
-	  paramsv = g_strsplit(urlv[1], "&", 0);
+	  if(urlv[1] && strlen(urlv[1]))
+	      paramsv = g_strsplit(urlv[1], "&", 0);
 	  g_strfreev(urlv);
 	}
-      while(paramsv[iter])
+
+      if(paramsv)
 	{
-	  if(g_str_has_prefix(paramsv[iter], "oauth_"))
+	  while(paramsv[iter])
 	    {
-	      gchar **fieldv = g_strsplit(paramsv[iter], "=", 2);
-	      g_string_append_printf(oauthparams,
-				     "%s=\"%s\", ",
-				     fieldv[0],
-				     fieldv[1]);
-	      g_strfreev(fieldv);
+	      if(g_str_has_prefix(paramsv[iter], "oauth_"))
+		{
+		  gchar **fieldv = g_strsplit(paramsv[iter], "=", 2);
+		  g_string_append_printf(oauthparams,
+					 "%s=\"%s\", ",
+					 fieldv[0],
+					 fieldv[1]);
+		  g_strfreev(fieldv);
+		}
+	      else
+		g_string_append_printf(leftparams, "&%s", paramsv[iter]);
+
+	      iter++;
+	    }
+	  g_string_truncate(oauthparams, oauthparams->len - 2);
+	  slist = curl_slist_append(slist, oauthparams->str);
+	  if(leftparams->len)
+	    g_string_erase(leftparams, 0, 1);
+
+	  if(*params == NULL)
+	    {
+	      g_free(*url);
+	      if(leftparams->len)
+		*url = g_strdup_printf("%s?%s", baseurl, leftparams->str);
+	      else
+		*url = g_strdup(baseurl);
 	    }
 	  else
-	    g_string_append_printf(leftparams, "&%s", paramsv[iter]);
-
-	  iter++;
-	}
-      g_string_truncate(oauthparams, oauthparams->len - 2);
-      slist = curl_slist_append(slist, oauthparams->str);
-
-      if(leftparams->len)
-	{
-	  g_string_erase(leftparams, 0, 1);
-	  if(*params == NULL)
-	    *url = g_strdup_printf("%s?%s", baseurl, leftparams->str);
-	  if(*params != NULL)
 	    {
+	      g_free(*url);
 	      *url = g_strdup(baseurl);
-	      *params = g_strdup(leftparams->str);
+	      if(leftparams->len)
+		{
+		  g_free(*params);
+		  *params = g_strdup(leftparams->str);
+		}
+	      else
+		{
+		  g_free(*params);
+		  *params = NULL;
+		}
 	    }
+	  g_strfreev(paramsv);
 	}
-      else
-	*url = g_strdup(baseurl);
 
       g_free(baseurl);
       g_string_free(oauthparams, TRUE);
       g_string_free(leftparams, TRUE);
-      g_strfreev(paramsv);
       return(slist);
     }
   else
-    {
-      *url = g_strdup(*url);
-      *params = g_strdup(*params);
-      return(NULL);
-    }
+    return(NULL);
 }
 
-void curlapi_http_cb(gchar *url, gchar *params, GSList *args, gboolean oauth)
+void curlapi_http_cb(gchar *inputurl,
+		     gchar *inputparams,
+		     GSList *args,
+		     gboolean oauth)
 {
+  gchar *url = g_strdup(inputurl);
+  gchar *params = g_strdup(inputparams);
   struct curl_slist *oauthheader = NULL;
   CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
@@ -142,32 +163,41 @@ void curlapi_http_cb(gchar *url, gchar *params, GSList *args, gboolean oauth)
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-  //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   returncode = curl_easy_perform(curlapi);
   if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
     {
       gchar *httperror = NULL;
       void (*write_cb)(GSList *args) = NULL;
 
-      httperror = curlapi_http(url, params, TRUE);
-      g_string_append_printf(buffer,
-			     "CURLcode=%d,"
-			     "CURLerror=%s,"
-			     "url=%s,"
-			     "postparams=%s,"
-			     "httperror=%s",
-			     returncode,
-			     curl_easy_strerror(returncode),
-			     url,
-			     params,
-			     httperror);
-      if(httperror)
-	g_free(httperror);
-
+      curl_easy_reset(curlapi);
+      curl_easy_setopt(curlapi, CURLOPT_WRITEFUNCTION, curlapi_http_write);
+      curl_easy_setopt(curlapi, CURLOPT_WRITEDATA, buffer);
+      curl_easy_setopt(curlapi, CURLOPT_URL, url);
+      curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
+      if(params)
+      	curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
+      curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+      curl_easy_perform(curlapi);
+      
+      if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)
+      	g_string_truncate(buffer, buffer->len - 2);
+      httperror = g_strdup_printf("CURLcode=%d,"
+				  "CURLerror=%s,"
+				  "url=%s,"
+				  "postparams=%s,"
+				  "httperror=%s",
+				  returncode,
+				  curl_easy_strerror(returncode),
+				  url,
+				  params,
+				  buffer->str);
       threadargs = g_slist_remove(threadargs, buffer);
       write_cb = (g_slist_nth(threadargs, 0))->data;
-      threadargs = g_slist_append(threadargs, g_strdup(buffer->str));
+      threadargs = g_slist_append(threadargs, g_strdup(httperror));
       write_cb(g_slist_nth(threadargs, 1));
+      g_free(httperror);
     }
 
   g_free(url);
@@ -179,8 +209,12 @@ void curlapi_http_cb(gchar *url, gchar *params, GSList *args, gboolean oauth)
   curl_easy_cleanup(curlapi);
 }
 
-gchar* curlapi_http(gchar *url, gchar *params, gboolean oauth)
+gchar* curlapi_http(gchar *inputurl,
+		    gchar *inputparams,
+		    gboolean oauth)
 {
+  gchar *url = g_strdup(inputurl);
+  gchar *params = g_strdup(inputparams);
   struct curl_slist *oauthheader = NULL;
   CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
@@ -194,22 +228,39 @@ gchar* curlapi_http(gchar *url, gchar *params, gboolean oauth)
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-  //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
-  if((returncode = curl_easy_perform(curlapi)) != CURLE_OK)
+  curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  returncode = curl_easy_perform(curlapi);
+  if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
     {
-      g_string_append_printf(buffer,
-			     "CURLcode=%d,"
-			     "CURLerror=%s,"
-			     "url=%s,"
-			     "postparams=%s",
-			     returncode,
-			     curl_easy_strerror(returncode),
-			     url,
-			     params);
+      curl_easy_reset(curlapi);
+      curl_easy_setopt(curlapi, CURLOPT_WRITEFUNCTION, curlapi_http_write);
+      curl_easy_setopt(curlapi, CURLOPT_WRITEDATA, buffer);
+      curl_easy_setopt(curlapi, CURLOPT_URL, url);
+      curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
+      if(params)
+	curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
+      curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+      curl_easy_perform(curlapi);
+
+      if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)
+	g_string_truncate(buffer, buffer->len - 2);
+      string = g_strdup_printf("CURLcode=%d,"
+			       "CURLerror=%s,"
+			       "url=%s,"
+			       "postparams=%s,"
+			       "httperror=%s",
+			       returncode,
+			       curl_easy_strerror(returncode),
+			       url,
+			       params,
+			       buffer->str);
     }
-  string = g_strdup(buffer->str);
-  if(g_strcmp0("\r\n", &string[buffer->len - 2]) == 0)
-    string[buffer->len - 2] = '\0';
+  else
+    {
+      if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)
+	g_string_truncate(buffer, buffer->len - 2);
+      string = g_strdup(buffer->str);
+    }
 
   g_free(url);
   g_free(params);
