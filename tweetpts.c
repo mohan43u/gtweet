@@ -20,11 +20,6 @@ static void tweetpts_free(void)
 
 int main(int argc, char *argv[])
 {
-  GPtrArray *plist = NULL;
-
-  setlocale(LC_ALL, "");
-  bindtextdomain(PACKAGE, LOCALEDIR);
-  textdomain(PACKAGE);
   tweetpts_init();
   cursesapi_userinput();
   tweetpts_free();

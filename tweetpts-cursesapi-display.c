@@ -290,11 +290,15 @@ void cursesapi_push_node(XPANEL *panel,
 	}
 
       if(prompt)
+	{
+	  noecho();
 	if(wgetch(W(panel)) == 'q')
 	  {
 	    flushinp();
 	    break;
 	  }
+	  echo();
+	}
 
       iter++;
     }
@@ -361,27 +365,13 @@ gboolean cursesapi_write_cb(GSList *args)
   return(TRUE);
 }
 
-void cursesapi_rest_write(gpointer data, gpointer user_data)
+void cursesapi_rest_write(XPANEL *panel,
+			  XPANEL *input,
+			  gchar *fields,
+			  gchar *string)
 {
-  XPANEL *totop = NULL;
-  XPANEL *tobottom = NULL;
-  XPANEL *input = NULL;
-  GPtrArray *poolargs = NULL;
-  gchar *fields = NULL;
-  gchar *string = NULL;
-
-  totop = (XPANEL *) user_data;
-  
-  poolargs = (GPtrArray *) data;
-  tobottom = g_ptr_array_index(poolargs, 0);
-  input = g_ptr_array_index(poolargs, 1);
-  fields = g_ptr_array_index(poolargs, 2);
-  string = g_ptr_array_index(poolargs, 3);
-
-  cursesapi_lock(tobottom);
-  cursesapi_lock(totop);
-  cursesapi_top(totop);
-  cursesapi_panel_refresh(totop, 1);
+  cursesapi_lock(panel);
+  cursesapi_panel_refresh(panel, 1);
   if(string && strlen(string))
     {
       JsonParser *parser = jsonapi_parser();
@@ -394,28 +384,25 @@ void cursesapi_rest_write(gpointer data, gpointer user_data)
 	      JsonNode *child = NULL;
 	      fieldsv = g_strsplit(fields, "|", 2);
 	      child = jsonapi_get_object(root, fieldsv[0]);
-	      cursesapi_push_node(totop, child, fieldsv[1] , TRUE);
+	      cursesapi_push_node(panel, child, fieldsv[1] , TRUE);
 	      json_node_free(child);
 	      g_strfreev(fieldsv);
 	    }
 	  else
-	    cursesapi_push_node(totop, root, fields, TRUE);
+	    cursesapi_push_node(panel, root, fields, TRUE);
 	}
       else
 	{
-	  cursesapi_push_string_pager(totop, string);
-	  cursesapi_push_string(totop, "\n", 0);
-	  wgetch(W(totop));
+	  cursesapi_push_string_pager(panel, string);
+	  cursesapi_push_string(panel, "\n", 0);
+	  wgetch(W(panel));
 	}
       g_free(fields);
       g_object_unref(parser);
     }
   g_free(string);
-  g_ptr_array_free(poolargs, FALSE);
-  cursesapi_top(tobottom);
-  cursesapi_unlock(totop);
   cursesapi_unlock(input);
-  cursesapi_unlock(tobottom);
+  cursesapi_unlock(panel);
 }
 
 gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
@@ -424,18 +411,18 @@ gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
     {
       JsonParser *parser = jsonapi_parser();
       JsonNode *root = jsonapi_decode(parser, string);
-      cursesapi_push_node(restpanel, root, fields, FALSE);
-      cursesapi_push_line(restpanel);
+      cursesapi_push_node(streampanel, root, fields, FALSE);
+      cursesapi_push_line(streampanel);
     }
   else
     {
-      cursesapi_push_string_pager(restpanel, string);
-      cursesapi_push_string(restpanel, "\n", 0);
+      cursesapi_push_string_pager(streampanel, string);
+      cursesapi_push_string(streampanel, "\n", 0);
     }
   g_free(string);
 
-  waddstr(W(restpanel), "press 'q' to quit, any other key to continue..");
-  if(wgetch(W(restpanel)) == 'q')
+  waddstr(W(streampanel), "press 'q' to quit, any other key to continue..");
+  if(wgetch(W(streampanel)) == 'q')
     return(FALSE);
   else
     return(TRUE);
@@ -471,16 +458,6 @@ void cursesapi_create_baselayout(void)
 				    NULL);
   g_ptr_array_add(plist, trendspanel);
 
-  restpanel = cursesapi_panel_new(MY(stdscrpanel) - 10,
-				  XP(stdscrpanel, 100),
-				  MY(userpanel),
-				  0,
-				  colorpair++,
-				  COLOR_WHITE,
-				  COLOR_BLACK,
-				  cursesapi_rest_write);
-  g_ptr_array_add(plist, restpanel);
-
   streampanel = cursesapi_panel_new(MY(stdscrpanel) - 10,
 				    XP(stdscrpanel, 100),
 				    MY(userpanel),
@@ -494,7 +471,7 @@ void cursesapi_create_baselayout(void)
   inputpanel = cursesapi_panel_new(2,
 				   XP(stdscrpanel, 100),
 				   MY(userpanel) +
-				   MY(restpanel),
+				   MY(streampanel),
 				   0,
 				   colorpair++,
 				   COLOR_WHITE,
@@ -505,7 +482,7 @@ void cursesapi_create_baselayout(void)
   statuspanel = cursesapi_panel_new(2,
 				    XP(stdscrpanel, 100),
 				    MY(userpanel) +
-				    MY(restpanel) +
+				    MY(streampanel) +
 				    MY(inputpanel),
 				    0,
 				    colorpair++,

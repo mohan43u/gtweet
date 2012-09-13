@@ -37,7 +37,6 @@ struct cursesapi_panel
 XPANEL *helppanel;
 XPANEL *userpanel;
 XPANEL *trendspanel;
-XPANEL *restpanel;
 XPANEL *streampanel;
 XPANEL *inputpanel;
 XPANEL *statuspanel;
@@ -79,7 +78,10 @@ void cursesapi_push_node(XPANEL *panel,
 				 gboolean prompt);
 void cursesapi_stream_write(gpointer data, gpointer user_data);
 gboolean cursesapi_write_cb(GSList *args);
-void cursesapi_rest_write(gpointer data, gpointer user_data);
+void cursesapi_rest_write(XPANEL *panel,
+			  XPANEL *input,
+			  gchar *fields,
+			  gchar *string);
 gboolean cursesapi_playback_cb(gchar *fields, gchar *string);
 void cursesapi_create_baselayout(void);
 void cursesapi_destroy_baselayout(void);
@@ -87,8 +89,7 @@ void cursesapi_init(void);
 void cursesapi_free(void);
 
 /* defined in tweetpts-cursesapi-keyboard.c */
-void cursesapi_call_rest_write(XPANEL *totop,
-			       XPANEL *tobottom,
+void cursesapi_call_rest_write(XPANEL *panel,
 			       XPANEL *input,
 			       gchar *inputfields,
 			       gchar *inputstring);

@@ -163,7 +163,7 @@ void curlapi_http_cb(gchar *inputurl,
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-  curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
   curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   returncode = curl_easy_perform(curlapi);
   if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
@@ -178,7 +178,7 @@ void curlapi_http_cb(gchar *inputurl,
       curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
       if(params)
       	curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-      curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+      //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
       curl_easy_perform(curlapi);
       
       if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)
@@ -227,7 +227,7 @@ gchar* curlapi_http(gchar *inputurl,
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
   if(params)
     curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-  curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
   curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   returncode = curl_easy_perform(curlapi);
   if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
@@ -239,7 +239,7 @@ gchar* curlapi_http(gchar *inputurl,
       curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
       if(params)
 	curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-      curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+      //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
       curl_easy_perform(curlapi);
 
       if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)

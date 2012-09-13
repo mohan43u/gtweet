@@ -3,7 +3,6 @@
 PKGMODS += glib-2.0 ncursesw oauth libcurl panelw json-glib-1.0
 INCLUDES += -I"." $(shell pkg-config --cflags $(PKGMODS))
 LIBS += $(shell pkg-config --libs $(PKGMODS)) -lreadline
-DEFS += -DPACKAGE='"tweetpts"' -DLOCALEDIR='"."'
 CFLAGS += -O0 -ggdb
 SOURCES := tweetpts.c 			\
 	tweetpts-cursesapi-display.c	\
