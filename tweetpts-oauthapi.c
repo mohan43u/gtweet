@@ -44,7 +44,7 @@ void oauthapi_request_token(void)
 		  NULL);
   g_free(request);
 
-  response = curlapi_http(REQ_TOKEN_URL, postarg, TRUE);
+  response = curlapi_http(REQ_TOKEN_URL, postarg, FALSE);
   g_free(postarg);
 
   argc = oauth_split_post_paramters(response, &argv, 0);
