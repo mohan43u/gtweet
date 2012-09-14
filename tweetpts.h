@@ -5,6 +5,7 @@
 #include <glib-unix.h>
 #include <glib/gi18n.h>
 #include <locale.h>
+#include <tweetpts-readlineapi.h>
 #include <tweetpts-oauthapi.h>
 #include <tweetpts-curlapi.h>
 #include <tweetpts-twitterapi.h>

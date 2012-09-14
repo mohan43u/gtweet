@@ -133,7 +133,6 @@ void cursesapi_push_string(XPANEL *panel,
       guint pos = 0;
       guint length = 0;
       gunichar *ucs4string = NULL;
-      wchar_t *newlinechar = NULL;
       gchar **stringv = NULL;
       gchar *jstring = NULL;
 
@@ -152,13 +151,13 @@ void cursesapi_push_string(XPANEL *panel,
 	      line = g_new0(gunichar, valuelength + 1);
 	      wcsncpy(line, &(ucs4string[pos]), valuelength);
 	      line[valuelength] = L'\0';
-	      newlinechar = line;
 	      pos = pos + (valuelength);
 	      wmove(W(panel), Y(panel), VALUE_LINE_BEG(panel));
 	      wrefresh(W(panel));
 	      waddwstr(W(panel), line);
 	      if(pos < length)
 		waddwstr(W(panel), L"\n");
+		  
 	      g_free(line);
 	    }
 	}
@@ -256,9 +255,9 @@ void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
 }
 
 void cursesapi_push_node(XPANEL *panel,
-				 JsonNode *root,
-				 gchar *fields,
-				 gboolean prompt)
+			 JsonNode *root,
+			 gchar *fields,
+			 gboolean prompt)
 {
   guint length = jsonapi_length(root);
   guint iter = 0;
@@ -292,15 +291,22 @@ void cursesapi_push_node(XPANEL *panel,
       if(prompt)
 	{
 	  noecho();
-	if(wgetch(W(panel)) == 'q')
-	  {
-	    flushinp();
-	    break;
-	  }
+	  if(wgetch(W(panel)) == 'q')
+	    {
+	      flushinp();
+	      break;
+	    }
 	  echo();
 	}
 
       iter++;
+    }
+
+  if(prompt)
+    {
+      wmove(W(panel), Y(panel), 0);
+      wclrtoeol(W(panel));
+      cursesapi_panel_refresh(panel, 0);
     }
 }
 
@@ -327,12 +333,10 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 	  cursesapi_push_line(panel);
 	  g_object_unref(parser);
 	}
+      else if(g_strcmp0("raw", fields) == 0)
+	cursesapi_push_string_pager(panel, string);
       else
-	{
-	  cursesapi_push_string_pager(panel, string);
-	  cursesapi_push_string(panel, "\n", 0);
-	  wgetch(W(panel));
-	}
+	cursesapi_push_string(panel, string, 0);
     }
   g_free(fields);
   g_free(string);
@@ -391,12 +395,11 @@ void cursesapi_rest_write(XPANEL *panel,
 	  else
 	    cursesapi_push_node(panel, root, fields, TRUE);
 	}
+      else if(g_strcmp0(fields, "raw") == 0)
+	cursesapi_push_string_pager(panel, string);
       else
-	{
-	  cursesapi_push_string_pager(panel, string);
-	  cursesapi_push_string(panel, "\n", 0);
-	  wgetch(W(panel));
-	}
+	cursesapi_push_string(panel, string, 0);
+
       g_free(fields);
       g_object_unref(parser);
     }
@@ -415,10 +418,7 @@ gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
       cursesapi_push_line(streampanel);
     }
   else
-    {
-      cursesapi_push_string_pager(streampanel, string);
-      cursesapi_push_string(streampanel, "\n", 0);
-    }
+    cursesapi_push_string_pager(streampanel, string);
   g_free(string);
 
   waddstr(W(streampanel), "press 'q' to quit, any other key to continue..");
@@ -518,6 +518,7 @@ void cursesapi_destroy_baselayout(void)
 
 void cursesapi_init(void)
 {
+  setlocale(LC_ALL, "");
   initscr();
   intrflush(stdscr, TRUE);
   keypad(stdscr, TRUE);

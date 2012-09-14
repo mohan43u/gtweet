@@ -2,8 +2,6 @@
 #define __TWEETPTS_OAUTHAPI__
 
 #include <oauth.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 #include <wordexp.h>
 
 #define CONSUMER_KEY "DjbukDI8FmGP3vPBNstK4g"

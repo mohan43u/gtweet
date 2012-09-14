@@ -5,6 +5,7 @@ INCLUDES += -I"." $(shell pkg-config --cflags $(PKGMODS))
 LIBS += $(shell pkg-config --libs $(PKGMODS)) -lreadline
 CFLAGS += -O0 -ggdb
 SOURCES := tweetpts.c 			\
+	tweetpts-readlineapi.c		\
 	tweetpts-cursesapi-display.c	\
 	tweetpts-cursesapi-keyboard.c	\
 	tweetpts-oauthapi.c 		\
@@ -14,6 +15,7 @@ SOURCES := tweetpts.c 			\
 	tweetpts-glibapi.c
 
 HEADERS := tweetpts.h 		\
+	tweetpts-readlineapi.h	\
 	tweetpts-cursesapi.h 	\
 	tweetpts-oauthapi.h 	\
 	tweetpts-curlapi.h	\

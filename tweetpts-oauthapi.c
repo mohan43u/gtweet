@@ -89,7 +89,12 @@ void oauthapi_authenticate(void)
   g_free(request);
 
   if(g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, NULL))
-    pin = g_strdup_printf("oauth_verifier=%s", readline("PIN: "));
+    {
+      gchar *inputpin = readlineapi_plain("PIN: ");
+      pin = g_strdup_printf("oauth_verifier=%s", inputpin);
+      g_free(inputpin);
+    }
+
   g_free(cmdline);
 }
 

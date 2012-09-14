@@ -30,36 +30,34 @@ void cursesapi_get_usersettings(XPANEL *panel)
   gchar *string = NULL;
 
   if(twitterapi_userfields->fields->len)
-     fields = twitterapi_get_userfields();
+    fields = twitterapi_get_userfields();
   else
     fields = g_strdup(T_USERSETTINGS_FIELD);
 
   string = twitterapi_r_usersettings();
-  if(string && strlen(string) && string[0] == '{')
+  if(string && strlen(string) && string[0] == '{' &&
+     fields && strlen(fields) && g_strcmp0("raw", fields) != 0)
     {
-      if(fields && strlen(fields) && g_strcmp0("raw", fields) != 0)
-	{
-	  JsonParser *parser = jsonapi_parser();
-	  JsonNode *root = jsonapi_decode(parser, string);
-	  gchar *woeid = NULL;
-	  gchar **fieldsv = NULL;
+      JsonParser *parser = jsonapi_parser();
+      JsonNode *root = jsonapi_decode(parser, string);
+      gchar *woeid = NULL;
+      gchar **fieldsv = NULL;
 
-	  cursesapi_push_node(panel, root, fields, FALSE);
-	  if(twitterapi_woeid->fields->len == 0)
-	    {
-	      woeid = jsonapi_get_value(root, "$.trend_location[*].woeid|int");
-	      g_mutex_lock(&(twitterapi_woeid->mutex));
-	      g_string_assign(twitterapi_woeid->fields, woeid);
-	      g_mutex_unlock(&(twitterapi_woeid->mutex));
-	    }
-	  g_object_unref(parser);
-	}
-      else
+      cursesapi_push_node(panel, root, fields, FALSE);
+      if(twitterapi_woeid->fields->len == 0)
 	{
-	  top_panel(P(panel));
-	  cursesapi_push_string(streampanel, string, 0);
+	  woeid = jsonapi_get_value(root, "$.trend_location[*].woeid|int");
+	  g_mutex_lock(&(twitterapi_woeid->mutex));
+	  g_string_assign(twitterapi_woeid->fields, woeid);
+	  g_mutex_unlock(&(twitterapi_woeid->mutex));
 	}
+      g_object_unref(parser);
     }
+  else if(g_strcmp0("raw", fields) == 0)
+    cursesapi_push_string_pager(panel, string);
+  else
+    cursesapi_push_string(panel, string, 0);
+
   g_free(fields);
   g_free(string);
 }
@@ -546,7 +544,7 @@ void cursesapi_userinput(void)
   while(true)
     {
       gchar input;
-      gchar cmd[BUFFERSIZE];
+      gchar *cmd;
       wordexp_t cmdexp;
 
       g_mutex_lock(&(inputpanel->mutex));
@@ -590,7 +588,7 @@ void cursesapi_userinput(void)
       else
 	ungetch(input);
 
-      wgetstr(W(inputpanel), cmd);
+      cmd = readlineapi_wgetstr();
       flushinp();
       if(wordexp(cmd, &cmdexp, 0) == 0)
 	{
@@ -644,6 +642,7 @@ void cursesapi_userinput(void)
 
 	  wordfree(&cmdexp);
 	}
+      g_free(cmd);
     }
 
   while(iter < threadarray->len)
@@ -656,4 +655,3 @@ void cursesapi_userinput(void)
     }
   g_ptr_array_free(threadarray, FALSE);
 }
-
