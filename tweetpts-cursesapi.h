@@ -21,7 +21,7 @@
 #define VALUE_LINE_BEG(panel) (FIELDWIDTH)
 #define VALUE_LINE_LEN(panel) (MX(panel) - FIELDWIDTH)
 
-typedef struct cursesapi_panel XPANEL;
+typedef struct cursesapi_panel cursesapi_panel_t;
 struct cursesapi_panel
 {
   PANEL *panel;
@@ -29,17 +29,17 @@ struct cursesapi_panel
   GCond wait;
   gint lockstatus;
   GThreadPool *pool;
-  void (*defaultfunc)(XPANEL *panel);
+  void (*defaultfunc)(cursesapi_panel_t *panel);
   gchar *defaultstring;
   gboolean stopthread;
 };
 
-XPANEL *helppanel;
-XPANEL *userpanel;
-XPANEL *trendspanel;
-XPANEL *streampanel;
-XPANEL *inputpanel;
-XPANEL *statuspanel;
+cursesapi_panel_t *helppanel;
+cursesapi_panel_t *userpanel;
+cursesapi_panel_t *trendspanel;
+cursesapi_panel_t *streampanel;
+cursesapi_panel_t *inputpanel;
+cursesapi_panel_t *statuspanel;
 GPtrArray *plist;
 
 typedef struct cursesapi_thread
@@ -50,36 +50,36 @@ typedef struct cursesapi_thread
 GPtrArray *threadarray;
 
 /* defined in tweetpts-cursesapi-display.c */
-void cursesapi_lock(XPANEL *panel);
-void cursesapi_unlock(XPANEL *panel);
-void cursesapi_toggle_lock(XPANEL *panel);
-void cursesapi_top(XPANEL *panel);
-void cursesapi_panel_refresh(XPANEL *panel, guint clear);
+void cursesapi_lock(cursesapi_panel_t *panel);
+void cursesapi_unlock(cursesapi_panel_t *panel);
+void cursesapi_toggle_lock(cursesapi_panel_t *panel);
+void cursesapi_top(cursesapi_panel_t *panel);
+void cursesapi_panel_refresh(cursesapi_panel_t *panel, guint clear);
 void cursesapi_panel_refresh_all(guint clear);
-XPANEL* cursesapi_panel_new(gushort line,
-				   gushort column,
-				   gushort y,
-				   gushort x,
-				   gushort colorpair,
-				   gushort foreground,
-				   gushort background,
-				   GFunc poolfunc);
-void cursesapi_panel_del(XPANEL *panel);
-void cursesapi_panel_move(XPANEL *panel, guint y, guint x);
-void cursesapi_push_string(XPANEL *panel,
-				  gchar *string,
-				  gushort format);
-void cursesapi_push_string_pager(XPANEL *panel, gchar *string);
-void cursesapi_push_line(XPANEL *panel);
-void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields);
-void cursesapi_push_node(XPANEL *panel,
-				 JsonNode *root,
-				 gchar *fields,
-				 gboolean prompt);
+cursesapi_panel_t* cursesapi_panel_new(gushort line,
+				       gushort column,
+				       gushort y,
+				       gushort x,
+				       gushort colorpair,
+				       gushort foreground,
+				       gushort background,
+				       GFunc poolfunc);
+void cursesapi_panel_del(cursesapi_panel_t *panel);
+void cursesapi_panel_move(cursesapi_panel_t *panel, guint y, guint x);
+void cursesapi_push_string(cursesapi_panel_t *panel,
+			   gchar *string,
+			   gushort format);
+void cursesapi_push_string_pager(cursesapi_panel_t *panel, gchar *string);
+void cursesapi_push_line(cursesapi_panel_t *panel);
+void cursesapi_push_element(cursesapi_panel_t *panel, JsonNode *node, gchar *fields);
+void cursesapi_push_node(cursesapi_panel_t *panel,
+			 JsonNode *root,
+			 gchar *fields,
+			 gboolean prompt);
 void cursesapi_stream_write(gpointer data, gpointer user_data);
 gboolean cursesapi_write_cb(GSList *args);
-void cursesapi_rest_write(XPANEL *panel,
-			  XPANEL *input,
+void cursesapi_rest_write(cursesapi_panel_t *panel,
+			  cursesapi_panel_t *input,
 			  gchar *fields,
 			  gchar *string);
 gboolean cursesapi_playback_cb(gchar *fields, gchar *string);
@@ -89,12 +89,12 @@ void cursesapi_init(void);
 void cursesapi_free(void);
 
 /* defined in tweetpts-cursesapi-keyboard.c */
-void cursesapi_call_rest_write(XPANEL *panel,
-			       XPANEL *input,
+void cursesapi_call_rest_write(cursesapi_panel_t *panel,
+			       cursesapi_panel_t *input,
 			       gchar *inputfields,
 			       gchar *inputstring);
-void cursesapi_get_usersettings(XPANEL *panel);
-void cursesapi_get_trendspanel(XPANEL *panel, gchar *woeid);
+void cursesapi_get_usersettings(cursesapi_panel_t *panel);
+void cursesapi_get_trendspanel(cursesapi_panel_t *panel, gchar *woeid);
 gboolean cursesapi_get_trendspanel_cb(gpointer user_data);
 void cursesapi_get_trends(gchar *country);
 void cursesapi_userinput_thread(gpointer data);

@@ -106,3 +106,16 @@ void glibapi_read_tweets(gchar *fields, gchar *filename, gpointer read_cb)
   g_string_free(buffer, TRUE);
   g_free(filename);
 }
+
+gchar* glibapi_expandfilename(gchar *filename)
+{
+  wordexp_t result_t;
+  gchar *result = NULL;
+  if(wordexp(filename, &result_t, 0) == 0)
+    result = g_strjoinv(" ", result_t.we_wordv);
+  else
+    result = g_strdup(filename);
+  wordfree(&result_t);
+  return(result);
+}
+      

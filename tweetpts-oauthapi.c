@@ -203,18 +203,18 @@ void oauthapi_access_token_from_file(void)
     }
 }
 
-gchar* expandfilename(gchar *filename)
+gboolean oauthapi_checkoauth(void)
 {
-  wordexp_t result_t;
+  gchar *url = NULL;
   gchar *result = NULL;
-  if(wordexp(filename, &result_t, 0) == 0)
-    result = g_strdup(result_t.we_wordv[result_t.we_wordc - 1]);
+
+  url = oauthapi_sign(CREDENTIAL_URL, NULL);
+  result = curlapi_http(url, NULL, TRUE);
+  if(result && result[0] == '{')
+    return(TRUE);
   else
-    result = g_strdup(filename);
-  wordfree(&result_t);
-  return(result);
+    return(FALSE);
 }
-      
 
 void oauthapi_init(void)
 {

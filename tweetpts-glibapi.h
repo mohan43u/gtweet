@@ -17,5 +17,6 @@ void glibapi_stop_recording(void);
 void glibapi_start_recording(gchar *filename);
 void glibapi_write_tweets(gchar *string);
 void glibapi_read_tweets(gchar *fields, gchar *filename, gpointer read_cb);
+gchar* glibapi_expandfilename(gchar *filename);
 
 #endif

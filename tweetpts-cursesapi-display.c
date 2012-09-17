@@ -1,20 +1,20 @@
 #include <tweetpts.h>
 
-void cursesapi_lock(XPANEL *panel)
+void cursesapi_lock(cursesapi_panel_t *panel)
 {
   if(panel->lockstatus <= 0)
     g_mutex_lock(&(panel->mutex));
   panel->lockstatus += 1;
 }
 
-void cursesapi_unlock(XPANEL *panel)
+void cursesapi_unlock(cursesapi_panel_t *panel)
 {
   panel->lockstatus -= 1;
   if(panel->lockstatus <= 0)
       g_mutex_unlock(&(panel->mutex));
 }
 
-void cursesapi_toggle_lock(XPANEL *panel)
+void cursesapi_toggle_lock(cursesapi_panel_t *panel)
 {
   if(panel->lockstatus <= 0)
     cursesapi_lock(panel);
@@ -22,7 +22,7 @@ void cursesapi_toggle_lock(XPANEL *panel)
     cursesapi_unlock(panel);
 }
 
-void cursesapi_panel_refresh(XPANEL *panel, guint clear)
+void cursesapi_panel_refresh(cursesapi_panel_t *panel, guint clear)
 {
   if(clear == 1)
     {
@@ -44,19 +44,19 @@ void cursesapi_panel_refresh_all(guint clear)
   guint iter = 0;
   while(iter < plist->len)
     {
-      XPANEL *panel = g_ptr_array_index(plist, iter);
+      cursesapi_panel_t *panel = g_ptr_array_index(plist, iter);
       cursesapi_panel_refresh(panel, clear);
       iter++;
     }
 }
 
-void cursesapi_top(XPANEL *panel)
+void cursesapi_top(cursesapi_panel_t *panel)
 {
   top_panel(P(panel));
   cursesapi_panel_refresh(panel, 0);
 }
 
-XPANEL* cursesapi_panel_new(gushort line,
+cursesapi_panel_t* cursesapi_panel_new(gushort line,
 				   gushort column,
 				   gushort y,
 				   gushort x,
@@ -66,9 +66,9 @@ XPANEL* cursesapi_panel_new(gushort line,
 				   GFunc poolfunc)
 {
   WINDOW *newwindow = NULL;
-  XPANEL *newpanel = NULL;
+  cursesapi_panel_t *newpanel = NULL;
 
-  newpanel = g_new0(XPANEL, 1);
+  newpanel = g_new0(cursesapi_panel_t, 1);
   g_mutex_init(&(newpanel->mutex));
   g_cond_init(&(newpanel->wait));
   newpanel->lockstatus = 0;
@@ -93,7 +93,7 @@ XPANEL* cursesapi_panel_new(gushort line,
   return(newpanel);
 }
 
-void cursesapi_panel_del(XPANEL *panel)
+void cursesapi_panel_del(cursesapi_panel_t *panel)
 {
   if(panel->pool)
     g_thread_pool_free(panel->pool, TRUE, FALSE);
@@ -107,13 +107,13 @@ void cursesapi_panel_del(XPANEL *panel)
   g_free(panel);
 }
 
-void cursesapi_panel_move(XPANEL *panel, guint y, guint x)
+void cursesapi_panel_move(cursesapi_panel_t *panel, guint y, guint x)
 {
   move_panel(P(panel), y, x);
   cursesapi_panel_refresh(panel, 0);
 }
 
-void cursesapi_push_string(XPANEL *panel,
+void cursesapi_push_string(cursesapi_panel_t *panel,
 			   gchar *string,
 			   gushort format)
 {
@@ -174,7 +174,7 @@ void cursesapi_push_string(XPANEL *panel,
   cursesapi_panel_refresh(panel, 0);
 }
 
-void cursesapi_push_string_pager(XPANEL *panel, gchar *string)
+void cursesapi_push_string_pager(cursesapi_panel_t *panel, gchar *string)
 {
   if(string && strlen(string))
     {
@@ -202,7 +202,7 @@ void cursesapi_push_string_pager(XPANEL *panel, gchar *string)
     }
 }
 
-void cursesapi_push_line(XPANEL *panel)
+void cursesapi_push_line(cursesapi_panel_t *panel)
 {
   gchar *line = g_strnfill(MX(panel), '-');
   waddch(W(panel), '\n');
@@ -213,7 +213,9 @@ void cursesapi_push_line(XPANEL *panel)
   g_free(line);
 }
 
-void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
+void cursesapi_push_element(cursesapi_panel_t *panel,
+			    JsonNode *node,
+			    gchar *fields)
 {
   if(fields && JSON_NODE_HOLDS_OBJECT(node))
     {
@@ -254,7 +256,7 @@ void cursesapi_push_element(XPANEL *panel, JsonNode *node, gchar *fields)
     }
 }
 
-void cursesapi_push_node(XPANEL *panel,
+void cursesapi_push_node(cursesapi_panel_t *panel,
 			 JsonNode *root,
 			 gchar *fields,
 			 gboolean prompt)
@@ -312,12 +314,12 @@ void cursesapi_push_node(XPANEL *panel,
 
 void cursesapi_stream_write(gpointer data, gpointer user_data)
 {
-  XPANEL *panel = NULL;
+  cursesapi_panel_t *panel = NULL;
   GPtrArray *poolargs = NULL;
   gchar *fields = NULL;
   gchar *string = NULL;
 
-  panel = (XPANEL *) user_data;
+  panel = (cursesapi_panel_t *) user_data;
   g_mutex_lock(&(panel->mutex));
 
   poolargs = (GPtrArray *) data;
@@ -346,7 +348,7 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
 
 gboolean cursesapi_write_cb(GSList *args)
 {
-  XPANEL *panel = g_slist_nth_data(args, 0);
+  cursesapi_panel_t *panel = g_slist_nth_data(args, 0);
   gchar *fields = g_slist_nth_data(args, 1);
   gchar *string = g_slist_nth_data(args, 2);
   GPtrArray *poolargs = g_ptr_array_new();
@@ -369,8 +371,8 @@ gboolean cursesapi_write_cb(GSList *args)
   return(TRUE);
 }
 
-void cursesapi_rest_write(XPANEL *panel,
-			  XPANEL *input,
+void cursesapi_rest_write(cursesapi_panel_t *panel,
+			  cursesapi_panel_t *input,
 			  gchar *fields,
 			  gchar *string)
 {
@@ -430,12 +432,12 @@ gboolean cursesapi_playback_cb(gchar *fields, gchar *string)
 
 void cursesapi_create_baselayout(void)
 {
-  XPANEL *stdscrpanel = NULL;
+  cursesapi_panel_t *stdscrpanel = NULL;
   gushort colorpair = 0;
 
   plist = g_ptr_array_new();
   threadarray = g_ptr_array_new();
-  stdscrpanel = g_new0(XPANEL, 1);
+  stdscrpanel = g_new0(cursesapi_panel_t, 1);
   stdscrpanel->panel = new_panel(stdscr);
 
   userpanel = cursesapi_panel_new(6,
@@ -490,7 +492,7 @@ void cursesapi_create_baselayout(void)
 				    COLOR_WHITE,
 				    NULL);
   g_ptr_array_add(plist, statuspanel);
-  statuspanel->defaultstring = g_strdup("\npress h for help..");
+  statuspanel->defaultstring = g_strdup("\npress F1 for help..");
   cursesapi_panel_refresh(statuspanel, 1);
 
   cursesapi_get_usersettings(userpanel);

@@ -68,7 +68,7 @@ static struct curl_slist* curlapi_get_oauthheader(gchar **url,
       GString *leftparams = g_string_new(NULL);
       guint iter = 0;
 
-      oauthparams = g_string_new("Authorization: OAuth realm=\"\", ");
+      oauthparams = g_string_new("Authorization: OAuth ");
       if(*params)
 	{
 	  baseurl = g_strdup(*url);
@@ -105,6 +105,7 @@ static struct curl_slist* curlapi_get_oauthheader(gchar **url,
 	    }
 	  g_string_truncate(oauthparams, oauthparams->len - 2);
 	  slist = curl_slist_append(slist, oauthparams->str);
+	  slist = curl_slist_append(slist, "Expect: ");
 	  if(leftparams->len)
 	    g_string_erase(leftparams, 0, 1);
 
@@ -125,6 +126,11 @@ static struct curl_slist* curlapi_get_oauthheader(gchar **url,
 		  g_free(*params);
 		  *params = g_strdup(leftparams->str);
 		}
+	      else if(*params != NULL)
+		{
+		  g_free(*params);
+		  *params = g_strdup("");
+		}
 	      else
 		{
 		  g_free(*params);
@@ -141,6 +147,21 @@ static struct curl_slist* curlapi_get_oauthheader(gchar **url,
     }
   else
     return(NULL);
+}
+
+static int curlapi_debug(CURL *curlapi,
+			 curl_infotype type,
+			 char *data,
+			 size_t size,
+			 void *userdata)
+{
+  GString *debugbuffer = (GString *) userdata;
+  gchar *edata = NULL;
+
+  edata = g_strndup(data, size);
+  g_printerr("%s", edata);
+  curl_free(edata);
+  return(0);
 }
 
 void curlapi_http_cb(gchar *inputurl,
@@ -163,7 +184,12 @@ void curlapi_http_cb(gchar *inputurl,
   curl_easy_setopt(curlapi, CURLOPT_URL, url);
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
   if(params)
-    curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
+    {
+      curl_easy_setopt(curlapi, CURLOPT_POST, 1);
+      curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
+    }
+  curl_easy_setopt(curlapi, CURLOPT_USERAGENT, curl_version());
+  curl_easy_setopt(curlapi, CURLOPT_DEBUGFUNCTION, curlapi_debug);
   //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
   curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   returncode = curl_easy_perform(curlapi);
@@ -197,6 +223,7 @@ gchar* curlapi_http(gchar *inputurl,
   struct curl_slist *oauthheader = NULL;
   CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
+  GString *debugbuffer = g_string_new(NULL);
   gchar *string = NULL;
   CURLcode returncode;
 
@@ -206,8 +233,13 @@ gchar* curlapi_http(gchar *inputurl,
   curl_easy_setopt(curlapi, CURLOPT_URL, url);
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
   if(params)
-    curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
-  //curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+    {
+      curl_easy_setopt(curlapi, CURLOPT_POST, 1);
+      curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
+    }
+  curl_easy_setopt(curlapi, CURLOPT_USERAGENT, curl_version());
+  curl_easy_setopt(curlapi, CURLOPT_DEBUGFUNCTION, curlapi_debug);
+  curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
   returncode = curl_easy_perform(curlapi);
   if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
     {
@@ -232,6 +264,108 @@ gchar* curlapi_http(gchar *inputurl,
   g_string_free(buffer, TRUE);
   if(oauthheader)
     curl_slist_free_all(oauthheader);
+  curl_easy_cleanup(curlapi);
+  return(string);
+}
+
+gchar* curlapi_http_media(gchar *inputurl,
+			  gchar *inputparams,
+			  GPtrArray *inputdata,
+			  gboolean oauth)
+{
+  gchar *url = g_strdup(inputurl);
+  gchar *params = g_strdup(inputparams);
+  struct curl_slist *oauthheader = NULL;
+  struct curl_httppost *firstitem = NULL;
+  struct curl_httppost *lastitem = NULL;
+  CURL *curlapi = curl_easy_init();
+  GString *buffer = g_string_new(NULL);
+  GString *debugbuffer = g_string_new(NULL);
+  gchar *filebuffer = NULL;
+  gsize filelength;
+  gchar *version = NULL;
+  gchar *string = NULL;
+  CURLcode returncode;
+
+  curl_easy_setopt(curlapi, CURLOPT_WRITEFUNCTION, curlapi_http_write);
+  curl_easy_setopt(curlapi, CURLOPT_WRITEDATA, buffer);
+  oauthheader = curlapi_get_oauthheader(&url, &params, oauth);
+  curl_easy_setopt(curlapi, CURLOPT_URL, url);
+  curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
+  if(params)
+    {
+      curl_easy_setopt(curlapi, CURLOPT_POST, 1);
+      curl_easy_setopt(curlapi, CURLOPT_POSTFIELDS, params);
+    }
+  if(inputdata)
+    {
+      curlapi_multipart_t *data = NULL;
+      guint iter = 0;
+      CURLFORMcode ret;
+      
+      while(iter < inputdata->len)
+	{
+	  data = (curlapi_multipart_t *) g_ptr_array_index(inputdata, iter);
+	  if(data->filepath)
+	    {
+	      ret = curl_formadd(&firstitem,
+				 &lastitem,
+				 CURLFORM_COPYNAME,
+				 data->name,
+				 CURLFORM_FILE,
+				 data->filepath,
+				 CURLFORM_END);
+	    }
+	  else
+	    {
+	      gchar *econtents = NULL;
+
+	      econtents = curl_easy_escape(curlapi,
+					   data->contents,
+					   strlen(data->contents));
+	      ret = curl_formadd(&firstitem,
+				 &lastitem,
+				 CURLFORM_COPYNAME,
+				 data->name,
+				 CURLFORM_COPYCONTENTS,
+				 econtents,
+				 CURLFORM_END);
+
+	      curl_free(econtents);
+	    }
+	  iter++;
+	}
+    }
+  curl_easy_setopt(curlapi, CURLOPT_HTTPPOST, firstitem);
+  curl_easy_setopt(curlapi, CURLOPT_USERAGENT, curl_version());
+  curl_easy_setopt(curlapi, CURLOPT_DEBUGFUNCTION, curlapi_debug);
+  curl_easy_setopt(curlapi, CURLOPT_VERBOSE, 1);
+  returncode = curl_easy_perform(curlapi);
+  if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
+    {
+      string = g_strdup_printf("CURLcode=%d,"
+			       "CURLerror=%s,"
+			       "url=%s,"
+			       "postparams=%s",
+			       returncode,
+			       curl_easy_strerror(returncode),
+			       url,
+			       params);
+    }
+  else
+    {
+      if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)
+	g_string_truncate(buffer, buffer->len - 2);
+      string = g_strdup(buffer->str);
+    }
+
+  g_free(url);
+  g_free(params);
+  g_string_free(buffer, TRUE);
+  g_string_free(debugbuffer, TRUE);
+  if(oauthheader)
+    curl_slist_free_all(oauthheader);
+  curl_formfree(firstitem);
   curl_easy_cleanup(curlapi);
   return(string);
 }

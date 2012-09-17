@@ -39,7 +39,7 @@ static void readlineapi_completion_func(char **matchv, int matchc, int maxstrlen
   while(matchv[iter])
     {
       waddstr(W(inputpanel), matchv[iter]);
-      if((iter + 1) < matchc)
+      if(iter < matchc)
 	waddstr(W(inputpanel), ", ");
       iter++;
     }
