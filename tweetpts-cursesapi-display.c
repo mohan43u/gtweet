@@ -57,13 +57,13 @@ void cursesapi_top(cursesapi_panel_t *panel)
 }
 
 cursesapi_panel_t* cursesapi_panel_new(gushort line,
-				   gushort column,
-				   gushort y,
-				   gushort x,
-				   gushort colorpair,
-				   gushort foreground,
-				   gushort background,
-				   GFunc poolfunc)
+				       gushort column,
+				       gushort y,
+				       gushort x,
+				       gushort colorpair,
+				       gushort foreground,
+				       gushort background,
+				       GFunc poolfunc)
 {
   WINDOW *newwindow = NULL;
   cursesapi_panel_t *newpanel = NULL;
@@ -204,7 +204,7 @@ void cursesapi_push_string_pager(cursesapi_panel_t *panel, gchar *string)
 
 void cursesapi_push_line(cursesapi_panel_t *panel)
 {
-  gchar *line = g_strnfill(MX(panel), '-');
+  gchar *line = g_strnfill(MX(panel), '.');
   waddch(W(panel), '\n');
   wattrset(W(panel), A_BOLD);
   waddstr(W(panel), line);
@@ -492,7 +492,7 @@ void cursesapi_create_baselayout(void)
 				    COLOR_WHITE,
 				    NULL);
   g_ptr_array_add(plist, statuspanel);
-  statuspanel->defaultstring = g_strdup("\npress F1 for help..");
+  statuspanel->defaultstring = g_strdup("\npress Ctrl+h for help..");
   cursesapi_panel_refresh(statuspanel, 1);
 
   cursesapi_get_usersettings(userpanel);

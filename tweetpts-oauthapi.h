@@ -4,13 +4,12 @@
 #include <oauth.h>
 #include <wordexp.h>
 
-#define CONSUMER_KEY "KyvIiiISSVySYeUL4Eqn0g"
-#define CONSUMER_SECRET "Aupu7dZwaTg41KHEGVIvfucrBC2iszaBb0P9Hws4"
+#define CONSUMER_KEY "EpQdWugEGn0L8sSeDyNxQ"
+#define CONSUMER_SECRET "e21wC3jBLlpDtjf4pKrD0m3br7LgPjwMFukhq31Vg"
 #define YAHOO_APPID "5jjpbPLV34HGmMDspnGKm0CfyR2QDaEaHulep.T59NmM4eA8rdFRPhCSWvVgd8w-"
 #define REQ_TOKEN_URL "https://api.twitter.com/oauth/request_token"
 #define AUTH_URL "https://api.twitter.com/oauth/authorize"
 #define ACCESS_TOKEN_URL "https://api.twitter.com/oauth/access_token"
-#define CREDENTIAL_URL "https://api.twitter.com/1.1/account/verify_credentials.json"
 
 #define CMDLINE_FMT "xdg-open '%s&%s&%s'"
 #define OAUTHFILE glibapi_expandfilename("~/.tweetpts")
@@ -25,15 +24,13 @@ gchar *access_key;
 gchar *access_secret;
 gchar *pin;
 
-gchar* oauthapi_sign(gchar *url, gchar **params);
+gchar* oauthapi_sign(gchar *url, gchar **params, gchar *method);
 void oauthapi_request_token(void);
 void oauthapi_authenticate(void);
 void oauthapi_access_token(void);
-gchar* expandfilename(gchar *filename);
 void oauthapi_init(void);
 void oauthapi_access_token_from_file(void);
 void oauthapi_access_token_to_file(void);
 void oauthapi_free(void);
-gboolean oauthapi_checkoauth(void);
 
 #endif

@@ -17,8 +17,12 @@
 #define T_R_UPDATEMEDIA "https://api.twitter.com/1.1/statuses/update_with_media.json"
 #define T_R_UPDATE "https://api.twitter.com/1.1/statuses/update.json"
 #define T_R_RETWEET "https://api.twitter.com/1.1/statuses/retweet/%s.json"
+#define T_R_DESTROY "https://api.twitter.com/1.1/statuses/destroy/%s.json"
 #define T_R_FOLLOW "https://api.twitter.com/1.1/friendships/create.json"
 #define T_R_UNFOLLOW "https://api.twitter.com/1.1/friendships/destroy.json"
+#define T_R_BLOCKLIST "https://api.twitter.com/1.1/blocks/list.json"
+#define T_R_BLOCK "https://api.twitter.com/1.1/blocks/create.json"
+#define T_R_UNBLOCK "https://api.twitter.com/1.1/blocks/destroy.json"
 #define Y_R_WOEID "http://where.yahooapis.com/v1"
 
 void twitterapi_init(void);
@@ -29,9 +33,7 @@ void twitterapi_s_stat_filter(GSList *args);
 void twitterapi_s_stat_sample(GSList *args);
 void twitterapi_s_stat_firehose(GSList *args);
 void twitterapi_s_htimeline(GSList *args);
-gchar* twitterapi_r_htimeline(gchar *count,
-			     gchar *since_id,
-			     gchar *max_id);
+gchar* twitterapi_r_htimeline(gchar *count, gchar *since_id, gchar *max_id);
 gchar* twitterapi_r_utimeline(gchar *userid,
 			      gchar *screenname,
 			      gchar *since_id,
@@ -49,25 +51,19 @@ gchar* twitterapi_r_tweetsearch(gchar *q,
 			 gchar *until,
 			 gchar *since_id,
 			 gchar *max_id);
-gchar* twitterapi_r_lookup(gchar *screenname,
-			   gchar *user_id);
-gchar* twitterapi_r_usersearch(gchar *q,
-			       gchar *page,
-			       gchar *count);
-gchar* twitterapi_r_following(gchar *userid,
-			       gchar *screenname,
-			       gchar *cursor);
-gchar* twitterapi_r_followers(gchar *userid,
-			      gchar *screenname,
-			      gchar *cursor);
-gchar* twitterapi_r_updatemedia(gchar *status,
-				gchar *filepath);
+gchar* twitterapi_r_lookup(gchar *screenname, gchar *user_id);
+gchar* twitterapi_r_usersearch(gchar *q, gchar *page, gchar *count);
+gchar* twitterapi_r_following(gchar *userid, gchar *screenname, gchar *cursor);
+gchar* twitterapi_r_followers(gchar *userid, gchar *screenname, gchar *cursor);
+gchar* twitterapi_r_updatemedia(gchar *status, gchar *filepath);
 gchar* twitterapi_r_update(gchar *status);
 gchar* twitterapi_r_retweet(gchar *postid);
-gchar* twitterapi_r_follow(gchar *screenname,
-			   gchar *userid);
-gchar* twitterapi_r_unfollow(gchar *screenname,
-			     gchar *userid);
+gchar* twitterapi_r_destroy(gchar *postid);
+gchar* twitterapi_r_follow(gchar *screenname, gchar *userid);
+gchar* twitterapi_r_unfollow(gchar *screenname, gchar *userid);
+gchar* twitterapi_r_blocklist(gchar *cursor);
+gchar* twitterapi_r_block(gchar *screenname, gchar *userid);
+gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid);
 
 
 #define T_FIELD "text|$..text,"					\
@@ -120,11 +116,15 @@ gchar* twitterapi_r_unfollow(gchar *screenname,
 #define T_USERSEARCH_FIELD T_LOOKUP_FIELD
 #define T_FOLLOWING_FIELD T_LOOKUP_FIELD
 #define T_FOLLOWERS_FIELD T_LOOKUP_FIELD
-#define T_UPDATEMEDIA_FIELD "raw"
+#define T_UPDATEMEDIA_FIELD T_FIELD
 #define T_UPDATE_FIELD T_FIELD
 #define T_RETWEET_FIELD T_FIELD
+#define T_DESTROY_FIELD T_FIELD
 #define T_FOLLOW_FIELD T_LOOKUP_FIELD
 #define T_UNFOLLOW_FIELD T_LOOKUP_FIELD
+#define T_BLOCKLIST_FIELD T_LOOKUP_FIELD
+#define T_BLOCK_FIELD T_LOOKUP_FIELD
+#define T_UNBLOCK_FIELD T_LOOKUP_FIELD
 
 #define TRENDUPDATESEC (5*60)
 

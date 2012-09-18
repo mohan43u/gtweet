@@ -36,6 +36,8 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		  g_string_append_printf(string, "%d", value);
 		  if(format)
 		    g_string_append_printf(string, format, value);
+		  if((iter + 1) != length)
+		    g_string_append(string, " ~ ");
 		}
 	    }
 	  else if(typev && typev[0] && g_strcmp0("double", typev[0]) == 0)
@@ -48,7 +50,7 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		  if(format)
 		    g_string_append_printf(string, format, value);
 		  if((iter + 1) != length)
-		    g_string_append(string, " | ");
+		    g_string_append(string, " ~ ");
 		}
 	    }
 	  else if(typev && typev[0] && g_strcmp0("int", typev[0]) == 0)
@@ -61,7 +63,7 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		  if(format)
 		    g_string_append_printf(string, format, value);
 		  if((iter + 1) != length)
-		    g_string_append(string, " | ");
+		    g_string_append(string, " ~ ");
 		}
 	    }
 	  else if(typev && typev[0] &&
@@ -86,7 +88,7 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		  if(format)
 		    g_string_append_printf(string, format, localtime);
 		  if((iter + 1) != length)
-		    g_string_append(string, " | ");
+		    g_string_append(string, " ~ ");
 		}
 	    }
 	  else
@@ -102,7 +104,7 @@ static gchar* jsonapi_stringify(JsonNode *node, gchar *type)
 		      if(format)
 			g_string_append_printf(string, format, value);
 		      if((iter + 1) != length)
-			g_string_append(string, " | ");
+			g_string_append(string, " ~ ");
 		    }
 		}
 	    }

@@ -89,7 +89,7 @@ void twitterapi_s_stat_filter(GSList *args)
   else
     fields = g_strdup(T_FILTER_FIELD);
 
-  url = oauthapi_sign(T_S_STAT_FILTER, &searchpattern);
+  url = oauthapi_sign(T_S_STAT_FILTER, &searchpattern, "POST");
   threadargs = g_slist_copy(g_slist_nth(args, 3));
   threadargs = g_slist_append(threadargs, fields);
   curlapi_http_cb(url, searchpattern, threadargs, TRUE);
@@ -110,7 +110,7 @@ void twitterapi_s_stat_sample(GSList *args)
   else
     fields = g_strdup(T_SAMPLE_FIELD);
 
-  url = oauthapi_sign(T_S_STAT_SAMPLE, NULL);
+  url = oauthapi_sign(T_S_STAT_SAMPLE, NULL, "GET");
   threadargs = g_slist_copy(g_slist_nth(args, 0));
   threadargs = g_slist_append(threadargs, fields);
   curlapi_http_cb(url, NULL, threadargs, TRUE);
@@ -147,7 +147,7 @@ void twitterapi_s_stat_firehose(GSList *args)
   else
     fields = g_strdup(T_FIREHOSE_FIELD);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   threadargs = g_slist_copy(g_slist_nth(args, 1));
   threadargs = g_slist_append(threadargs, fields);
@@ -196,7 +196,7 @@ void twitterapi_s_htimeline(GSList *args)
   else
     fields = g_strdup(T_HTIMELINE_FIELD);
 			     
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   threadargs = g_slist_copy(g_slist_nth(args, 2));
   threadargs = g_slist_append(threadargs, fields);
@@ -206,9 +206,7 @@ void twitterapi_s_htimeline(GSList *args)
   g_free(url);
 }
 
-gchar* twitterapi_r_htimeline(gchar *count,
-			     gchar *since_id,
-			     gchar *max_id)
+gchar* twitterapi_r_htimeline(gchar *count, gchar *since_id, gchar *max_id)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -237,7 +235,7 @@ gchar* twitterapi_r_htimeline(gchar *count,
     geturl = g_strdup(T_R_HTIMELINE);
   g_string_free(getargs, TRUE);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
   g_free(url);
@@ -287,7 +285,7 @@ gchar* twitterapi_r_utimeline(gchar *userid,
     geturl = g_strdup(T_R_UTIMELINE);
   g_string_free(getargs, TRUE);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
   g_free(url);
@@ -299,7 +297,7 @@ gchar* twitterapi_r_usersettings(void)
   gchar *url = NULL;
   gchar *result = NULL;
 
-  url = oauthapi_sign(T_R_ACCOUNTSETTINGS, NULL);
+  url = oauthapi_sign(T_R_ACCOUNTSETTINGS, NULL, "GET");
   result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
@@ -324,7 +322,7 @@ gchar* twitterapi_r_trends(gchar *woeid)
   geturl = g_strdup_printf(T_R_TRENDS, finalwoeid);
   g_free(finalwoeid);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
   g_free(url);
@@ -433,15 +431,14 @@ gchar* twitterapi_r_tweetsearch(gchar *q,
     geturl = g_strdup(T_R_TWEETSEARCH);
   g_string_free(getargs, TRUE);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
 
-gchar* twitterapi_r_lookup(gchar *screenname,
-			   gchar *user_id)
+gchar* twitterapi_r_lookup(gchar *screenname, gchar *user_id)
 {
   gchar *url = NULL;
   gchar *postparams = NULL;
@@ -465,16 +462,14 @@ gchar* twitterapi_r_lookup(gchar *screenname,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = oauthapi_sign(T_R_LOOKUP, &postparams);
+  url = oauthapi_sign(T_R_LOOKUP, &postparams, "POST");
   result = curlapi_http(url, postparams, TRUE);
   g_free(url);
   g_free(postparams);
   return(result);
 }
 
-gchar* twitterapi_r_usersearch(gchar *q,
-			       gchar *page,
-			       gchar *count)
+gchar* twitterapi_r_usersearch(gchar *q, gchar *page, gchar *count)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -503,16 +498,14 @@ gchar* twitterapi_r_usersearch(gchar *q,
     geturl = g_strdup(T_R_USERSEARCH);
   g_string_free(getargs, TRUE);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
   g_free(url);
   return(result);
 }
 
-static gchar* twitterapi_strsplit(gchar **str,
-				  gchar *delimit,
-				  guint length)
+static gchar* twitterapi_strsplit(gchar **str, gchar *delimit, guint length)
 {
   gchar **strv = NULL;
   guint strc = 0;
@@ -534,9 +527,7 @@ static gchar* twitterapi_strsplit(gchar **str,
   return(result);
 }
 
-gchar* twitterapi_r_following(gchar *userid,
-			      gchar *screenname,
-			      gchar *cursor)
+gchar* twitterapi_r_following(gchar *userid, gchar *screenname, gchar *cursor)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -567,7 +558,7 @@ gchar* twitterapi_r_following(gchar *userid,
     geturl = g_strdup(T_R_FOLLOWING);
   g_string_free(getargs, TRUE);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
 
@@ -606,9 +597,7 @@ gchar* twitterapi_r_following(gchar *userid,
   return(finalresult);
 }
 
-gchar* twitterapi_r_followers(gchar *userid,
-			      gchar *screenname,
-			      gchar *cursor)
+gchar* twitterapi_r_followers(gchar *userid, gchar *screenname, gchar *cursor)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -639,7 +628,7 @@ gchar* twitterapi_r_followers(gchar *userid,
     geturl = g_strdup(T_R_FOLLOWERS);
   g_string_free(getargs, TRUE);
 
-  url = oauthapi_sign(geturl, NULL);
+  url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
 
@@ -678,11 +667,11 @@ gchar* twitterapi_r_followers(gchar *userid,
   return(finalresult);
 }
 
-gchar* twitterapi_r_updatemedia(gchar *status,
-				gchar *filepath)
+gchar* twitterapi_r_updatemedia(gchar *status, gchar *filepath)
 {
   gchar *url = NULL;
-  gchar *geturl = NULL;
+  gchar *posturl = NULL;
+  gchar *postparams = NULL;
   GPtrArray *inputdata = NULL;
   curlapi_multipart_t *data = NULL;
   gchar *result = NULL;
@@ -705,12 +694,14 @@ gchar* twitterapi_r_updatemedia(gchar *status,
       g_ptr_array_add(inputdata, data);
       g_free(status);
     }
-  geturl = g_strdup(T_R_UPDATEMEDIA);
 
-  url = oauthapi_sign(geturl, NULL);
-  g_free(geturl);
-  result = curlapi_http_media(url, NULL, inputdata, TRUE);
+  posturl = g_strdup(T_R_UPDATEMEDIA);
+  postparams = g_strdup("");
+  url = oauthapi_sign(posturl, &postparams, "POST");
+  g_free(posturl);
+  result = curlapi_http_media(url, postparams, inputdata, TRUE);
   g_free(url);
+  g_free(postparams);
 
   iter = 0;
   while(iter < inputdata->len)
@@ -746,7 +737,7 @@ gchar* twitterapi_r_update(gchar *status)
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = oauthapi_sign(T_R_UPDATE, &postparams);
+  url = oauthapi_sign(T_R_UPDATE, &postparams, "POST");
   result = curlapi_http(url, postparams, TRUE);
   g_free(url);
   return(result);
@@ -768,14 +759,35 @@ gchar* twitterapi_r_retweet(gchar *postid)
     return(NULL);
 
   postparams = g_strdup("");
-  url = oauthapi_sign(posturl, &postparams);
+  url = oauthapi_sign(posturl, &postparams, "POST");
   result = curlapi_http(url, postparams, TRUE);
   g_free(url);
   return(result);
 }
 
-gchar* twitterapi_r_follow(gchar *screenname,
-			   gchar *userid)
+gchar* twitterapi_r_destroy(gchar *postid)
+{
+  gchar *url = NULL;
+  gchar *posturl = NULL;
+  gchar *postparams = NULL;
+  gchar *result = NULL;
+
+  if(postid && strlen(postid))
+    {
+      posturl = g_strdup_printf(T_R_DESTROY, postid);
+      g_free(postid);
+    }
+  else
+    return(NULL);
+
+  postparams = g_strdup("");
+  url = oauthapi_sign(posturl, &postparams, "POST");
+  result = curlapi_http(url, postparams, TRUE);
+  g_free(url);
+  return(result);
+}
+
+gchar* twitterapi_r_follow(gchar *screenname, gchar *userid)
 {
   gchar *url = NULL;
   gchar *postparams = NULL;
@@ -799,14 +811,13 @@ gchar* twitterapi_r_follow(gchar *screenname,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = oauthapi_sign(T_R_FOLLOW, &postparams);
+  url = oauthapi_sign(T_R_FOLLOW, &postparams, "POST");
   result = curlapi_http(url, postparams, TRUE);
   g_free(url);
   return(result);
 }
 
-gchar* twitterapi_r_unfollow(gchar *screenname,
-			     gchar *userid)
+gchar* twitterapi_r_unfollow(gchar *screenname, gchar *userid)
 {
   gchar *url = NULL;
   gchar *postparams = NULL;
@@ -830,7 +841,93 @@ gchar* twitterapi_r_unfollow(gchar *screenname,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = oauthapi_sign(T_R_UNFOLLOW, &postparams);
+  url = oauthapi_sign(T_R_UNFOLLOW, &postparams, "POST");
+  result = curlapi_http(url, postparams, TRUE);
+  g_free(url);
+  return(result);
+}
+
+gchar* twitterapi_r_blocklist(gchar *cursor)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  GString *getargs = NULL;
+  gchar *result = NULL;
+
+  getargs = g_string_new(NULL);
+  if(cursor && strlen(cursor))
+    {
+      g_string_append_printf(getargs, "&cursor=%s", cursor);
+      g_free(cursor);
+    }
+  if(getargs->len)
+    geturl = g_strdup_printf("%s?%s", T_R_BLOCKLIST, &(getargs->str[1]));
+  else
+    geturl = g_strdup(T_R_BLOCKLIST);
+  g_string_free(getargs, TRUE);
+
+  url = oauthapi_sign(geturl, NULL, "GET");
+  g_free(geturl);
+  result = curlapi_http(url, NULL, TRUE);
+  g_free(url);
+  return(result);
+}
+
+gchar* twitterapi_r_block(gchar *screenname, gchar *userid)
+{
+  gchar *url = NULL;
+  gchar *postparams = NULL;
+  GString *postargs = NULL;
+  gchar *result = NULL;
+
+  postargs = g_string_new(NULL);
+  if(screenname && strlen(screenname))
+    {
+      g_string_append_printf(postargs, "&screen_name=%s", screenname);
+      g_free(screenname);
+    }
+  if(userid && strlen(userid))
+    {
+      g_string_append_printf(postargs, "&user_id=%s", userid);
+      g_free(userid);
+    }
+  if(postargs->len)
+    postparams = g_strdup(&(postargs->str[1]));
+  else
+    postparams = g_strdup("");
+  g_string_free(postargs, TRUE);
+
+  url = oauthapi_sign(T_R_BLOCK, &postparams, "POST");
+  result = curlapi_http(url, postparams, TRUE);
+  g_free(url);
+  return(result);
+}
+
+gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid)
+{
+  gchar *url = NULL;
+  gchar *postparams = NULL;
+  GString *postargs = NULL;
+  gchar *result = NULL;
+
+  postargs = g_string_new(NULL);
+  if(screenname && strlen(screenname))
+    {
+      g_string_append_printf(postargs, "&screen_name=%s", screenname);
+      g_free(screenname);
+    }
+  if(userid && strlen(userid))
+    {
+      g_string_append_printf(postargs, "&user_id=%s", userid);
+      g_free(userid);
+    }
+  if(postargs->len)
+    postparams = g_strdup(&(postargs->str[1]));
+  else
+    postparams = g_strdup("");
+  g_string_free(postargs, TRUE);
+
+  url = oauthapi_sign(T_R_UNBLOCK, &postparams, "POST");
   result = curlapi_http(url, postparams, TRUE);
   g_free(url);
   return(result);

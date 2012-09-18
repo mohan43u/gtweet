@@ -1,7 +1,6 @@
 #include <tweetpts.h>
 
-gchar* oauthapi_sign(gchar *url,
-		     gchar **params)
+gchar* oauthapi_sign(gchar *url, gchar **params, gchar *method)
 {
   gchar *requesturl = NULL;
   gchar *resulturl = NULL;
@@ -14,7 +13,7 @@ gchar* oauthapi_sign(gchar *url,
   resulturl = oauth_sign_url2(requesturl,
 			      params,
 			      OA_HMAC,
-			      NULL,
+			      method,
 			      CONSUMER_KEY,
 			      CONSUMER_SECRET,
 			      access_key,
@@ -201,19 +200,6 @@ void oauthapi_access_token_from_file(void)
       oauthapi_access_token();
       oauthapi_access_token_to_file();
     }
-}
-
-gboolean oauthapi_checkoauth(void)
-{
-  gchar *url = NULL;
-  gchar *result = NULL;
-
-  url = oauthapi_sign(CREDENTIAL_URL, NULL);
-  result = curlapi_http(url, NULL, TRUE);
-  if(result && result[0] == '{')
-    return(TRUE);
-  else
-    return(FALSE);
 }
 
 void oauthapi_init(void)

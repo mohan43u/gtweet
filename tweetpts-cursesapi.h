@@ -49,13 +49,25 @@ typedef struct cursesapi_thread
 } XTHREAD;
 GPtrArray *threadarray;
 
+/* defined in tweetpts-cursesapi-keyboard.c */
+void cursesapi_userinput(void);
+void cursesapi_get_usersettings(cursesapi_panel_t *panel);
+gboolean cursesapi_get_trendspanel_cb(gpointer user_data);
+void cursesapi_get_trendspanel(cursesapi_panel_t *panel, gchar *woeid);
+
 /* defined in tweetpts-cursesapi-display.c */
+void cursesapi_create_baselayout(void);
+void cursesapi_destroy_baselayout(void);
+void cursesapi_init(void);
+void cursesapi_free(void);
+gboolean cursesapi_playback_cb(gchar *fields, gchar *string);
+gboolean cursesapi_write_cb(GSList *args);
 void cursesapi_lock(cursesapi_panel_t *panel);
 void cursesapi_unlock(cursesapi_panel_t *panel);
 void cursesapi_toggle_lock(cursesapi_panel_t *panel);
-void cursesapi_top(cursesapi_panel_t *panel);
 void cursesapi_panel_refresh(cursesapi_panel_t *panel, guint clear);
 void cursesapi_panel_refresh_all(guint clear);
+void cursesapi_top(cursesapi_panel_t *panel);
 cursesapi_panel_t* cursesapi_panel_new(gushort line,
 				       gushort column,
 				       gushort y,
@@ -71,45 +83,17 @@ void cursesapi_push_string(cursesapi_panel_t *panel,
 			   gushort format);
 void cursesapi_push_string_pager(cursesapi_panel_t *panel, gchar *string);
 void cursesapi_push_line(cursesapi_panel_t *panel);
-void cursesapi_push_element(cursesapi_panel_t *panel, JsonNode *node, gchar *fields);
+void cursesapi_push_element(cursesapi_panel_t *panel,
+			    JsonNode *node,
+			    gchar *fields);
 void cursesapi_push_node(cursesapi_panel_t *panel,
 			 JsonNode *root,
 			 gchar *fields,
 			 gboolean prompt);
 void cursesapi_stream_write(gpointer data, gpointer user_data);
-gboolean cursesapi_write_cb(GSList *args);
 void cursesapi_rest_write(cursesapi_panel_t *panel,
 			  cursesapi_panel_t *input,
 			  gchar *fields,
 			  gchar *string);
-gboolean cursesapi_playback_cb(gchar *fields, gchar *string);
-void cursesapi_create_baselayout(void);
-void cursesapi_destroy_baselayout(void);
-void cursesapi_init(void);
-void cursesapi_free(void);
-
-/* defined in tweetpts-cursesapi-keyboard.c */
-void cursesapi_call_rest_write(cursesapi_panel_t *panel,
-			       cursesapi_panel_t *input,
-			       gchar *inputfields,
-			       gchar *inputstring);
-void cursesapi_get_usersettings(cursesapi_panel_t *panel);
-void cursesapi_get_trendspanel(cursesapi_panel_t *panel, gchar *woeid);
-gboolean cursesapi_get_trendspanel_cb(gpointer user_data);
-void cursesapi_get_trends(gchar *country);
-void cursesapi_userinput_thread(gpointer data);
-void cursesapi_setfields(guint cmdc, gchar **cmdv);
-void cursesapi_filter(guint cmdc, gchar **cmdv);
-void cursesapi_sample(guint cmdc, gchar **cmdv);
-void cursesapi_firehose(guint cmdc, gchar **cmdv);
-void cursesapi_timeline(guint cmdc, gchar **cmdv);
-void cursesapi_trends(guint cmdc, gchar **cmdv);
-void cursesapi_start_recording(guint cmdc, gchar **cmdv);
-void cursesapi_stop_recording(guint cmdc, gchar **cmdv);
-void cursesapi_playback(guint cmdc, gchar **cmdv);
-void cursesapi_usersettings(guint cmdc, gchar **cmdv);
-void cursesapi_space(void);
-void cursesapi_finish(void);
-void cursesapi_userinput(void);
 
 #endif
