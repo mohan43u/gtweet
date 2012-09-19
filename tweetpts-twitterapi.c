@@ -761,6 +761,7 @@ gchar* twitterapi_r_retweet(gchar *postid)
   postparams = g_strdup("");
   url = oauthapi_sign(posturl, &postparams, "POST");
   result = curlapi_http(url, postparams, TRUE);
+  g_free(postparams);
   g_free(url);
   return(result);
 }

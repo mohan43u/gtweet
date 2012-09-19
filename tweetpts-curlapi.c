@@ -315,20 +315,13 @@ gchar* curlapi_http_media(gchar *inputurl,
 	    }
 	  else
 	    {
-	      gchar *econtents = NULL;
-
-	      econtents = curl_easy_escape(curlapi,
-					   data->contents,
-					   strlen(data->contents));
 	      ret = curl_formadd(&firstitem,
 				 &lastitem,
 				 CURLFORM_COPYNAME,
 				 data->name,
 				 CURLFORM_COPYCONTENTS,
-				 econtents,
+				 data->contents,
 				 CURLFORM_END);
-
-	      curl_free(econtents);
 	    }
 	  iter++;
 	}

@@ -498,7 +498,7 @@ static void cursesapi_following(guint cmdc, gchar **cmdv)
   cursor = (cmdc >= 4? g_strdup(cmdv[3]) : NULL);
 
   following = twitterapi_r_following(userid, screenname, cursor);
-  if(following && strlen(following))
+  if(following && strlen(following) && following[0] == '[')
     {
       fields = g_strdup(T_FOLLOWING_FIELD);
       followingv = g_strsplit(following, "\n", 0);
@@ -531,7 +531,7 @@ static void cursesapi_followers(guint cmdc, gchar **cmdv)
   cursor = (cmdc >= 4? g_strdup(cmdv[3]) : NULL);
 
   followers = twitterapi_r_followers(userid, screenname, cursor);
-  if(followers && strlen(followers))
+  if(followers && strlen(followers) && followers[0] == '[')
     {
       fields = g_strdup(T_FOLLOWERS_FIELD);
       followersv = g_strsplit(followers, "\n", 0);
@@ -581,7 +581,7 @@ static void cursesapi_update(guint cmdc, gchar **cmdv)
 
   update = twitterapi_r_update(status);
 
-  if(update && strlen(update))
+  if(update && strlen(update) && update[0] == '{')
     fields = g_strdup(T_UPDATE_FIELD);
   else
     fields = g_strdup("raw");
@@ -601,7 +601,7 @@ static void cursesapi_retweet(guint cmdc, gchar **cmdv)
 
   retweet = twitterapi_r_retweet(postid);
 
-  if(retweet && strlen(retweet))
+  if(retweet && strlen(retweet) && retweet[0] == '{')
     fields = g_strdup(T_RETWEET_FIELD);
   else
     fields = g_strdup("raw");
@@ -614,21 +614,21 @@ static void cursesapi_retweet(guint cmdc, gchar **cmdv)
 static void cursesapi_destroy(guint cmdc, gchar **cmdv)
 {
   gchar *fields = NULL;
-  gchar *retweet = NULL;
+  gchar *destroy = NULL;
   gchar *postid = NULL;
 
   postid = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
 
-  retweet = twitterapi_r_destroy(postid);
+  destroy = twitterapi_r_destroy(postid);
 
-  if(retweet && strlen(retweet))
+  if(destroy && strlen(destroy) && destroy[0] == '{')
     fields = g_strdup(T_DESTROY_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
-			    retweet);
+			    destroy);
 }
 
 static void cursesapi_follow(guint cmdc, gchar **cmdv)
@@ -643,7 +643,7 @@ static void cursesapi_follow(guint cmdc, gchar **cmdv)
 
   follow = twitterapi_r_follow(screenname, userid);
 
-  if(follow && strlen(follow))
+  if(follow && strlen(follow) && follow[0] == '{')
     fields = g_strdup(T_FOLLOW_FIELD);
   else
     fields = g_strdup("raw");
@@ -665,7 +665,7 @@ static void cursesapi_unfollow(guint cmdc, gchar **cmdv)
 
   unfollow = twitterapi_r_unfollow(screenname, userid);
 
-  if(unfollow && strlen(unfollow))
+  if(unfollow && strlen(unfollow) && unfollow[0] == '{')
     fields = g_strdup(T_UNFOLLOW_FIELD);
   else
     fields = g_strdup("raw");
@@ -706,7 +706,7 @@ static void cursesapi_block(guint cmdc, gchar **cmdv)
 
   block = twitterapi_r_block(screenname, userid);
 
-  if(block && strlen(block))
+  if(block && strlen(block) && block[0] == '{')
     fields = g_strdup(T_BLOCK_FIELD);
   else
     fields = g_strdup("raw");
@@ -728,7 +728,7 @@ static void cursesapi_unblock(guint cmdc, gchar **cmdv)
 
   unblock = twitterapi_r_unblock(screenname, userid);
 
-  if(unblock && strlen(unblock))
+  if(unblock && strlen(unblock) && unblock[0] == '{')
     fields = g_strdup(T_UNBLOCK_FIELD);
   else
     fields = g_strdup("raw");

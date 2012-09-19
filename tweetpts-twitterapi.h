@@ -67,12 +67,12 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid);
 
 
 #define T_FIELD "text|$..text,"					\
-  "name|$.user.screen_name|| [http://www.twitter.com/%s],"	\
+  "fname|$.user.name,"						\
+  "tname|$.user.screen_name|| [http://www.twitter.com/%s],"	\
   "time|$.created_at|time,"					\
   "postid|$.id_str,"						\
   "url|$..url,"							\
   "desc|$.user.description,"					\
-  "location|$.user.location,"					\
   "source|$.source"
 
 #define T_FILTER_FIELD T_FIELD
@@ -95,8 +95,8 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid);
 
 #define T_TWEETSEARCH_FIELD "$.statuses.*|"T_FIELD
 
-#define T_LOOKUP_FIELD "fullname|$.name,"		\
-  "name|$.screen_name|| [http://www.twitter.com/%s],"	\
+#define T_LOOKUP_FIELD "fname|$.name,"			\
+  "tname|$.screen_name|| [http://www.twitter.com/%s],"	\
   "desc|$.description,"					\
   "location|$.location,"				\
   "id|$.id_str,"					\
