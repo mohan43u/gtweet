@@ -933,3 +933,116 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid)
   g_free(url);
   return(result);
 }
+
+gchar* twitterapi_r_profile(gchar *name,
+			    gchar *purl,
+			    gchar *location,
+			    gchar *description)
+{
+  gchar *url = NULL;
+  gchar *postparams = NULL;
+  GString *postargs = NULL;
+  gchar *result = NULL;
+
+  postargs = g_string_new(NULL);
+  if(name && strlen(name))
+    {
+      g_string_append_printf(postargs, "&name=%s", name);
+      g_free(name);
+    }
+  if(purl && strlen(purl))
+    {
+      g_string_append_printf(postargs, "&purl=%s", purl);
+      g_free(purl);
+    }
+  if(location && strlen(location))
+    {
+      g_string_append_printf(postargs, "&location=%s", location);
+      g_free(location);
+    }
+  if(description && strlen(description))
+    {
+      g_string_append_printf(postargs, "&description=%s", description);
+      g_free(description);
+    }
+  if(postargs->len)
+    postparams = g_strdup(&(postargs->str[1]));
+  else
+    postparams = g_strdup("");
+  g_string_free(postargs, TRUE);
+
+  url = oauthapi_sign(T_R_PROFILE, &postparams, "POST");
+  result = curlapi_http(url, postparams, TRUE);
+  g_free(url);
+  return(result);
+}
+
+gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use)
+{
+  gchar *url = NULL;
+  gchar *posturl = NULL;
+  gchar *postparams = NULL;
+  GString *postargs = NULL;
+  GPtrArray *inputdata = NULL;
+  curlapi_multipart_t *data = NULL;
+  gchar *result = NULL;
+  gchar iter = 0;
+
+  inputdata = g_ptr_array_new();
+  if(filepath && strlen(filepath))
+    {
+      data = g_new0(curlapi_multipart_t, 1);
+      data->name = g_strdup("image");
+      data->filepath = glibapi_expandfilename(filepath);
+      g_ptr_array_add(inputdata, data);
+      g_free(filepath);
+    }
+
+  posturl = g_strdup(T_R_PBACKGROUND);
+  postparams = g_strdup("");
+  url = oauthapi_sign(posturl, &postparams, "POST");
+  g_free(posturl);
+  result = curlapi_http_media(url, postparams, inputdata, TRUE);
+  if(result && strlen(result) && result[0] == '{')
+    {
+      if(use && strlen(use))
+	{
+	  postargs = g_string_new(NULL);
+	  g_string_append_printf(postargs, "&use=%s", use);
+	  g_free(use);
+	}
+      else
+	postargs = g_string_new("use=1");
+      if(tile && strlen(tile))
+	{
+	  g_string_append_printf(postargs, "&tile=%s", tile);
+	  g_free(tile);
+	}
+      postparams = g_strdup(postargs->str);
+
+      g_free(url);
+      g_free(postparams);
+      g_free(result);
+      posturl = g_strdup(T_R_PBACKGROUND);
+      postparams = g_strdup(postargs->str);
+      url = oauthapi_sign(posturl, &postparams, "POST");
+      g_free(posturl);
+      result = curlapi_http(url, postparams, TRUE);
+    }
+  g_free(url);
+  g_free(postparams);
+
+  iter = 0;
+  while(iter < inputdata->len)
+    {
+      data = (curlapi_multipart_t *) g_ptr_array_index(inputdata, iter);
+      g_free(data->name);
+      g_free(data->contenttype);
+      g_free(data->contents);
+      g_free(data->filepath);
+      g_free(data);
+      iter++;
+    }
+  g_ptr_array_free(inputdata, FALSE);
+  return(result);
+}

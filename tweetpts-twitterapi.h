@@ -23,6 +23,8 @@
 #define T_R_BLOCKLIST "https://api.twitter.com/1.1/blocks/list.json"
 #define T_R_BLOCK "https://api.twitter.com/1.1/blocks/create.json"
 #define T_R_UNBLOCK "https://api.twitter.com/1.1/blocks/destroy.json"
+#define T_R_PROFILE "https://api.twitter.com/1.1/account/update_profile.json"
+#define T_R_PBACKGROUND "https://api.twitter.com/1.1/account/update_profile_background_image.json"
 #define Y_R_WOEID "http://where.yahooapis.com/v1"
 
 void twitterapi_init(void);
@@ -64,6 +66,13 @@ gchar* twitterapi_r_unfollow(gchar *screenname, gchar *userid);
 gchar* twitterapi_r_blocklist(gchar *cursor);
 gchar* twitterapi_r_block(gchar *screenname, gchar *userid);
 gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid);
+gchar* twitterapi_r_profile(gchar *name,
+			    gchar *url,
+			    gchar *location,
+			    gchar *description);
+gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use);
+
+
 
 
 #define T_FIELD "text|$..text,"					\
@@ -125,6 +134,8 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid);
 #define T_BLOCKLIST_FIELD T_LOOKUP_FIELD
 #define T_BLOCK_FIELD T_LOOKUP_FIELD
 #define T_UNBLOCK_FIELD T_LOOKUP_FIELD
+#define T_PROFILE_FIELD T_LOOKUP_FIELD
+#define T_PBACKGROUND_FIELD T_LOOKUP_FIELD
 
 #define TRENDUPDATESEC (5*60)
 

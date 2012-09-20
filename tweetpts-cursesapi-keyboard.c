@@ -31,6 +31,11 @@ static void cursesapi_retweet(guint cmdc, gchar **cmdv);
 static void cursesapi_destroy(guint cmdc, gchar **cmdv);
 static void cursesapi_follow(guint cmdc, gchar **cmdv);
 static void cursesapi_unfollow(guint cmdc, gchar **cmdv);
+static void cursesapi_blocklist(guint cmdc, gchar **cmdv);
+static void cursesapi_block(guint cmdc, gchar **cmdv);
+static void cursesapi_unblock(guint cmdc, gchar **cmdv);
+static void cursesapi_profile(guint cmdc, gchar **cmdv);
+static void cursesapi_pbackground(guint cmdc, gchar **cmdv);
 
 static void cursesapi_call_rest_write(cursesapi_panel_t *panel,
 				      cursesapi_panel_t *input,
@@ -738,6 +743,59 @@ static void cursesapi_unblock(guint cmdc, gchar **cmdv)
 			    unblock);
 }
 
+static void cursesapi_profile(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = NULL;
+  gchar *profile = NULL;
+  gchar *name = NULL;
+  gchar *purl = NULL;
+  gchar *location = NULL;
+  gchar *description = NULL;
+
+  name = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+  purl = (cmdc >= 3? g_strdup(cmdv[2]) : NULL);
+  location = (cmdc >= 4? g_strdup(cmdv[3]) : NULL);
+  description = (cmdc >= 5? g_strdup(cmdv[4]) : NULL);
+
+  profile = twitterapi_r_profile(name,
+				 purl,
+				 location,
+				 description);
+
+  if(profile && strlen(profile) && profile[0] == '{')
+    fields = g_strdup(T_PROFILE_FIELD);
+  else
+    fields = g_strdup("raw");
+  cursesapi_call_rest_write(streampanel,
+			    inputpanel,
+			    fields,
+			    profile);
+}
+
+static void cursesapi_pbackground(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = NULL;
+  gchar *pbackground = NULL;
+  gchar *filepath = NULL;
+  gchar *tile = NULL;
+  gchar *use = NULL;
+
+  filepath = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+  use = (cmdc >= 3? g_strdup(cmdv[2]) : NULL);
+  tile = (cmdc >= 4? g_strdup(cmdv[3]) : NULL);
+
+  pbackground = twitterapi_r_pbackground(filepath, tile, use);
+
+  if(pbackground && strlen(pbackground) && pbackground[0] == '{')
+    fields = g_strdup(T_PBACKGROUND_FIELD);
+  else
+    fields = g_strdup("raw");
+  cursesapi_call_rest_write(streampanel,
+			    inputpanel,
+			    fields,
+			    pbackground);
+}
+
 static void cursesapi_help(void)
 {
   GString *help = g_string_new(NULL);
@@ -810,6 +868,12 @@ static void cursesapi_help(void)
   g_string_append(help, "\n");
   g_string_append(help, "unblock [screenname] [userid] \n");
   g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/post/blocks/destroy \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "profile [name] [url] [location] [description] \n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/post/account/update_profile \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "pbackground [filepath] [use] [tile] \n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image \n");
   g_string_append(help, "\n");
   g_string_append(help, "startrecord [filename]\n");
   g_string_append(help, "\t start saving all streaming tweets into a json file. Defaults to 'tweets.json' in current directory\n");
@@ -946,6 +1010,12 @@ void cursesapi_userinput(void)
 
 	  if(g_strcmp0("unblock", cmdv[0]) == 0)
 	    cursesapi_unblock(cmdc, cmdv);
+
+	  if(g_strcmp0("profile", cmdv[0]) == 0)
+	    cursesapi_profile(cmdc, cmdv);
+
+	  if(g_strcmp0("pbackground", cmdv[0]) == 0)
+	    cursesapi_pbackground(cmdc, cmdv);
 
 	  if(g_strcmp0("startrecord", cmdv[0]) == 0)
 	    cursesapi_start_recording(cmdc, cmdv);

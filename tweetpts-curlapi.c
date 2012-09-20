@@ -277,8 +277,6 @@ gchar* curlapi_http_media(gchar *inputurl,
   CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
   GString *debugbuffer = g_string_new(NULL);
-  gchar *filebuffer = NULL;
-  gsize filelength;
   gchar *version = NULL;
   gchar *string = NULL;
   CURLcode returncode;
@@ -289,6 +287,7 @@ gchar* curlapi_http_media(gchar *inputurl,
   oauthheader = curlapi_get_oauthheader(&url, &params, oauth);
   curl_easy_setopt(curlapi, CURLOPT_URL, url);
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
+  curl_easy_setopt(curlapi, CURLOPT_FAILONERROR, 1);
   if(params)
     {
       curl_easy_setopt(curlapi, CURLOPT_POST, 1);
