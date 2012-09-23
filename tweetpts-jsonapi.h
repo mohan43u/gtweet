@@ -20,6 +20,7 @@ void jsonapi_free(void);
   "postid|$.id_str,"						\
   "url|$..url,"							\
   "desc|$.user.description,"					\
+  "loc|$.user.location,"					\
   "source|$.source"
 
 #define J_FILTER_FIELD J_FIELD
