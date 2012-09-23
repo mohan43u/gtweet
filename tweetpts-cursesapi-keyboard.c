@@ -581,10 +581,12 @@ static void cursesapi_update(guint cmdc, gchar **cmdv)
   gchar *fields = NULL;
   gchar *update = NULL;
   gchar *status = NULL;
+  gchar *replypostid = NULL;
 
   status = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+  replypostid = (cmdc >= 3? g_strdup(cmdv[2]) : NULL);
 
-  update = twitterapi_r_update(status);
+  update = twitterapi_r_update(status, replypostid);
 
   if(update && strlen(update) && update[0] == '{')
     fields = g_strdup(T_UPDATE_FIELD);

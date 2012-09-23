@@ -58,7 +58,7 @@ gchar* twitterapi_r_usersearch(gchar *q, gchar *page, gchar *count);
 gchar* twitterapi_r_following(gchar *userid, gchar *screenname, gchar *cursor);
 gchar* twitterapi_r_followers(gchar *userid, gchar *screenname, gchar *cursor);
 gchar* twitterapi_r_updatemedia(gchar *status, gchar *filepath);
-gchar* twitterapi_r_update(gchar *status);
+gchar* twitterapi_r_update(gchar *status, gchar *replypostid);
 gchar* twitterapi_r_retweet(gchar *postid);
 gchar* twitterapi_r_destroy(gchar *postid);
 gchar* twitterapi_r_follow(gchar *screenname, gchar *userid);

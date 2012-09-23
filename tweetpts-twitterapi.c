@@ -718,7 +718,7 @@ gchar* twitterapi_r_updatemedia(gchar *status, gchar *filepath)
   return(result);
 }
 
-gchar* twitterapi_r_update(gchar *status)
+gchar* twitterapi_r_update(gchar *status, gchar *replypostid)
 {
   gchar *url = NULL;
   gchar *postparams = NULL;
@@ -728,8 +728,16 @@ gchar* twitterapi_r_update(gchar *status)
   postargs = g_string_new(NULL);
   if(status && strlen(status))
     {
-      g_string_append_printf(postargs, "&status=%s", status);
+      gchar *estatus = NULL;
+      estatus = g_uri_escape_string(status, NULL, TRUE);
       g_free(status);
+      g_string_append_printf(postargs, "&status=%s", estatus);
+      g_free(estatus);
+    }
+  if(replypostid && strlen(replypostid))
+    {
+      g_string_append_printf(postargs, "&in_reply_to_status_id=%s", replypostid);
+      g_free(replypostid);
     }
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
