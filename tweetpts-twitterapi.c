@@ -1,187 +1,52 @@
 #include <tweetpts.h>
 
-void twitterapi_init(void)
-{
-  twitterapi_userfields = g_new0(twitterapi_field_t, 1);
-  twitterapi_userfields->fields = g_string_new(NULL);
-  g_mutex_init(&(twitterapi_userfields->mutex));
-
-  twitterapi_woeid = g_new0(twitterapi_field_t, 1);
-  twitterapi_woeid->fields = g_string_new(NULL);
-  g_mutex_init(&(twitterapi_woeid->mutex));
-}
-
-void twitterapi_free(void)
-{
-  g_string_free(twitterapi_userfields->fields, TRUE);
-  g_mutex_clear(&(twitterapi_userfields->mutex));
-  g_free(twitterapi_userfields);
-
-  g_string_free(twitterapi_woeid->fields, TRUE);
-  g_mutex_clear(&(twitterapi_woeid->mutex));
-  g_free(twitterapi_woeid);
-}
-
-void twitterapi_set_userfields(gchar *fields)
-{
-  if(fields)
-    {
-      g_mutex_lock(&(twitterapi_userfields->mutex));
-      if(fields && g_strcmp0("default", fields) == 0)
-	g_string_set_size(twitterapi_userfields->fields, 0);
-      else
-	g_string_assign(twitterapi_userfields->fields, fields);
-      g_mutex_unlock(&(twitterapi_userfields->mutex));
-    }
-}
-
-gchar* twitterapi_get_userfields(void)
-{
-  gchar *string = NULL;
-
-  if(twitterapi_userfields->fields->len)
-    {
-      string = g_strdup(twitterapi_userfields->fields->str);
-      g_string_set_size(twitterapi_userfields->fields, 0);
-    }
-  return(string);
-}
-
-void twitterapi_s_stat_filter(GSList *args)
+void twitterapi_s_stat_filter(gchar *track, gchar *follow, gchar *locations,
+			      gpointer func, gpointer userdata)
 {
   gchar *url = NULL;
+  gchar *postparams = NULL;
   GString *postargs = NULL;
-  gchar *searchpattern = NULL;
-  gchar *fields = NULL;
-  GSList *threadargs = NULL;
-  gchar *track = NULL;
-  gchar *follow = NULL;
-  gchar *locations = NULL;
-
-  track = g_slist_nth_data(args, 0);
-  follow = g_slist_nth_data(args, 1);
-  locations = g_slist_nth_data(args, 2);
 
   postargs = g_string_new(NULL);
   if(track && strlen(track))
-    {
-      g_string_append_printf(postargs, "&track=%s", track);
-      g_free(track);
-    }
+    g_string_append_printf(postargs, "&track=%s", track);
   if(follow && strlen(follow))
-    {
-      g_string_append_printf(postargs, "&follow=%s", follow);
-      g_free(follow);
-    }
+    g_string_append_printf(postargs, "&follow=%s", follow);
   if(locations && strlen(locations))
-    {
-      g_string_append_printf(postargs, "&locations=%s", locations);
-      g_free(locations);
-    }
+    g_string_append_printf(postargs, "&locations=%s", locations);
   if(postargs->len)
-    searchpattern = g_strdup(&(postargs->str[1]));
+    postparams = g_strdup(&(postargs->str[1]));
   else
-    searchpattern = g_strdup("");
+    postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  if(twitterapi_userfields->fields->len)
-    fields = g_strdup(twitterapi_get_userfields());
-  else
-    fields = g_strdup(T_FILTER_FIELD);
-
-  url = oauthapi_sign(T_S_STAT_FILTER, &searchpattern, "POST");
-  threadargs = g_slist_copy(g_slist_nth(args, 3));
-  threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, searchpattern, threadargs, TRUE);
-  g_slist_free(threadargs);
-  g_free(searchpattern);
-  g_free(fields);
+  url = oauthapi_sign(T_S_STAT_FILTER, &postparams, "POST");
+  curlapi_http_cb(url, postparams, func, userdata, TRUE);
+  g_free(postparams);
   g_free(url);
 }
 
-void twitterapi_s_stat_sample(GSList *args)
+void twitterapi_s_stat_sample(gpointer func, gpointer userdata)
 {
   gchar *url = NULL;
-  gchar *fields = NULL;
-  GSList *threadargs = NULL;
-
-  if(twitterapi_userfields->fields->len)
-    fields = twitterapi_get_userfields();
-  else
-    fields = g_strdup(T_SAMPLE_FIELD);
 
   url = oauthapi_sign(T_S_STAT_SAMPLE, NULL, "GET");
-  threadargs = g_slist_copy(g_slist_nth(args, 0));
-  threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, NULL, threadargs, TRUE);
-  g_slist_free(threadargs);
-  g_free(fields);
+  curlapi_http_cb(url, NULL, func, userdata, TRUE);
   g_free(url);
 }
 
-void twitterapi_s_stat_firehose(GSList *args)
+void twitterapi_s_htimeline(gchar *track, gchar *locations, gpointer func,
+			    gpointer userdata)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
   GString *getargs = NULL;
-  gchar *fields = NULL;
-  GSList *threadargs = NULL;
-  gchar *count = NULL;
-  
-  count = g_slist_nth_data(args, 0);
-
-  getargs = g_string_new(NULL);
-  if(count && strlen(count))
-    {
-      g_string_append_printf(getargs, "&count=%s", count);
-      g_free(count);
-    }
-  if(getargs->len)
-    geturl = g_strdup_printf("%s?%s", T_S_STAT_FIREHOSE, &(getargs->str[1]));
-  else
-    geturl = g_strdup(T_S_STAT_FIREHOSE);
-  g_string_free(getargs, TRUE);
-
-  if(twitterapi_userfields->fields->len)
-    fields = twitterapi_get_userfields();
-  else
-    fields = g_strdup(T_FIREHOSE_FIELD);
-
-  url = oauthapi_sign(geturl, NULL, "GET");
-  g_free(geturl);
-  threadargs = g_slist_copy(g_slist_nth(args, 1));
-  threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, NULL, threadargs, TRUE);
-  g_slist_free(threadargs);
-  g_free(fields);
-  g_free(url);
-}
-
-void twitterapi_s_htimeline(GSList *args)
-{
-  gchar *url = NULL;
-  gchar *geturl = NULL;
-  GString *getargs = NULL;
-  gchar *fields = NULL;
-  GSList *threadargs = NULL;
-  gchar *track = NULL;
-  gchar *locations = NULL;
-
-
-  track = g_slist_nth_data(args, 0);
-  locations = g_slist_nth_data(args, 1);
 
   getargs = g_string_new(NULL);
   if(track && strlen(track))
-    {
-      g_string_append_printf(getargs, "&track=%s", track);
-      g_free(track);
-    }
+    g_string_append_printf(getargs, "&track=%s", track);
   if(locations && strlen(locations))
-    {
-      g_string_append_printf(getargs, "&locations=%s", locations);
-      g_free(locations);
-    }
+    g_string_append_printf(getargs, "&locations=%s", locations);
   if(getargs->len)
     geturl = g_strdup_printf("%s?with=followings&reply=all%s",
 			     T_S_USER,
@@ -191,18 +56,9 @@ void twitterapi_s_htimeline(GSList *args)
 			     T_S_USER);
   g_string_free(getargs, TRUE);
 
-  if(twitterapi_userfields->fields->len)
-    fields = twitterapi_get_userfields();
-  else
-    fields = g_strdup(T_HTIMELINE_FIELD);
-			     
   url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
-  threadargs = g_slist_copy(g_slist_nth(args, 2));
-  threadargs = g_slist_append(threadargs, fields);
-  curlapi_http_cb(url, NULL, threadargs, TRUE);
-  g_slist_free(threadargs);
-  g_free(fields);
+  curlapi_http_cb(url, NULL, func, userdata, TRUE);
   g_free(url);
 }
 
@@ -215,20 +71,11 @@ gchar* twitterapi_r_htimeline(gchar *count, gchar *since_id, gchar *max_id)
 
   getargs = g_string_new(NULL);
   if(count && strlen(count))
-    {
-      g_string_append_printf(getargs, "&count=%s", count);
-      g_free(count);
-    }
+    g_string_append_printf(getargs, "&count=%s", count);
   if(since_id && strlen(since_id))
-    {
-      g_string_append_printf(getargs, "&since_id=%s", since_id);
-      g_free(since_id);
-    }
+    g_string_append_printf(getargs, "&since_id=%s", since_id);
   if(max_id && strlen(max_id))
-    {
-      g_string_append_printf(getargs, "&max_id=%s", max_id);
-      g_free(max_id);
-    }
+    g_string_append_printf(getargs, "&max_id=%s", max_id);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_HTIMELINE, &(getargs->str[1]));
   else
@@ -242,11 +89,8 @@ gchar* twitterapi_r_htimeline(gchar *count, gchar *since_id, gchar *max_id)
   return(result);
 }
 
-gchar* twitterapi_r_utimeline(gchar *userid,
-			      gchar *screenname,
-			      gchar *since_id,
-			      gchar *count,
-			      gchar *max_id)
+gchar* twitterapi_r_utimeline(gchar *userid, gchar *screenname, gchar *since_id,
+			      gchar *count, gchar *max_id)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -255,30 +99,15 @@ gchar* twitterapi_r_utimeline(gchar *userid,
 
   getargs = g_string_new(NULL);
   if(userid && strlen(userid))
-    {
-      g_string_append_printf(getargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
+    g_string_append_printf(getargs, "&user_id=%s", userid);
   if(screenname && strlen(screenname))
-    {
-      g_string_append_printf(getargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
+    g_string_append_printf(getargs, "&screen_name=%s", screenname);
   if(since_id && strlen(since_id))
-    {
-      g_string_append_printf(getargs, "&since_id=%s", since_id);
-      g_free(since_id);
-    }
+    g_string_append_printf(getargs, "&since_id=%s", since_id);
   if(count && strlen(count))
-    {
-      g_string_append_printf(getargs, "&count=%s", count);
-      g_free(count);
-    }
+    g_string_append_printf(getargs, "&count=%s", count);
   if(max_id && strlen(max_id))
-    {
-      g_string_append_printf(getargs, "&max_id=%s", max_id);
-      g_free(max_id);
-    }
+    g_string_append_printf(getargs, "&max_id=%s", max_id);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_UTIMELINE, &(getargs->str[1]));
   else
@@ -307,21 +136,9 @@ gchar* twitterapi_r_trends(gchar *woeid)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
-  gchar *finalwoeid = NULL;
   gchar *result = NULL;
 
-  if(woeid)
-    finalwoeid = g_strdup(woeid);
-  else
-    {
-      if(twitterapi_woeid->fields->len)
-	finalwoeid = g_strdup(twitterapi_woeid->fields->str);
-      else
-	finalwoeid = g_strdup("1");
-    }
-  geturl = g_strdup_printf(T_R_TRENDS, finalwoeid);
-  g_free(finalwoeid);
-
+  geturl = g_strdup_printf(T_R_TRENDS, woeid);
   url = oauthapi_sign(geturl, NULL, "GET");
   g_free(geturl);
   result = curlapi_http(url, NULL, TRUE);
@@ -347,32 +164,23 @@ gchar* twitterapi_r_woeid(gchar *countryname)
       	  JsonParser *parser = jsonapi_parser();
       	  JsonNode *node = jsonapi_decode(parser, result);
       	  woeid = jsonapi_get_value(node, "$..woeid|int");
+	  g_object_unref(parser);
       	}
       else
-	woeid = g_strdup_printf("url=%s, result=%s", url, result);
+	woeid = NULL;
+
       g_free(url);
       g_free(result);
     }
   else
-    {
-      if(twitterapi_woeid->fields->len)
-	woeid = g_strdup(twitterapi_woeid->fields->str);
-      else
-	woeid = NULL;
-    }
+    woeid = NULL;
 
   return(woeid);
 }
 
-gchar* twitterapi_r_tweetsearch(gchar *q,
-			   gchar *geocode,
-			   gchar *lang,
-			   gchar *locale,
-			   gchar *result_type,
-			   gchar *count,
-			   gchar *until,
-			   gchar *since_id,
-			   gchar *max_id)
+gchar* twitterapi_r_tweetsearch(gchar *q, gchar *geocode, gchar *lang,
+				gchar *locale, gchar *result_type, gchar *count,
+				gchar *until, gchar *since_id, gchar *max_id)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -381,50 +189,23 @@ gchar* twitterapi_r_tweetsearch(gchar *q,
 
   getargs = g_string_new(NULL);
   if(q && strlen(q))
-    {
-      g_string_append_printf(getargs, "&q=%s", q);
-      g_free(q);
-    }
+    g_string_append_printf(getargs, "&q=%s", q);
   if(geocode && strlen(geocode))
-    {
-      g_string_append_printf(getargs, "&geocode=%s", geocode);
-      g_free(geocode);
-    }
+    g_string_append_printf(getargs, "&geocode=%s", geocode);
   if(lang && strlen(lang))
-    {
-      g_string_append_printf(getargs, "&lang=%s", lang);
-      g_free(lang);
-    }
+    g_string_append_printf(getargs, "&lang=%s", lang);
   if(locale && strlen(locale))
-    {
-      g_string_append_printf(getargs, "&locale=%s", locale);
-      g_free(locale);
-    }
+    g_string_append_printf(getargs, "&locale=%s", locale);
   if(result_type && strlen(result_type))
-    {
-      g_string_append_printf(getargs, "&result_type=%s", result_type);
-      g_free(result_type);
-    }
+    g_string_append_printf(getargs, "&result_type=%s", result_type);
   if(count && strlen(count))
-    {
-      g_string_append_printf(getargs, "&count=%s", count);
-      g_free(count);
-    }
+    g_string_append_printf(getargs, "&count=%s", count);
   if(until && strlen(until))
-    {
-      g_string_append_printf(getargs, "&until=%s", until);
-      g_free(until);
-    }
+    g_string_append_printf(getargs, "&until=%s", until);
   if(since_id && strlen(since_id))
-    {
-      g_string_append_printf(getargs, "&since_id=%s", since_id);
-      g_free(since_id);
-    }
+    g_string_append_printf(getargs, "&since_id=%s", since_id);
   if(max_id && strlen(max_id))
-    {
-      g_string_append_printf(getargs, "&max_id=%s", max_id);
-      g_free(max_id);
-    }
+    g_string_append_printf(getargs, "&max_id=%s", max_id);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_TWEETSEARCH, &(getargs->str[1]));
   else
@@ -447,15 +228,9 @@ gchar* twitterapi_r_lookup(gchar *screenname, gchar *user_id)
 
   postargs = g_string_new(NULL);
   if(screenname && strlen(screenname))
-    {
-      g_string_append_printf(postargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
+    g_string_append_printf(postargs, "&screen_name=%s", screenname);
   if(user_id && strlen(user_id))
-    {
-      g_string_append_printf(postargs, "&user_id=%s", user_id);
-      g_free(user_id);
-    }
+    g_string_append_printf(postargs, "&user_id=%s", user_id);
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
   else
@@ -478,20 +253,11 @@ gchar* twitterapi_r_usersearch(gchar *q, gchar *page, gchar *count)
 
   getargs = g_string_new(NULL);
   if(q && strlen(q))
-    {
-      g_string_append_printf(getargs, "&q=%s", q);
-      g_free(q);
-    }
+    g_string_append_printf(getargs, "&q=%s", q);
   if(page && strlen(page))
-    {
-      g_string_append_printf(getargs, "&page=%s", page);
-      g_free(page);
-    }
+    g_string_append_printf(getargs, "&page=%s", page);
   if(count && strlen(count))
-    {
-      g_string_append_printf(getargs, "&count=%s", count);
-      g_free(count);
-    }
+    g_string_append_printf(getargs, "&count=%s", count);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_USERSEARCH, &(getargs->str[1]));
   else
@@ -538,20 +304,11 @@ gchar* twitterapi_r_following(gchar *userid, gchar *screenname, gchar *cursor)
 
   getargs = g_string_new(NULL);
   if(userid && strlen(userid))
-    {
-      g_string_append_printf(getargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
+    g_string_append_printf(getargs, "&user_id=%s", userid);
   if(screenname && strlen(screenname))
-    {
-      g_string_append_printf(getargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
+    g_string_append_printf(getargs, "&screen_name=%s", screenname);
   if(cursor && strlen(cursor))
-    {
-      g_string_append_printf(getargs, "&cursor=%s", cursor);
-      g_free(cursor);
-    }
+    g_string_append_printf(getargs, "&cursor=%s", cursor);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_FOLLOWING, &(getargs->str[1]));
   else
@@ -608,20 +365,11 @@ gchar* twitterapi_r_followers(gchar *userid, gchar *screenname, gchar *cursor)
 
   getargs = g_string_new(NULL);
   if(userid && strlen(userid))
-    {
-      g_string_append_printf(getargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
+    g_string_append_printf(getargs, "&user_id=%s", userid);
   if(screenname && strlen(screenname))
-    {
-      g_string_append_printf(getargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
+    g_string_append_printf(getargs, "&screen_name=%s", screenname);
   if(cursor && strlen(cursor))
-    {
-      g_string_append_printf(getargs, "&cursor=%s", cursor);
-      g_free(cursor);
-    }
+    g_string_append_printf(getargs, "&cursor=%s", cursor);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_FOLLOWERS, &(getargs->str[1]));
   else
@@ -684,7 +432,6 @@ gchar* twitterapi_r_updatemedia(gchar *status, gchar *filepath)
       data->name = g_strdup("media[]");
       data->filepath = glibapi_expandfilename(filepath);
       g_ptr_array_add(inputdata, data);
-      g_free(filepath);
     }
   if(status && strlen(status))
     {
@@ -692,7 +439,6 @@ gchar* twitterapi_r_updatemedia(gchar *status, gchar *filepath)
       data->name = g_strdup("status");
       data->contents = g_strdup(status);
       g_ptr_array_add(inputdata, data);
-      g_free(status);
     }
 
   posturl = g_strdup(T_R_UPDATEMEDIA);
@@ -730,15 +476,11 @@ gchar* twitterapi_r_update(gchar *status, gchar *replypostid)
     {
       gchar *estatus = NULL;
       estatus = g_uri_escape_string(status, NULL, TRUE);
-      g_free(status);
       g_string_append_printf(postargs, "&status=%s", estatus);
       g_free(estatus);
     }
   if(replypostid && strlen(replypostid))
-    {
-      g_string_append_printf(postargs, "&in_reply_to_status_id=%s", replypostid);
-      g_free(replypostid);
-    }
+    g_string_append_printf(postargs, "&in_reply_to_status_id=%s", replypostid);
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
   else
@@ -759,10 +501,7 @@ gchar* twitterapi_r_retweet(gchar *postid)
   gchar *result = NULL;
 
   if(postid && strlen(postid))
-    {
-      posturl = g_strdup_printf(T_R_RETWEET, postid);
-      g_free(postid);
-    }
+    posturl = g_strdup_printf(T_R_RETWEET, postid);
   else
     return(NULL);
 
@@ -782,10 +521,7 @@ gchar* twitterapi_r_destroy(gchar *postid)
   gchar *result = NULL;
 
   if(postid && strlen(postid))
-    {
-      posturl = g_strdup_printf(T_R_DESTROY, postid);
-      g_free(postid);
-    }
+    posturl = g_strdup_printf(T_R_DESTROY, postid);
   else
     return(NULL);
 
@@ -805,15 +541,9 @@ gchar* twitterapi_r_follow(gchar *screenname, gchar *userid)
 
   postargs = g_string_new(NULL);
   if(screenname && strlen(screenname))
-    {
-      g_string_append_printf(postargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
+    g_string_append_printf(postargs, "&screen_name=%s", screenname);
   if(userid && strlen(userid))
-    {
-      g_string_append_printf(postargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
+    g_string_append_printf(postargs, "&user_id=%s", userid);
   if(postargs->len)
     postparams = g_strdup_printf("follow=true%s", postargs->str);
   else
@@ -835,15 +565,9 @@ gchar* twitterapi_r_unfollow(gchar *screenname, gchar *userid)
 
   postargs = g_string_new(NULL);
   if(screenname && strlen(screenname))
-    {
       g_string_append_printf(postargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
   if(userid && strlen(userid))
-    {
       g_string_append_printf(postargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
   else
@@ -865,10 +589,7 @@ gchar* twitterapi_r_blocklist(gchar *cursor)
 
   getargs = g_string_new(NULL);
   if(cursor && strlen(cursor))
-    {
       g_string_append_printf(getargs, "&cursor=%s", cursor);
-      g_free(cursor);
-    }
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_BLOCKLIST, &(getargs->str[1]));
   else
@@ -891,15 +612,9 @@ gchar* twitterapi_r_block(gchar *screenname, gchar *userid)
 
   postargs = g_string_new(NULL);
   if(screenname && strlen(screenname))
-    {
       g_string_append_printf(postargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
   if(userid && strlen(userid))
-    {
       g_string_append_printf(postargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
   else
@@ -921,15 +636,9 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid)
 
   postargs = g_string_new(NULL);
   if(screenname && strlen(screenname))
-    {
       g_string_append_printf(postargs, "&screen_name=%s", screenname);
-      g_free(screenname);
-    }
   if(userid && strlen(userid))
-    {
       g_string_append_printf(postargs, "&user_id=%s", userid);
-      g_free(userid);
-    }
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
   else
@@ -942,9 +651,7 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid)
   return(result);
 }
 
-gchar* twitterapi_r_profile(gchar *name,
-			    gchar *purl,
-			    gchar *location,
+gchar* twitterapi_r_profile(gchar *name, gchar *purl, gchar *location,
 			    gchar *description)
 {
   gchar *url = NULL;
@@ -954,25 +661,13 @@ gchar* twitterapi_r_profile(gchar *name,
 
   postargs = g_string_new(NULL);
   if(name && strlen(name))
-    {
-      g_string_append_printf(postargs, "&name=%s", name);
-      g_free(name);
-    }
+    g_string_append_printf(postargs, "&name=%s", name);
   if(purl && strlen(purl))
-    {
-      g_string_append_printf(postargs, "&purl=%s", purl);
-      g_free(purl);
-    }
+    g_string_append_printf(postargs, "&purl=%s", purl);
   if(location && strlen(location))
-    {
-      g_string_append_printf(postargs, "&location=%s", location);
-      g_free(location);
-    }
+    g_string_append_printf(postargs, "&location=%s", location);
   if(description && strlen(description))
-    {
-      g_string_append_printf(postargs, "&description=%s", description);
-      g_free(description);
-    }
+    g_string_append_printf(postargs, "&description=%s", description);
   if(postargs->len)
     postparams = g_strdup(&(postargs->str[1]));
   else
@@ -1003,7 +698,6 @@ gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use)
       data->name = g_strdup("image");
       data->filepath = glibapi_expandfilename(filepath);
       g_ptr_array_add(inputdata, data);
-      g_free(filepath);
     }
 
   posturl = g_strdup(T_R_PBACKGROUND);

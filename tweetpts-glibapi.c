@@ -118,4 +118,3 @@ gchar* glibapi_expandfilename(gchar *filename)
   wordfree(&result_t);
   return(result);
 }
-      

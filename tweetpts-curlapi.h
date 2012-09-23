@@ -3,17 +3,11 @@
 
 #include <curl/curl.h>
 
-void curlapi_http_cb(gchar *url,
-		     gchar *params,
-		     GSList *args,
-		     gboolean oauth);
-gchar* curlapi_http(gchar *url,
-		    gchar *params,
-		    gboolean oauth);
-gchar* curlapi_http_media(gchar *inputurl,
-			  gchar *inputparams,
-			  GPtrArray *inputdata,
-			  gboolean oauth);
+void curlapi_http_cb(gchar *inputurl, gchar *inputparams, gpointer func,
+		     gpointer userdata, gboolean oauth);
+gchar* curlapi_http(gchar *url, gchar *params, gboolean oauth);
+gchar* curlapi_http_media(gchar *inputurl, gchar *inputparams,
+			  GPtrArray *inputdata, gboolean oauth);
 
 typedef struct
 {

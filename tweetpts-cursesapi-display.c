@@ -56,13 +56,9 @@ void cursesapi_top(cursesapi_panel_t *panel)
   cursesapi_panel_refresh(panel, 0);
 }
 
-cursesapi_panel_t* cursesapi_panel_new(gushort line,
-				       gushort column,
-				       gushort y,
-				       gushort x,
-				       gushort colorpair,
-				       gushort foreground,
-				       gushort background,
+cursesapi_panel_t* cursesapi_panel_new(gushort line, gushort column, gushort y,
+				       gushort x, gushort colorpair,
+				       gushort foreground, gushort background,
 				       GFunc poolfunc)
 {
   WINDOW *newwindow = NULL;
@@ -113,8 +109,7 @@ void cursesapi_panel_move(cursesapi_panel_t *panel, guint y, guint x)
   cursesapi_panel_refresh(panel, 0);
 }
 
-void cursesapi_push_string(cursesapi_panel_t *panel,
-			   gchar *string,
+void cursesapi_push_string(cursesapi_panel_t *panel, gchar *string,
 			   gushort format)
 {
   if(format == 0)
@@ -213,8 +208,7 @@ void cursesapi_push_line(cursesapi_panel_t *panel)
   g_free(line);
 }
 
-void cursesapi_push_element(cursesapi_panel_t *panel,
-			    JsonNode *node,
+void cursesapi_push_element(cursesapi_panel_t *panel, JsonNode *node,
 			    gchar *fields)
 {
   if(fields && JSON_NODE_HOLDS_OBJECT(node))
@@ -256,9 +250,7 @@ void cursesapi_push_element(cursesapi_panel_t *panel,
     }
 }
 
-void cursesapi_push_node(cursesapi_panel_t *panel,
-			 JsonNode *root,
-			 gchar *fields,
+void cursesapi_push_node(cursesapi_panel_t *panel, JsonNode *root, gchar *fields,
 			 gboolean prompt)
 {
   guint length = jsonapi_length(root);
@@ -346,11 +338,11 @@ void cursesapi_stream_write(gpointer data, gpointer user_data)
   g_mutex_unlock(&(panel->mutex));
 }
 
-gboolean cursesapi_write_cb(GSList *args)
+gboolean cursesapi_write_cb(gchar *string, gpointer userdata)
 {
-  cursesapi_panel_t *panel = g_slist_nth_data(args, 0);
-  gchar *fields = g_slist_nth_data(args, 1);
-  gchar *string = g_slist_nth_data(args, 2);
+  GPtrArray *args = userdata;
+  cursesapi_panel_t *panel = g_ptr_array_index(args, 0);
+  gchar *fields = g_ptr_array_index(args, 1);
   GPtrArray *poolargs = g_ptr_array_new();
 
   // someone asked me to die! ok, done..
@@ -366,15 +358,11 @@ gboolean cursesapi_write_cb(GSList *args)
   if(glibapi_iochannel->iochannel)
     glibapi_write_tweets(g_strdup(string));
 
-  g_slist_free(args);
-  g_free(string);
   return(TRUE);
 }
 
-void cursesapi_rest_write(cursesapi_panel_t *panel,
-			  cursesapi_panel_t *input,
-			  gchar *fields,
-			  gchar *string)
+void cursesapi_rest_write(cursesapi_panel_t *panel, cursesapi_panel_t *input,
+			  gchar *fields, gchar *string)
 {
   cursesapi_lock(panel);
   cursesapi_panel_refresh(panel, 1);
@@ -402,10 +390,8 @@ void cursesapi_rest_write(cursesapi_panel_t *panel,
       else
 	cursesapi_push_string(panel, string, 0);
 
-      g_free(fields);
       g_object_unref(parser);
     }
-  g_free(string);
   cursesapi_unlock(input);
   cursesapi_unlock(panel);
 }
@@ -436,7 +422,6 @@ void cursesapi_create_baselayout(void)
   gushort colorpair = 0;
 
   plist = g_ptr_array_new();
-  threadarray = g_ptr_array_new();
   stdscrpanel = g_new0(cursesapi_panel_t, 1);
   stdscrpanel->panel = new_panel(stdscr);
 
@@ -527,10 +512,13 @@ void cursesapi_init(void)
   start_color();
   nonl();
   cursesapi_create_baselayout();
+  cursesapi_woeid = NULL;
 }
 
 void cursesapi_free(void)
 {
   cursesapi_destroy_baselayout();
+  if(cursesapi_woeid)
+    g_free(cursesapi_woeid);
   endwin();
 }

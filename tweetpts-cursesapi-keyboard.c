@@ -2,8 +2,7 @@
 
 static void cursesapi_call_rest_write(cursesapi_panel_t *panel,
 				      cursesapi_panel_t *input,
-				      gchar *inputfields,
-				      gchar *inputstring);
+				      gchar *fields, gchar *string);
 static void cursesapi_get_trends(gchar *country);
 static void cursesapi_userinput_thread(gpointer data);
 static void cursesapi_help(void);
@@ -12,11 +11,12 @@ static void cursesapi_finish(void);
 static void cursesapi_start_recording(guint cmdc, gchar **cmdv);
 static void cursesapi_stop_recording(guint cmdc, gchar **cmdv);
 static void cursesapi_playback(guint cmdc, gchar **cmdv);
-static void cursesapi_setfields(guint cmdc, gchar **cmdv);
 static void cursesapi_tweetsearch(guint cmdc, gchar **cmdv);
+static void cursesapi_filter_thread(gpointer data);
 static void cursesapi_filter(guint cmdc, gchar **cmdv);
+static void cursesapi_sample_thread(gpointer data);
 static void cursesapi_sample(guint cmdc, gchar **cmdv);
-static void cursesapi_firehose(guint cmdc, gchar **cmdv);
+static void cursesapi_htimelinestream_thread(gpointer data);
 static void cursesapi_htimelinestream(guint cmdc, gchar **cmdv);
 static void cursesapi_htimeline(guint cmdc, gchar **cmdv);
 static void cursesapi_utimeline(guint cmdc, gchar **cmdv);
@@ -39,23 +39,10 @@ static void cursesapi_pbackground(guint cmdc, gchar **cmdv);
 
 static void cursesapi_call_rest_write(cursesapi_panel_t *panel,
 				      cursesapi_panel_t *input,
-				      gchar *inputfields,
-				      gchar *inputstring)
+				      gchar *fields, gchar *string)
 {
-  gchar *fields = NULL;
-  gchar *string = NULL;
-
-  if(inputstring && strlen(inputstring))
+  if(string && strlen(string))
     {
-      if(twitterapi_userfields->fields->len)
-	fields = twitterapi_get_userfields();
-      else
-	fields = g_strdup(inputfields);
-      g_free(inputfields);
-
-      string = g_strdup(inputstring);
-      g_free(inputstring);
-
       cursesapi_lock(input);
       cursesapi_rest_write(panel, input, fields, string);
     }
@@ -66,32 +53,24 @@ void cursesapi_get_usersettings(cursesapi_panel_t *panel)
   gchar *fields = NULL;
   gchar *string = NULL;
 
-  if(twitterapi_userfields->fields->len)
-    fields = twitterapi_get_userfields();
-  else
-    fields = g_strdup(T_USERSETTINGS_FIELD);
-
+  fields = g_strdup(J_USERSETTINGS_FIELD);
   string = twitterapi_r_usersettings();
-  if(string && strlen(string) && string[0] == '{' &&
-     fields && strlen(fields) && g_strcmp0("raw", fields) != 0)
+  if(string && strlen(string) && string[0] == '{')
     {
       JsonParser *parser = jsonapi_parser();
       JsonNode *root = jsonapi_decode(parser, string);
       gchar *woeid = NULL;
-      gchar **fieldsv = NULL;
 
       cursesapi_push_node(panel, root, fields, FALSE);
-      if(twitterapi_woeid->fields->len == 0)
+      if(cursesapi_woeid == NULL)
 	{
 	  woeid = jsonapi_get_value(root, "$.trend_location[*].woeid|int");
-	  g_mutex_lock(&(twitterapi_woeid->mutex));
-	  g_string_assign(twitterapi_woeid->fields, woeid);
-	  g_mutex_unlock(&(twitterapi_woeid->mutex));
+	  g_mutex_lock(&(trendspanel->mutex));
+	  cursesapi_woeid = g_strdup(woeid);
+	  g_mutex_unlock(&(trendspanel->mutex));
 	}
       g_object_unref(parser);
     }
-  else if(g_strcmp0("raw", fields) == 0)
-    cursesapi_push_string_pager(panel, string);
   else
     cursesapi_push_string(panel, string, 0);
 
@@ -104,18 +83,22 @@ void cursesapi_get_trendspanel(cursesapi_panel_t *panel, gchar *woeid)
   gchar *fields = NULL;
   gchar *string = NULL;
 
-  g_mutex_lock(&(panel->mutex));
-
-  if(twitterapi_userfields->fields->len)
-    fields = twitterapi_get_userfields();
+  fields = g_strdup(J_TRENDS_FIELD);
+  if(woeid == NULL)
+    {
+      if(cursesapi_woeid)
+	{
+	  g_mutex_lock(&(trendspanel->mutex));
+	  string = twitterapi_r_trends(cursesapi_woeid);
+	  g_mutex_unlock(&(trendspanel->mutex));
+	}
+      else
+	string = twitterapi_r_trends("1");
+    }
   else
-    fields = g_strdup(T_TRENDS_FIELD);
+    string = twitterapi_r_trends(woeid);
 
-  string = twitterapi_r_trends(woeid);
-  if(string &&
-     strlen(string) &&
-     string[0] == '[' &&
-     g_strcmp0("raw", fields) != 0)
+  if(string && strlen(string) && string[0] == '[')
     {
       JsonParser *parser = jsonapi_parser();
       JsonNode *root = jsonapi_decode(parser, string);
@@ -125,11 +108,10 @@ void cursesapi_get_trendspanel(cursesapi_panel_t *panel, gchar *woeid)
       g_object_unref(parser);
     }
   else
-      cursesapi_push_string(panel, string, 0);
+    cursesapi_push_string(panel, string, 0);
+
   g_free(fields);
   g_free(string);
-
-  g_mutex_unlock(&(panel->mutex));
 }
 
 gboolean cursesapi_get_trendspanel_cb(gpointer user_data)
@@ -142,13 +124,14 @@ gboolean cursesapi_get_trendspanel_cb(gpointer user_data)
 static void cursesapi_get_trends(gchar *country)
 {
   gchar *woeid = NULL;
-  gchar **woeidv = NULL;
   guint iter = 0;
   GPtrArray *poolargs = g_ptr_array_new();
 
   woeid = twitterapi_r_woeid(country);
   if(woeid && strlen(woeid) && g_str_has_prefix(woeid, "url=") != TRUE)
     {
+      gchar **woeidv = NULL;
+
       woeidv = g_strsplit(woeid, "|", 0);
       while(woeidv[iter])
 	{
@@ -156,19 +139,28 @@ static void cursesapi_get_trends(gchar *country)
 	  gchar *string = NULL;
 	  gchar *swoeid = g_strstrip(woeidv[iter]);
 
-	  g_mutex_lock(&(twitterapi_woeid->mutex));
-	  g_string_assign(twitterapi_woeid->fields, swoeid);
-	  g_mutex_unlock(&(twitterapi_woeid->mutex));
+	  g_mutex_lock(&(trendspanel->mutex));
+	  if(cursesapi_woeid)
+	    {
+	      g_free(cursesapi_woeid);
+	      cursesapi_woeid = g_strdup(swoeid);
+	    }
+	  else
+	    cursesapi_woeid = g_strdup(swoeid);
+	  g_mutex_unlock(&(trendspanel->mutex));
 
 	  string = twitterapi_r_trends(swoeid);
 	  if(string && strlen(string) && string[0] == '[')
-	    fields = g_strdup(T_TRENDS_FIELD);
+	    fields = g_strdup(J_TRENDS_FIELD);
 	  else
 	    fields = g_strdup("raw");
 	  cursesapi_call_rest_write(streampanel,
 				    inputpanel,
 				    fields,
 				    string);
+	  g_free(fields);
+	  g_free(string);
+
 	  iter++;
 	}
       g_strfreev(woeidv);
@@ -181,18 +173,11 @@ static void cursesapi_get_trends(gchar *country)
 				inputpanel,
 				fields,
 				string);
+      g_free(fields);
+      g_free(string);
     }
 
   g_free(woeid);
-}
-
-static void cursesapi_userinput_thread(gpointer data)
-{
-  GSList *args = (GSList *) data;
-  void (*twitterapi_function)(GSList *args) = g_slist_nth_data(args, 0);
-  GSList *threadargs = g_slist_copy(g_slist_nth(args, 1));
-  twitterapi_function(threadargs);
-  g_slist_free(threadargs);
 }
 
 static void cursesapi_space(void)
@@ -229,7 +214,7 @@ static void cursesapi_stop_recording(guint cmdc, gchar **cmdv)
 
 static void cursesapi_playback(guint cmdc, gchar **cmdv)
 {
-  gchar *fields = g_strdup(T_FILTER_FIELD);
+  gchar *fields = g_strdup(J_FILTER_FIELD);
   gchar *filename = NULL;
 
   filename = (cmdc >= 2 ? g_strdup(cmdv[1]) : g_strdup("tweets.json"));
@@ -240,12 +225,6 @@ static void cursesapi_playback(guint cmdc, gchar **cmdv)
   glibapi_read_tweets(fields, filename, cursesapi_playback_cb);
   cursesapi_unlock(inputpanel);
   cursesapi_unlock(streampanel);
-}
-
-static void cursesapi_setfields(guint cmdc, gchar **cmdv)
-{
-  if(cmdc >= 2)
-    twitterapi_set_userfields(cmdv[1]);
 }
 
 static void cursesapi_tweetsearch(guint cmdc, gchar **cmdv)
@@ -282,19 +261,64 @@ static void cursesapi_tweetsearch(guint cmdc, gchar **cmdv)
 			       since_id,
 			       max_id);
   if(tweetsearch && strlen(tweetsearch) && tweetsearch[0] == '{')
-    fields = g_strdup(T_TWEETSEARCH_FIELD);
+    fields = g_strdup(J_TWEETSEARCH_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    tweetsearch);
+
+  g_free(q);
+  g_free(result_type);
+  g_free(count);
+  g_free(geocode);
+  g_free(lang);
+  g_free(locale);
+  g_free(until);
+  g_free(since_id);
+  g_free(max_id);
+  g_free(fields);
+  g_free(tweetsearch);
+}
+
+static void cursesapi_filter_thread(gpointer data)
+{
+  GPtrArray *args = NULL;
+  gchar *track = NULL;
+  gchar *follow = NULL;
+  gchar *locations = NULL;
+  gchar *fields = NULL;
+  GPtrArray *userdata = NULL;
+
+  args = data;
+  track = g_ptr_array_index(args, 0);
+  follow = g_ptr_array_index(args, 1);
+  locations = g_ptr_array_index(args, 2);
+
+  fields = g_strdup(J_FILTER_FIELD);
+  userdata = g_ptr_array_new();
+  g_ptr_array_add(userdata, streampanel);
+  g_ptr_array_add(userdata, fields);
+
+  twitterapi_s_stat_filter(track,
+			   follow,
+			   locations,
+			   cursesapi_write_cb,
+			   userdata);
+
+  g_free(track);
+  g_free(follow);
+  g_free(locations);
+  g_free(fields);
+  g_ptr_array_free(userdata, FALSE);
+  g_ptr_array_free(args, FALSE);
 }
 
 static void cursesapi_filter(guint cmdc, gchar **cmdv)
 {
-  GSList *args = NULL;
-  XTHREAD *thread = NULL;
+  GPtrArray *args = NULL;
+  GThread *thread = NULL;
   gchar *track = NULL;
   gchar *follow = NULL;
   gchar *locations = NULL;
@@ -303,81 +327,89 @@ static void cursesapi_filter(guint cmdc, gchar **cmdv)
   follow = (cmdc >= 3 ? g_strdup(cmdv[2]) : NULL);
   locations = (cmdc >= 4 ? g_strdup(cmdv[3]) : NULL);
 
-  args = g_slist_append(args, twitterapi_s_stat_filter);
-  args = g_slist_append(args, track);
-  args = g_slist_append(args, follow);
-  args = g_slist_append(args, locations);
-  args = g_slist_append(args, cursesapi_write_cb);
-  args = g_slist_append(args, streampanel);
-  thread = g_new0(XTHREAD, 1);
-  thread->thread = g_thread_new("filter",
-				(GThreadFunc)
-				cursesapi_userinput_thread,
-				args);
-  thread->args = args;
-  g_ptr_array_add(threadarray, thread);
+  args = g_ptr_array_new();
+  g_ptr_array_add(args, track);
+  g_ptr_array_add(args, follow);
+  g_ptr_array_add(args, locations);
+
+  thread = g_thread_new("filter",
+			(GThreadFunc) cursesapi_filter_thread,
+			args);
+}
+
+static void cursesapi_sample_thread(gpointer data)
+{
+  gchar *fields = NULL;
+  GPtrArray *userdata = NULL;
+
+  fields = g_strdup(J_SAMPLE_FIELD);
+  userdata = g_ptr_array_new();
+  g_ptr_array_add(userdata, streampanel);
+  g_ptr_array_add(userdata, fields);
+
+  twitterapi_s_stat_sample(cursesapi_write_cb, userdata);
+
+  g_free(fields);
+  g_ptr_array_free(userdata, FALSE);
 }
 
 static void cursesapi_sample(guint cmdc, gchar **cmdv)
 {
-  GSList *args = NULL;
-  XTHREAD *thread = NULL;
+  GThread *thread = NULL;
+  gchar *fields = NULL;
 
-  args = g_slist_append(args, twitterapi_s_stat_sample);
-  args = g_slist_append(args, cursesapi_write_cb);
-  args = g_slist_append(args, streampanel);
-  thread = g_new0(XTHREAD, 1);
-  thread->thread = g_thread_new("sample",
-				(GThreadFunc)
-				cursesapi_userinput_thread,
-				args);
-  thread->args = args;
-  g_ptr_array_add(threadarray, thread);
+  thread = g_thread_new("sample",
+			(GThreadFunc) cursesapi_sample_thread,
+			NULL);
 }
 
-static void cursesapi_firehose(guint cmdc, gchar **cmdv)
+static void cursesapi_htimelinestream_thread(gpointer data)
 {
-  GSList *args = NULL;
-  XTHREAD *thread = NULL;
-  gchar *count = NULL;
+  GPtrArray *args = NULL;
+  gchar *track = NULL;
+  gchar *locations = NULL;
+  gchar *fields = NULL;
+  GPtrArray *userdata = NULL;
 
-  count = (cmdc >= 2 ? g_strdup(cmdv[1]) : NULL);
+  args = data;
+  track = g_ptr_array_index(args, 0);
+  locations = g_ptr_array_index(args, 1);
 
-  args = g_slist_append(args, twitterapi_s_stat_firehose);
-  args = g_slist_append(args, count);
-  args = g_slist_append(args, cursesapi_write_cb);
-  args = g_slist_append(args, streampanel);
-  thread = g_new0(XTHREAD, 1);
-  thread->thread = g_thread_new("firehose",
-				(GThreadFunc)
-				cursesapi_userinput_thread,
-				args);
-  thread->args = args;
-  g_ptr_array_add(threadarray, thread);
+  fields = g_strdup(J_HTIMELINE_FIELD);
+  userdata = g_ptr_array_new();
+  g_ptr_array_add(userdata, streampanel);
+  g_ptr_array_add(userdata, fields);
+
+  twitterapi_s_htimeline(track,
+			 locations,
+			 cursesapi_write_cb,
+			 userdata);
+
+  g_free(track);
+  g_free(locations);
+  g_free(fields);
+  g_ptr_array_free(userdata, FALSE);
+  g_ptr_array_free(args, FALSE);
 }
 
 static void cursesapi_htimelinestream(guint cmdc, gchar **cmdv)
 {
-  GSList *args = NULL;
-  XTHREAD *thread = NULL;
+  GPtrArray *args = NULL;
+  GThread *thread = NULL;
   gchar *track = NULL;
   gchar *locations = NULL;
+  gchar *fields = NULL;
 
   track = (cmdc >= 2 ? g_strdup(cmdv[1]) : NULL);
   locations = (cmdc >= 3 ? g_strdup(cmdv[2]) : NULL);
 
-  args = g_slist_append(args, twitterapi_s_htimeline);
-  args = g_slist_append(args, track);
-  args = g_slist_append(args, locations);
-  args = g_slist_append(args, cursesapi_write_cb);
-  args = g_slist_append(args, streampanel);
-  thread = g_new0(XTHREAD, 1);
-  thread->thread = g_thread_new("timeline",
-				(GThreadFunc)
-				cursesapi_userinput_thread,
-				args);
-  thread->args = args;
-  g_ptr_array_add(threadarray, thread);
+  args = g_ptr_array_new();
+  g_ptr_array_add(args, track);
+  g_ptr_array_add(args, locations);
+
+  thread = g_thread_new("timeline",
+			(GThreadFunc) cursesapi_htimelinestream_thread,
+			args);
 }
 
 static void cursesapi_htimeline(guint cmdc, gchar **cmdv)
@@ -396,13 +428,19 @@ static void cursesapi_htimeline(guint cmdc, gchar **cmdv)
 				   since_id,
 				   max_id);
   if(timeline && strlen(timeline) && timeline[0] == '[')
-    fields = g_strdup(T_HTIMELINE_FIELD);
+    fields = g_strdup(J_HTIMELINE_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    timeline);
+
+  g_free(count);
+  g_free(since_id);
+  g_free(max_id);
+  g_free(fields);
+  g_free(timeline);
 }
 
 static void cursesapi_utimeline(guint cmdc, gchar **cmdv)
@@ -427,13 +465,21 @@ static void cursesapi_utimeline(guint cmdc, gchar **cmdv)
 				    count,
 				    max_id);
   if(timeline && strlen(timeline) && timeline[0] == '[')
-    fields = g_strdup(T_UTIMELINE_FIELD);
+    fields = g_strdup(J_UTIMELINE_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    timeline);
+
+  g_free(screenname);
+  g_free(count);
+  g_free(userid);
+  g_free(since_id);
+  g_free(max_id);
+  g_free(fields);
+  g_free(timeline);
 }
 
 static void cursesapi_trends(guint cmdc, gchar **cmdv)
@@ -442,6 +488,7 @@ static void cursesapi_trends(guint cmdc, gchar **cmdv)
   country = (cmdc >= 2 ? g_strdup(cmdv[1]) : NULL);
   cursesapi_get_trends(country);
   cursesapi_get_trendspanel(trendspanel, NULL);
+  g_free(country);
 }
 
 static void cursesapi_lookup(guint cmdc, gchar **cmdv)
@@ -456,13 +503,18 @@ static void cursesapi_lookup(guint cmdc, gchar **cmdv)
 
   lookup = twitterapi_r_lookup(screenname, user_id);
   if(lookup && strlen(lookup) && lookup[0] == '[')
-    fields = g_strdup(T_LOOKUP_FIELD);
+    fields = g_strdup(J_LOOKUP_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    lookup);
+
+  g_free(screenname);
+  g_free(user_id);
+  g_free(fields);
+  g_free(lookup);
 }
 
 static void cursesapi_usersearch(guint cmdc, gchar **cmdv)
@@ -479,13 +531,19 @@ static void cursesapi_usersearch(guint cmdc, gchar **cmdv)
 
   usersearch = twitterapi_r_usersearch(q, page, count);
   if(usersearch && strlen(usersearch) && usersearch[0] == '[')
-    fields = g_strdup(T_USERSEARCH_FIELD);
+    fields = g_strdup(J_USERSEARCH_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    usersearch);
+
+  g_free(fields);
+  g_free(q);
+  g_free(page);
+  g_free(count);
+  g_free(usersearch);
 }
 
 static void cursesapi_following(guint cmdc, gchar **cmdv)
@@ -505,7 +563,7 @@ static void cursesapi_following(guint cmdc, gchar **cmdv)
   following = twitterapi_r_following(userid, screenname, cursor);
   if(following && strlen(following) && following[0] == '[')
     {
-      fields = g_strdup(T_FOLLOWING_FIELD);
+      fields = g_strdup(J_FOLLOWING_FIELD);
       followingv = g_strsplit(following, "\n", 0);
       while(followingv[iter])
 	{
@@ -519,6 +577,10 @@ static void cursesapi_following(guint cmdc, gchar **cmdv)
       g_free(following);
       g_strfreev(followingv);
     }
+
+  g_free(userid);
+  g_free(screenname);
+  g_free(cursor);
 }
 
 static void cursesapi_followers(guint cmdc, gchar **cmdv)
@@ -538,7 +600,7 @@ static void cursesapi_followers(guint cmdc, gchar **cmdv)
   followers = twitterapi_r_followers(userid, screenname, cursor);
   if(followers && strlen(followers) && followers[0] == '[')
     {
-      fields = g_strdup(T_FOLLOWERS_FIELD);
+      fields = g_strdup(J_FOLLOWERS_FIELD);
       followersv = g_strsplit(followers, "\n", 0);
       while(followersv[iter])
 	{
@@ -552,6 +614,10 @@ static void cursesapi_followers(guint cmdc, gchar **cmdv)
       g_free(followers);
       g_strfreev(followersv);
     }
+
+  g_free(userid);
+  g_free(screenname);
+  g_free(cursor);
 }
 
 static void cursesapi_updatemedia(guint cmdc, gchar **cmdv)
@@ -567,13 +633,18 @@ static void cursesapi_updatemedia(guint cmdc, gchar **cmdv)
   update = twitterapi_r_updatemedia(status,
 				    filepath);
   if(update && strlen(update) && update[0] == '{')
-    fields = g_strdup(T_UPDATEMEDIA_FIELD);
+    fields = g_strdup(J_UPDATEMEDIA_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    update);
+
+  g_free(fields);
+  g_free(update);
+  g_free(status);
+  g_free(filepath);
 }
 
 static void cursesapi_update(guint cmdc, gchar **cmdv)
@@ -589,13 +660,18 @@ static void cursesapi_update(guint cmdc, gchar **cmdv)
   update = twitterapi_r_update(status, replypostid);
 
   if(update && strlen(update) && update[0] == '{')
-    fields = g_strdup(T_UPDATE_FIELD);
+    fields = g_strdup(J_UPDATE_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    update);
+
+  g_free(fields);
+  g_free(update);
+  g_free(status);
+  g_free(replypostid);
 }
 
 static void cursesapi_retweet(guint cmdc, gchar **cmdv)
@@ -609,13 +685,17 @@ static void cursesapi_retweet(guint cmdc, gchar **cmdv)
   retweet = twitterapi_r_retweet(postid);
 
   if(retweet && strlen(retweet) && retweet[0] == '{')
-    fields = g_strdup(T_RETWEET_FIELD);
+    fields = g_strdup(J_RETWEET_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    retweet);
+
+  g_free(fields);
+  g_free(retweet);
+  g_free(postid);
 }
 
 static void cursesapi_destroy(guint cmdc, gchar **cmdv)
@@ -629,13 +709,17 @@ static void cursesapi_destroy(guint cmdc, gchar **cmdv)
   destroy = twitterapi_r_destroy(postid);
 
   if(destroy && strlen(destroy) && destroy[0] == '{')
-    fields = g_strdup(T_DESTROY_FIELD);
+    fields = g_strdup(J_DESTROY_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    destroy);
+
+  g_free(fields);
+  g_free(destroy);
+  g_free(postid);
 }
 
 static void cursesapi_follow(guint cmdc, gchar **cmdv)
@@ -651,13 +735,18 @@ static void cursesapi_follow(guint cmdc, gchar **cmdv)
   follow = twitterapi_r_follow(screenname, userid);
 
   if(follow && strlen(follow) && follow[0] == '{')
-    fields = g_strdup(T_FOLLOW_FIELD);
+    fields = g_strdup(J_FOLLOW_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    follow);
+
+  g_free(fields);
+  g_free(follow);
+  g_free(screenname);
+  g_free(userid);
 }
 
 static void cursesapi_unfollow(guint cmdc, gchar **cmdv)
@@ -673,13 +762,18 @@ static void cursesapi_unfollow(guint cmdc, gchar **cmdv)
   unfollow = twitterapi_r_unfollow(screenname, userid);
 
   if(unfollow && strlen(unfollow) && unfollow[0] == '{')
-    fields = g_strdup(T_UNFOLLOW_FIELD);
+    fields = g_strdup(J_UNFOLLOW_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    unfollow);
+
+  g_free(fields);
+  g_free(unfollow);
+  g_free(screenname);
+  g_free(userid);
 }
 
 static void cursesapi_blocklist(guint cmdc, gchar **cmdv)
@@ -692,13 +786,17 @@ static void cursesapi_blocklist(guint cmdc, gchar **cmdv)
 
   blocklist = twitterapi_r_blocklist(cursor);
   if(blocklist && strlen(blocklist) && blocklist[0] == '[')
-    fields = g_strdup(T_BLOCKLIST_FIELD);
+    fields = g_strdup(J_BLOCKLIST_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    blocklist);
+
+  g_free(fields);
+  g_free(blocklist);
+  g_free(cursor);
 }
 
 static void cursesapi_block(guint cmdc, gchar **cmdv)
@@ -714,13 +812,18 @@ static void cursesapi_block(guint cmdc, gchar **cmdv)
   block = twitterapi_r_block(screenname, userid);
 
   if(block && strlen(block) && block[0] == '{')
-    fields = g_strdup(T_BLOCK_FIELD);
+    fields = g_strdup(J_BLOCK_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    block);
+
+  g_free(fields);
+  g_free(block);
+  g_free(screenname);
+  g_free(userid);
 }
 
 static void cursesapi_unblock(guint cmdc, gchar **cmdv)
@@ -736,13 +839,18 @@ static void cursesapi_unblock(guint cmdc, gchar **cmdv)
   unblock = twitterapi_r_unblock(screenname, userid);
 
   if(unblock && strlen(unblock) && unblock[0] == '{')
-    fields = g_strdup(T_UNBLOCK_FIELD);
+    fields = g_strdup(J_UNBLOCK_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    unblock);
+
+  g_free(fields);
+  g_free(unblock);
+  g_free(screenname);
+  g_free(userid);
 }
 
 static void cursesapi_profile(guint cmdc, gchar **cmdv)
@@ -765,13 +873,20 @@ static void cursesapi_profile(guint cmdc, gchar **cmdv)
 				 description);
 
   if(profile && strlen(profile) && profile[0] == '{')
-    fields = g_strdup(T_PROFILE_FIELD);
+    fields = g_strdup(J_PROFILE_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    profile);
+
+  g_free(fields);
+  g_free(profile);
+  g_free(name);
+  g_free(purl);
+  g_free(location);
+  g_free(description);
 }
 
 static void cursesapi_pbackground(guint cmdc, gchar **cmdv)
@@ -789,13 +904,19 @@ static void cursesapi_pbackground(guint cmdc, gchar **cmdv)
   pbackground = twitterapi_r_pbackground(filepath, tile, use);
 
   if(pbackground && strlen(pbackground) && pbackground[0] == '{')
-    fields = g_strdup(T_PBACKGROUND_FIELD);
+    fields = g_strdup(J_PBACKGROUND_FIELD);
   else
     fields = g_strdup("raw");
   cursesapi_call_rest_write(streampanel,
 			    inputpanel,
 			    fields,
 			    pbackground);
+
+  g_free(fields);
+  g_free(pbackground);
+  g_free(filepath);
+  g_free(tile);
+  g_free(use);
 }
 
 static void cursesapi_help(void)
@@ -816,9 +937,6 @@ static void cursesapi_help(void)
   g_string_append(help, "\n");
   g_string_append(help, "sample\n");
   g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/statuses/sample \n");
-  g_string_append(help, "\n");
-  g_string_append(help, "firehose [count]\n");
-  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/statuses/firehose \n");
   g_string_append(help, "\n");
   g_string_append(help, "htimelinestream [track] [locations]\n");
   g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/user \n");
@@ -959,9 +1077,6 @@ void cursesapi_userinput(void)
 	  if(g_strcmp0("sample", cmdv[0]) == 0)
 	    cursesapi_sample(cmdc, cmdv);
 
-	  if(g_strcmp0("firehose", cmdv[0]) == 0)
-	    cursesapi_firehose(cmdc, cmdv);
-
 	  if(g_strcmp0("htimelinestream", cmdv[0]) == 0)
 	    cursesapi_htimelinestream(cmdc, cmdv);
 
@@ -1028,9 +1143,6 @@ void cursesapi_userinput(void)
 	  if(g_strcmp0("playback", cmdv[0]) == 0)
 	    cursesapi_playback(cmdc, cmdv);
 
-	  if(g_strcmp0("setfields", cmdv[0]) == 0)
-	    cursesapi_setfields(cmdc, cmdv);
-
 	  if(g_strcmp0("exit", cmdv[0]) == 0)
 	    {
 	      flushinp();
@@ -1041,14 +1153,4 @@ void cursesapi_userinput(void)
 	}
       g_free(cmd);
     }
-
-  while(iter < threadarray->len)
-    {
-      XTHREAD *thread = g_ptr_array_index(threadarray, iter);
-      cursesapi_lock(streampanel);
-      g_slist_free(thread->args);
-      cursesapi_unlock(streampanel);
-      iter++;
-    }
-  g_ptr_array_free(threadarray, FALSE);
 }

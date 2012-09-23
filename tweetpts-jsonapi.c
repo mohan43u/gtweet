@@ -218,7 +218,6 @@ gchar* jsonapi_get_array(JsonNode *root, gchar *fields)
   return(result);
 }
 
-
 void jsonapi_init(void)
 {
   g_type_init();

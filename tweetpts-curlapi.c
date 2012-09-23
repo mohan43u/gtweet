@@ -1,10 +1,7 @@
 #include <tweetpts.h>
 
-static int curlapi_debug(CURL *curlapi,
-			 curl_infotype type,
-			 char *data,
-			 size_t size,
-			 void *userdata)
+static int curlapi_debug(CURL *curlapi, curl_infotype type, char *data,
+			 size_t size, void *userdata)
 {
   GString *debugbuffer = (GString *) userdata;
   gchar *edata = NULL;
@@ -15,23 +12,22 @@ static int curlapi_debug(CURL *curlapi,
   return(0);
 }
 
-static size_t curlapi_http_write_cb(char *ptr,
-				    size_t size,
-				    size_t nmemb,
+static size_t curlapi_http_write_cb(char *ptr, size_t size, size_t nmemb,
 				    void *userdata)
 {
+  GPtrArray *cbargs = NULL;
   gsize length = 0;
   GString *buffer = NULL;
-  GSList *args = NULL;
-  GSList *threadargs = NULL;
-  gboolean (*write_cb)(GSList *args) = NULL;
+  gboolean (*write_cb)(gchar *string, gpointer userdata) = NULL;
+  gpointer writecb_userdata = NULL;
   gchar *string = NULL;
   gchar *fullstring = NULL;
   
   length = size * nmemb;
-  args = (GSList *) userdata;
-  buffer = g_slist_nth_data(args, 0);
-  write_cb = g_slist_nth_data(args, 1);
+  cbargs = userdata;
+  buffer = g_ptr_array_index(cbargs, 0);
+  write_cb = g_ptr_array_index(cbargs, 1);
+  writecb_userdata = g_ptr_array_index(cbargs, 2);
   string = g_strndup(ptr, length);
   
   if(g_strcmp0("\r\n", &string[length - 2]) == 0)
@@ -41,12 +37,10 @@ static size_t curlapi_http_write_cb(char *ptr,
       g_free(string);
       fullstring = g_strdup(buffer->str);
       g_string_set_size(buffer, 0);
-      threadargs = g_slist_copy(g_slist_nth(args, 2));
-      threadargs = g_slist_append(threadargs, fullstring);
-
       //Make sure write_cb returns true, else die.
-      if(write_cb(threadargs) == FALSE)
+      if(write_cb(fullstring, writecb_userdata) == FALSE)
 	length = 0;
+      g_free(fullstring);
     }
   else
     {
@@ -57,9 +51,7 @@ static size_t curlapi_http_write_cb(char *ptr,
   return(length);
 }
 
-static size_t curlapi_http_write(char *ptr,
-				 size_t size,
-				 size_t nmemb,
+static size_t curlapi_http_write(char *ptr, size_t size, size_t nmemb,
 				 void *userdata)
 {
   gsize length = size * nmemb;
@@ -70,8 +62,7 @@ static size_t curlapi_http_write(char *ptr,
   return(length);
 }
 
-static struct curl_slist* curlapi_get_oauthheader(gchar **url,
-						  gchar **params,
+static struct curl_slist* curlapi_get_oauthheader(gchar **url, gchar **params,
 						  gboolean oauth)
 {
   if(oauth)
@@ -164,23 +155,23 @@ static struct curl_slist* curlapi_get_oauthheader(gchar **url,
     return(NULL);
 }
 
-void curlapi_http_cb(gchar *inputurl,
-		     gchar *inputparams,
-		     GSList *args,
-		     gboolean oauth)
+void curlapi_http_cb(gchar *inputurl, gchar *inputparams, gpointer func,
+		     gpointer userdata, gboolean oauth)
 {
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
   struct curl_slist *oauthheader = NULL;
   CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
-  GSList *threadargs = g_slist_copy(args);
+  GPtrArray *cbargs = g_ptr_array_new();
   CURLcode returncode;
 
-  threadargs = g_slist_prepend(threadargs, buffer);
+  g_ptr_array_add(cbargs, buffer);
+  g_ptr_array_add(cbargs, func);
+  g_ptr_array_add(cbargs, userdata);
   curl_easy_setopt(curlapi, CURLOPT_USERAGENT, curl_version());
   curl_easy_setopt(curlapi, CURLOPT_WRITEFUNCTION, curlapi_http_write_cb);
-  curl_easy_setopt(curlapi, CURLOPT_WRITEDATA, threadargs);
+  curl_easy_setopt(curlapi, CURLOPT_WRITEDATA, cbargs);
   oauthheader = curlapi_get_oauthheader(&url, &params, oauth);
   curl_easy_setopt(curlapi, CURLOPT_URL, url);
   curl_easy_setopt(curlapi, CURLOPT_HTTPHEADER, oauthheader);
@@ -194,27 +185,24 @@ void curlapi_http_cb(gchar *inputurl,
   if(returncode != CURLE_OK && returncode != CURLE_WRITE_ERROR)
     {
       gchar *httperror = NULL;
-      void (*write_cb)(GSList *args) = NULL;
+      gboolean (*write_cb)(gchar *string, gpointer userdata) = NULL;
 
       httperror = curlapi_http(url, params, oauth);
-      threadargs = g_slist_remove(threadargs, buffer);
-      write_cb = g_slist_nth_data(threadargs, 0);
-      threadargs = g_slist_append(threadargs, g_strdup(httperror));
-      write_cb(g_slist_nth(threadargs, 1));
+      write_cb = func;
+      write_cb(httperror, userdata);
       g_free(httperror);
     }
 
   g_free(url);
   g_free(params);
   g_string_free(buffer, TRUE);
+  g_ptr_array_free(cbargs, FALSE);
   if(oauthheader)
     curl_slist_free_all(oauthheader);
   curl_easy_cleanup(curlapi);
 }
 
-gchar* curlapi_http(gchar *inputurl,
-		    gchar *inputparams,
-		    gboolean oauth)
+gchar* curlapi_http(gchar *inputurl, gchar *inputparams, gboolean oauth)
 {
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
@@ -264,10 +252,8 @@ gchar* curlapi_http(gchar *inputurl,
   return(string);
 }
 
-gchar* curlapi_http_media(gchar *inputurl,
-			  gchar *inputparams,
-			  GPtrArray *inputdata,
-			  gboolean oauth)
+gchar* curlapi_http_media(gchar *inputurl, gchar *inputparams,
+			  GPtrArray *inputdata, gboolean oauth)
 {
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
