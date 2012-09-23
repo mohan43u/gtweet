@@ -3,7 +3,6 @@
 
 #define T_S_STAT_FILTER "https://stream.twitter.com/1.1/statuses/filter.json"
 #define T_S_STAT_SAMPLE "https://stream.twitter.com/1.1/statuses/sample.json"
-#define T_S_STAT_FIREHOSE "https://stream.twitter.com/1.1/statuses/firehose.json"
 #define T_S_USER "https://userstream.twitter.com/1.1/user.json"
 #define T_R_HTIMELINE "https://api.twitter.com/1.1/statuses/home_timeline.json"
 #define T_R_UTIMELINE "https://api.twitter.com/1.1/statuses/user_timeline.json"
@@ -29,8 +28,6 @@
 
 void twitterapi_init(void);
 void twitterapi_free(void);
-void twitterapi_set_userfields(gchar *fields);
-gchar* twitterapi_get_userfields(void);
 void twitterapi_s_stat_filter(gchar *track, gchar *follow, gchar *locations,
 			      gpointer func, gpointer userdata);
 void twitterapi_s_stat_sample(gpointer func, gpointer userdata);
