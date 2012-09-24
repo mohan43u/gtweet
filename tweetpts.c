@@ -2,8 +2,7 @@
 
 static void tweetpts_init(void)
 {
-  glibapi_init();
-  oauthapi_init();
+  twitterapi_init();
   cursesapi_init();
   jsonapi_init();
 }
@@ -12,8 +11,7 @@ static void tweetpts_free(void)
 {
   jsonapi_free();
   cursesapi_free();
-  oauthapi_free();
-  glibapi_free();
+  twitterapi_free();
 }
 
 int main(int argc, char *argv[])

@@ -748,3 +748,15 @@ gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use)
   g_ptr_array_free(inputdata, FALSE);
   return(result);
 }
+
+void twitterapi_init(void)
+{
+  glibapi_init();
+  oauthapi_init();
+}
+
+void twitterapi_free(void)
+{
+  oauthapi_free();
+  glibapi_free();
+}
