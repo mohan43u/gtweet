@@ -37,7 +37,7 @@ void glibapi_init(void)
 				mainloop_init_cb,
 				glibapi_mainloop);
 
-  glibapi_iochannel = g_new0(XGIOChannel, 1);
+  glibapi_iochannel = g_new0(glibapi_giochannel_t, 1);
   glibapi_iochannel->pool = g_thread_pool_new(iochannel_write_cb,
 					      glibapi_iochannel,
 					      1,

@@ -132,20 +132,6 @@ gchar* twitterapi_r_usersettings(void)
   return(result);
 }
 
-gchar* twitterapi_r_trends(gchar *woeid)
-{
-  gchar *url = NULL;
-  gchar *geturl = NULL;
-  gchar *result = NULL;
-
-  geturl = g_strdup_printf(T_R_TRENDS, woeid);
-  url = oauthapi_sign(geturl, NULL, "GET");
-  g_free(geturl);
-  result = curlapi_http(url, NULL, TRUE);
-  g_free(url);
-  return(result);
-}
-
 gchar* twitterapi_r_woeid(gchar *countryname)
 {
   gchar *url = NULL;
@@ -176,6 +162,20 @@ gchar* twitterapi_r_woeid(gchar *countryname)
     woeid = NULL;
 
   return(woeid);
+}
+
+gchar* twitterapi_r_trends(gchar *woeid)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  gchar *result = NULL;
+
+  geturl = g_strdup_printf(T_R_TRENDS, woeid);
+  url = oauthapi_sign(geturl, NULL, "GET");
+  g_free(geturl);
+  result = curlapi_http(url, NULL, TRUE);
+  g_free(url);
+  return(result);
 }
 
 gchar* twitterapi_r_tweetsearch(gchar *q, gchar *geocode, gchar *lang,
@@ -753,10 +753,12 @@ void twitterapi_init(void)
 {
   glibapi_init();
   oauthapi_init();
+  jsonapi_init();
 }
 
 void twitterapi_free(void)
 {
+  jsonapi_free();
   oauthapi_free();
   glibapi_free();
 }

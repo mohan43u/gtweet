@@ -37,11 +37,11 @@ gchar* twitterapi_r_htimeline(gchar *count, gchar *since_id, gchar *max_id);
 gchar* twitterapi_r_utimeline(gchar *userid, gchar *screenname, gchar *since_id,
 			      gchar *count, gchar *max_id);
 gchar* twitterapi_r_usersettings(void);
-gchar* twitterapi_r_trends(gchar *woeid);
 gchar* twitterapi_r_woeid(gchar *countryname);
+gchar* twitterapi_r_trends(gchar *woeid);
 gchar* twitterapi_r_tweetsearch(gchar *q, gchar *geocode, gchar *lang,
-			 gchar *locale, gchar *result_type, gchar *count,
-			 gchar *until, gchar *since_id, gchar *max_id);
+				gchar *locale, gchar *result_type, gchar *count,
+				gchar *until, gchar *since_id, gchar *max_id);
 gchar* twitterapi_r_lookup(gchar *screenname, gchar *user_id);
 gchar* twitterapi_r_usersearch(gchar *q, gchar *page, gchar *count);
 gchar* twitterapi_r_following(gchar *userid, gchar *screenname, gchar *cursor);

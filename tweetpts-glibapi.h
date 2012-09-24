@@ -6,10 +6,10 @@ typedef struct
   GIOChannel *iochannel;
   GThreadPool *pool;
   GMutex mutex;
-} XGIOChannel;
+} glibapi_giochannel_t;
 
 GMainLoop *glibapi_mainloop;
-XGIOChannel *glibapi_iochannel;
+glibapi_giochannel_t *glibapi_iochannel;
 
 void glibapi_init(void);
 void glibapi_free(void);
