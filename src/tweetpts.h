@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <glib-unix.h>
 #include <locale.h>
+#include <string.h>
 #include <tweetpts-glibapi.h>
 #include <tweetpts-readlineapi.h>
 #include <tweetpts-curlapi.h>
