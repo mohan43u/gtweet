@@ -924,10 +924,10 @@ static void cursesapi_help(void)
   GString *help = g_string_new(NULL);
 
   g_string_append(help, "' ' \t pause/resume streaming\n");
-  g_string_append(help, "ctrl+f \t stop streaming\n");
-  g_string_append(help, "ctrl+r \t refresh screen\n");
-  g_string_append(help, "ctrl+l \t clear screen\n");
-  g_string_append(help, "ctrl+h \t this help text\n");
+  g_string_append(help, "Ctrl-f \t stop streaming\n");
+  g_string_append(help, "Ctrl-r \t refresh screen\n");
+  g_string_append(help, "Ctrl-l \t clear screen\n");
+  g_string_append(help, "Ctrl-h \t this help text\n");
   g_string_append(help, "\n");
   g_string_append(help, "tsearch [q] [result_type] [count] [geocode] [lang] [locale] [until] [since_id] [max_id]\n");
   g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/get/search/tweets \n");
@@ -1003,9 +1003,6 @@ static void cursesapi_help(void)
   g_string_append(help, "\n");
   g_string_append(help, "playback [filename]\n");
   g_string_append(help, "\t display those stored json tweets in [filename] back in the screen. Defaults to 'tweets.json' file in current directory \n");
-  g_string_append(help, "\n");
-  g_string_append(help, "setfields [jsonfield]\n");
-  g_string_append(help, "\t json field specification understandable by jsonapi_get_value() function\n");
   g_string_append(help, "\n");
   g_string_append(help, "exit\n");
   g_string_append(help, "\t exit from this application\n");

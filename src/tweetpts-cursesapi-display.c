@@ -477,7 +477,7 @@ void cursesapi_create_baselayout(void)
 				    COLOR_WHITE,
 				    NULL);
   g_ptr_array_add(plist, statuspanel);
-  statuspanel->defaultstring = g_strdup("\npress Ctrl+h for help..");
+  statuspanel->defaultstring = g_strdup("\npress Ctrl-h for help..");
   cursesapi_panel_refresh(statuspanel, 1);
 
   cursesapi_get_usersettings(userpanel);
