@@ -1,5 +1,19 @@
 #include <tweetpts.h>
 
+void twitterapi_init(void)
+{
+  glibapi_init();
+  oauthapi_init();
+  jsonapi_init();
+}
+
+void twitterapi_free(void)
+{
+  jsonapi_free();
+  oauthapi_free();
+  glibapi_free();
+}
+
 void twitterapi_s_stat_filter(gchar *track, gchar *follow, gchar *locations,
 			      gpointer func, gpointer userdata)
 {
@@ -747,18 +761,4 @@ gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use)
     }
   g_ptr_array_free(inputdata, FALSE);
   return(result);
-}
-
-void twitterapi_init(void)
-{
-  glibapi_init();
-  oauthapi_init();
-  jsonapi_init();
-}
-
-void twitterapi_free(void)
-{
-  jsonapi_free();
-  oauthapi_free();
-  glibapi_free();
 }
