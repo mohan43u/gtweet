@@ -16,6 +16,7 @@ void jsonapi_free(void);
 #define J_FIELD "text|$..text,"					\
   "fname|$.user.name,"						\
   "tname|$.user.screen_name|| [http://www.twitter.com/%s],"	\
+  "official|$.user.verified|boolean,"				\
   "time|$.created_at|time,"					\
   "postid|$.id_str,"						\
   "url|$..url,"							\
@@ -45,6 +46,7 @@ void jsonapi_free(void);
 
 #define J_LOOKUP_FIELD "fname|$.name,"			\
   "tname|$.screen_name|| [http://www.twitter.com/%s],"	\
+  "official|$.verified|boolean,"			\
   "desc|$.description,"					\
   "location|$.location,"				\
   "id|$.id_str,"					\
