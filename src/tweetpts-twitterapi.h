@@ -24,6 +24,7 @@
 #define T_R_UNBLOCK "https://api.twitter.com/1.1/blocks/destroy.json"
 #define T_R_PROFILE "https://api.twitter.com/1.1/account/update_profile.json"
 #define T_R_PBACKGROUND "https://api.twitter.com/1.1/account/update_profile_background_image.json"
+#define T_R_PIMAGE "https://api.twitter.com/1.1/account/update_profile_image.json"
 #define Y_R_WOEID "http://where.yahooapis.com/v1"
 
 void twitterapi_init(void);
@@ -58,5 +59,6 @@ gchar* twitterapi_r_unblock(gchar *screenname, gchar *userid);
 gchar* twitterapi_r_profile(gchar *name, gchar *url, gchar *location,
 			    gchar *description);
 gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use);
+gchar* twitterapi_r_pimage(gchar *filepath);
 
 #endif

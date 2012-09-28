@@ -36,6 +36,7 @@ static void cursesapi_block(guint cmdc, gchar **cmdv);
 static void cursesapi_unblock(guint cmdc, gchar **cmdv);
 static void cursesapi_profile(guint cmdc, gchar **cmdv);
 static void cursesapi_pbackground(guint cmdc, gchar **cmdv);
+static void cursesapi_pimage(guint cmdc, gchar **cmdv);
 
 static void cursesapi_call_rest_write(cursesapi_panel_t *panel,
 				      cursesapi_panel_t *input,
@@ -919,6 +920,30 @@ static void cursesapi_pbackground(guint cmdc, gchar **cmdv)
   g_free(use);
 }
 
+static void cursesapi_pimage(guint cmdc, gchar **cmdv)
+{
+  gchar *fields = NULL;
+  gchar *pimage = NULL;
+  gchar *filepath = NULL;
+
+  filepath = (cmdc >= 2? g_strdup(cmdv[1]) : NULL);
+
+  pimage = twitterapi_r_pimage(filepath);
+
+  if(pimage && strlen(pimage) && pimage[0] == '{')
+    fields = g_strdup(J_PIMAGE_FIELD);
+  else
+    fields = g_strdup("raw");
+  cursesapi_call_rest_write(streampanel,
+			    inputpanel,
+			    fields,
+			    pimage);
+
+  g_free(fields);
+  g_free(pimage);
+  g_free(filepath);
+}
+
 static void cursesapi_help(void)
 {
   GString *help = g_string_new(NULL);
@@ -994,6 +1019,9 @@ static void cursesapi_help(void)
   g_string_append(help, "\n");
   g_string_append(help, "pbackground [filepath] [use] [tile] \n");
   g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image \n");
+  g_string_append(help, "\n");
+  g_string_append(help, "pimage [filepath] \n");
+  g_string_append(help, "\t https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image \n");
   g_string_append(help, "\n");
   g_string_append(help, "startrecord [filename]\n");
   g_string_append(help, "\t start saving all streaming tweets into a json file. Defaults to 'tweets.json' in current directory\n");
@@ -1130,6 +1158,9 @@ void cursesapi_userinput(void)
 
 	  if(g_strcmp0("pbackground", cmdv[0]) == 0)
 	    cursesapi_pbackground(cmdc, cmdv);
+
+	  if(g_strcmp0("pimage", cmdv[0]) == 0)
+	    cursesapi_pimage(cmdc, cmdv);
 
 	  if(g_strcmp0("startrecord", cmdv[0]) == 0)
 	    cursesapi_start_recording(cmdc, cmdv);

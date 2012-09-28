@@ -762,3 +762,39 @@ gchar* twitterapi_r_pbackground(gchar *filepath, gchar *tile, gchar *use)
   g_ptr_array_free(inputdata, FALSE);
   return(result);
 }
+
+gchar* twitterapi_r_pimage(gchar *filepath)
+{
+  gchar *url = NULL;
+  gchar *postparams = NULL;
+  GString *postargs = NULL;
+  gchar *result = NULL;
+
+  postargs = g_string_new(NULL);
+  if(filepath && strlen(filepath))
+    {
+      gchar *filecontent = NULL;
+      gchar *fullpath = NULL;
+      gchar *encodedcontent = NULL;
+      gsize length = 0; 
+
+      fullpath = glibapi_expandfilename(filepath);
+      g_file_get_contents(fullpath, &filecontent, &length, NULL);
+      encodedcontent = g_base64_encode(filecontent, length);
+      g_string_append_printf(postargs, "&image=%s", encodedcontent);
+
+      g_free(encodedcontent);
+      g_free(filecontent);
+      g_free(fullpath);
+    }
+  if(postargs->len)
+    postparams = g_strdup(&(postargs->str[1]));
+  else
+    postparams = g_strdup("");
+  g_string_free(postargs, TRUE);
+
+  url = oauthapi_sign(T_R_PIMAGE, &postparams, "POST");
+  result = curlapi_http(url, postparams, TRUE);
+  g_free(url);
+  return(result);
+}
