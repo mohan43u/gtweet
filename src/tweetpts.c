@@ -43,6 +43,13 @@ static void tweetpts_free(void)
 
 int main(int argc, char *argv[])
 {
+
+  if(g_strcmp0("--help", argv[1]) == 0)
+    {
+      cursesapi_help(TRUE);
+      exit(EXIT_SUCCESS);
+    }
+
   tweetpts_init();
   cursesapi_userinput();
   tweetpts_free();

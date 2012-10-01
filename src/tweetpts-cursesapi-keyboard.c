@@ -34,7 +34,6 @@ static void cursesapi_call_rest_write(cursesapi_panel_t *panel,
 				      gchar *fields, gchar *string);
 static void cursesapi_get_trends(gchar *country);
 static void cursesapi_userinput_thread(gpointer data);
-static void cursesapi_help(void);
 static void cursesapi_space(void);
 static void cursesapi_finish(void);
 static void cursesapi_start_recording(guint cmdc, gchar **cmdv);
@@ -973,7 +972,7 @@ static void cursesapi_pimage(guint cmdc, gchar **cmdv)
   g_free(filepath);
 }
 
-static void cursesapi_help(void)
+void cursesapi_help(gboolean console)
 {
   GString *help = g_string_new(NULL);
 
@@ -1065,7 +1064,10 @@ static void cursesapi_help(void)
   g_string_append(help, "\t exit from this application\n");
   g_string_append(help, "\n");
 
-  cursesapi_call_rest_write(streampanel, inputpanel, g_strdup("raw"), g_strdup(help->str));
+  if(console)
+    g_printerr("%s", help->str);
+  else
+    cursesapi_call_rest_write(streampanel, inputpanel, g_strdup("raw"), g_strdup(help->str));
   g_string_free(help, TRUE);
 }
 
@@ -1094,7 +1096,7 @@ void cursesapi_userinput(void)
 	}
       else if(input == 8) // 8 == Ctrl + h
 	{
-	  cursesapi_help();
+	  cursesapi_help(FALSE);
 	  continue;
 	}
       else if(input == 6) // 6 == Ctrl + f

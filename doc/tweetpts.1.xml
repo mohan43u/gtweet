@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+<refentry lang="en">
+<refentryinfo>
+    <title>Tweetpts(1)</title>
+    <date>October 2012</date>
+    <author>
+        <firstname>Mohan</firstname>
+        <surname>R</surname>
+        <email>mohan43u@gmail.com</email>
+    </author>
+    <authorinitials>MR</authorinitials>
+<revhistory><revision><revnumber>0.2</revnumber><date>October 2012</date><authorinitials>MR</authorinitials><revremark>Written for tweetpts-0.2 release</revremark></revision></revhistory>
+</refentryinfo>
+<refmeta>
+<refentrytitle>Tweetpts</refentrytitle>
+<manvolnum>1</manvolnum>
+<refmiscinfo class="source">&#160;</refmiscinfo>
+<refmiscinfo class="manual">&#160;</refmiscinfo>
+<refmiscinfo class="version">0.2</refmiscinfo>
+</refmeta>
+<refnamediv>
+    <refname>tweetpts</refname>
+    <refpurpose>A simple twitter terminal client</refpurpose>
+</refnamediv>
+<refsynopsisdiv id="_synopsis">
+<simpara><emphasis role="strong">tweetpts</emphasis></simpara>
+</refsynopsisdiv>
+<refsect1 id="_description">
+<title>DESCRIPTION</title>
+<simpara>The tweetpts(1) is a simple twitter client which have following commands to interact with twitter</simpara>
+</refsect1>
+<refsect1 id="_commands_and_keys">
+<title>COMMANDS AND KEYS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">pause/resume streaming</emphasis>
+</term>
+<listitem>
+<simpara>
+press <emphasis>' '</emphasis> to  pause/resume streaming
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">stop streaming</emphasis>
+</term>
+<listitem>
+<simpara>
+press <emphasis>Ctrl-f</emphasis> to  stop streaming
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">refresh screen</emphasis>
+</term>
+<listitem>
+<simpara>
+press <emphasis>Ctrl-r</emphasis> to refresh screen
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">clear screen</emphasis>
+</term>
+<listitem>
+<simpara>
+press <emphasis>Ctrl-l</emphasis> to clear screen
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">get help</emphasis>
+</term>
+<listitem>
+<simpara>
+press <emphasis>Ctrl-h</emphasis> to get this help text
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">tsearch</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: tsearch [q] [result_type] [count] [geocode] [lang] [locale] [until] [since_id] [max_id]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/search/tweets">https://dev.twitter.com/docs/api/1.1/get/search/tweets</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">filter</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: filter [track] [follow] [locations]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/filter">https://dev.twitter.com/docs/api/1.1/post/statuses/filter</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">sample</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: sample
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/sample">https://dev.twitter.com/docs/api/1.1/get/statuses/sample</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">htimelinestream</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: htimelinestream [track] [locations]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/user">https://dev.twitter.com/docs/api/1.1/get/user</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">htimeline</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: htimeline [count] [since_id] [max_id]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline">https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">utimeline</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: utimeline [screenname] [count] [since_id] [max_id]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline">https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">trends</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: trends [country]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara>show what is trending in specific [country]. give <emphasis>world</emphasis> as <emphasis>country</emphasis> to get what is trending globally</simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">lookup</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: lookup [screenname] [user_id]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/users/lookup">https://dev.twitter.com/docs/api/1.1/get/users/lookup</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">usearch</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: usearch [q] [page] [count]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/users/search">https://dev.twitter.com/docs/api/1.1/get/users/search</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">following</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: following [screenname] [userid] [cursor]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/friends/ids">https://dev.twitter.com/docs/api/1.1/get/friends/ids</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">followers</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: followers [screenname] [userid] [cursor]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/followers/ids">https://dev.twitter.com/docs/api/1.1/get/followers/ids</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">updatemedia</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: updatemedia [status] [filepath]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media">https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">update</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: update [status]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/update">https://dev.twitter.com/docs/api/1.1/post/statuses/update</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">retweet</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: retweet [postid]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid">https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">destroy</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: destroy [postid]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid">https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">follow</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: follow [screenname] [userid]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/friendships/create">https://dev.twitter.com/docs/api/1.1/post/friendships/create</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">unfollow</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: unfollow [screenname] [userid]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/friendships/destroy">https://dev.twitter.com/docs/api/1.1/post/friendships/destroy</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">blocklist</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: blocklist [cursor]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/blocks/list">https://dev.twitter.com/docs/api/1.1/get/blocks/list</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">block</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: block [screenname] [userid]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/blocks/create">https://dev.twitter.com/docs/api/1.1/post/blocks/create</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">unblock</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: unblock [screenname] [userid]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/blocks/destroy">https://dev.twitter.com/docs/api/1.1/post/blocks/destroy</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">profile</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: profile [name] [url] [location] [description]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile">https://dev.twitter.com/docs/api/1.1/post/account/update_profile</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">pbackground</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: pbackground [filepath] [use] [tile]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image">https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">pimage</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: pimage [filepath]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image">https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image</ulink></simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">startrecord</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: startrecord [filename]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara>start saving all streaming tweets into a json file. Defaults to <emphasis>tweets.json</emphasis> in current directory</simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">stoprecord</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: stoprecord
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara>stop saving tweets.</simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">playback</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: playback [filename]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara>display those stored json tweets in [filename] back in the screen. Defaults to <emphasis>tweets.json</emphasis> file in current directory</simpara>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">exit</emphasis>
+</term>
+<listitem>
+<simpara>
+<emphasis>syntex</emphasis>: exit
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+<simpara>exit from this application</simpara>
+</refsect1>
+<refsect1 id="_returncode">
+<title>RETURNCODE</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+Success
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+Failure
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</refsect1>
+<refsect1 id="_bugs">
+<title>BUGS</title>
+<simpara>Please raise it on <ulink url="https://github.com/mohan43u/tweetpts/issues">https://github.com/mohan43u/tweetpts/issues</ulink></simpara>
+</refsect1>
+<refsect1 id="_author">
+<title>AUTHOR</title>
+<simpara>Till now, Its me Mohan "Mokka" Raman :)</simpara>
+</refsect1>
+<refsect1 id="_resources">
+<title>RESOURCES</title>
+<simpara><ulink url="https://github.com/mohan43u/tweetpts">https://github.com/mohan43u/tweetpts</ulink></simpara>
+</refsect1>
+<refsect1 id="_copying">
+<title>COPYING</title>
+<simpara>See LICENSE file or <ulink url="https://github.com/mohan43u/tweetpts/blob/master/LICENSE">https://github.com/mohan43u/tweetpts/blob/master/LICENSE</ulink></simpara>
+</refsect1>
+</refentry>

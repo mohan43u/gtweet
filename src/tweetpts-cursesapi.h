@@ -110,5 +110,7 @@ void cursesapi_push_node(cursesapi_panel_t *panel, JsonNode *root, gchar *fields
 void cursesapi_stream_write(gpointer data, gpointer user_data);
 void cursesapi_rest_write(cursesapi_panel_t *panel, cursesapi_panel_t *input,
 			  gchar *fields, gchar *string);
+void cursesapi_help(gboolean console);
+
 
 #endif

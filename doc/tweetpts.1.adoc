@@ -1,0 +1,234 @@
+Tweetpts(1)
+===========
+Mohan R <mohan43u@gmail.com>
+v0.2, October 2012 : Written for tweetpts-0.2 release
+:doctype: manpage
+
+NAME
+----
+
+tweetpts - A simple twitter terminal client
+
+SYNOPSIS
+--------
+
+*tweetpts*
+
+DESCRIPTION
+-----------
+
+The tweetpts(1) is a simple twitter client which have following commands to interact with twitter
+
+COMMANDS AND KEYS
+-----------------
+
+*pause/resume streaming*::
+
+press _' '_ to  pause/resume streaming
+
+*stop streaming*::
+
+press _Ctrl-f_ to  stop streaming
+
+*refresh screen*::
+
+press _Ctrl-r_ to refresh screen
+
+*clear screen*::
+
+press _Ctrl-l_ to clear screen
+
+*get help*::
+
+press _Ctrl-h_ to get this help text
+
+*tsearch*::
+
+_syntex_: tsearch [q] [result_type] [count] [geocode] [lang] [locale] [until] [since_id] [max_id]
+
+https://dev.twitter.com/docs/api/1.1/get/search/tweets
+
+*filter*::
+
+_syntex_: filter [track] [follow] [locations]
+
+https://dev.twitter.com/docs/api/1.1/post/statuses/filter
+
+*sample*::
+
+_syntex_: sample
+
+https://dev.twitter.com/docs/api/1.1/get/statuses/sample
+
+*htimelinestream*::
+
+_syntex_: htimelinestream [track] [locations]
+
+https://dev.twitter.com/docs/api/1.1/get/user
+
+*htimeline*::
+
+_syntex_: htimeline [count] [since_id] [max_id]
+
+https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline
+
+*utimeline*::
+
+_syntex_: utimeline [screenname] [count] [since_id] [max_id]
+
+https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
+
+*trends*::
+
+_syntex_: trends [country]
+
+show what is trending in specific [country]. give 'world' as 'country' to get what is trending globally
+
+*lookup*::
+
+_syntex_: lookup [screenname] [user_id]
+
+https://dev.twitter.com/docs/api/1.1/get/users/lookup
+
+*usearch*::
+
+_syntex_: usearch [q] [page] [count]
+
+https://dev.twitter.com/docs/api/1.1/get/users/search
+
+*following*::
+
+_syntex_: following [screenname] [userid] [cursor]
+
+https://dev.twitter.com/docs/api/1.1/get/friends/ids
+
+*followers*::
+
+_syntex_: followers [screenname] [userid] [cursor]
+
+https://dev.twitter.com/docs/api/1.1/get/followers/ids
+
+*updatemedia*::
+
+_syntex_: updatemedia [status] [filepath]
+
+https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media
+
+*update*::
+
+_syntex_: update [status]
+
+https://dev.twitter.com/docs/api/1.1/post/statuses/update
+
+*retweet*::
+
+_syntex_: retweet [postid]
+
+https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid
+
+*destroy*::
+
+_syntex_: destroy [postid]
+
+https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid
+
+*follow*::
+
+_syntex_: follow [screenname] [userid]
+
+https://dev.twitter.com/docs/api/1.1/post/friendships/create
+
+*unfollow*::
+
+_syntex_: unfollow [screenname] [userid]
+
+https://dev.twitter.com/docs/api/1.1/post/friendships/destroy
+
+*blocklist*::
+
+_syntex_: blocklist [cursor]
+
+https://dev.twitter.com/docs/api/1.1/get/blocks/list
+
+*block*::
+
+_syntex_: block [screenname] [userid]
+
+https://dev.twitter.com/docs/api/1.1/post/blocks/create
+
+*unblock*::
+
+_syntex_: unblock [screenname] [userid]
+
+https://dev.twitter.com/docs/api/1.1/post/blocks/destroy
+
+*profile*::
+
+_syntex_: profile [name] [url] [location] [description]
+
+https://dev.twitter.com/docs/api/1.1/post/account/update_profile
+
+*pbackground*::
+
+_syntex_: pbackground [filepath] [use] [tile]
+
+https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image
+
+*pimage*::
+
+_syntex_: pimage [filepath]
+
+https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image
+
+*startrecord*::
+
+_syntex_: startrecord [filename]
+
+start saving all streaming tweets into a json file. Defaults to 'tweets.json' in current directory
+
+*stoprecord*::
+
+_syntex_: stoprecord
+
+stop saving tweets.
+
+*playback*::
+
+_syntex_: playback [filename]
+
+display those stored json tweets in [filename] back in the screen. Defaults to 'tweets.json' file in current directory
+
+*exit*::
+
+_syntex_: exit
+
+exit from this application
+
+RETURNCODE
+----------
+
+*0*::
+Success
+
+*1*::
+Failure
+
+BUGS
+----
+
+Please raise it on https://github.com/mohan43u/tweetpts/issues
+
+AUTHOR
+------
+
+Till now, Its me Mohan "Mokka" Raman :)
+
+RESOURCES
+---------
+
+https://github.com/mohan43u/tweetpts
+
+COPYING
+-------
+
+See LICENSE file or https://github.com/mohan43u/tweetpts/blob/master/LICENSE
