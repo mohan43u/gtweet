@@ -31,7 +31,7 @@
 tweetpts \- A simple twitter terminal client
 .SH "SYNOPSIS"
 .sp
-\fBtweetpts\fR
+tweetpts [\-\-help]
 .SH "DESCRIPTION"
 .sp
 The tweetpts(1) is a simple twitter client which have following commands to interact with twitter
@@ -78,7 +78,7 @@ to get this help text
 \fIsyntex\fR: tsearch [q] [result_type] [count] [geocode] [lang] [locale] [until] [since_id] [max_id]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/search/tweets\fR\m[]
+search tweets\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/search/tweets\fR\m[]
 .PP
 \fBfilter\fR
 .RS 4
@@ -86,7 +86,7 @@ to get this help text
 \fIsyntex\fR: filter [track] [follow] [locations]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/filter\fR\m[]
+start streaming tweets with particular word\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/filter\fR\m[]
 .PP
 \fBsample\fR
 .RS 4
@@ -94,7 +94,7 @@ to get this help text
 \fIsyntex\fR: sample
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/statuses/sample\fR\m[]
+random tweets\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/statuses/sample\fR\m[]
 .PP
 \fBhtimelinestream\fR
 .RS 4
@@ -102,7 +102,7 @@ to get this help text
 \fIsyntex\fR: htimelinestream [track] [locations]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/user\fR\m[]
+start streaming your home timeline\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/user\fR\m[]
 .PP
 \fBhtimeline\fR
 .RS 4
@@ -110,7 +110,7 @@ to get this help text
 \fIsyntex\fR: htimeline [count] [since_id] [max_id]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/statuses/home_timeline\fR\m[]
+show your home timeline\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/statuses/home_timeline\fR\m[]
 .PP
 \fButimeline\fR
 .RS 4
@@ -118,7 +118,7 @@ to get this help text
 \fIsyntex\fR: utimeline [screenname] [count] [since_id] [max_id]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/statuses/user_timeline\fR\m[]
+show particular user\(cqs timeline\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/statuses/user_timeline\fR\m[]
 .PP
 \fBtrends\fR
 .RS 4
@@ -134,7 +134,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: lookup [screenname] [user_id]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/users/lookup\fR\m[]
+search user matching exact screenname/user_id\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/users/lookup\fR\m[]
 .PP
 \fBusearch\fR
 .RS 4
@@ -142,7 +142,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: usearch [q] [page] [count]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/users/search\fR\m[]
+search user\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/users/search\fR\m[]
 .PP
 \fBfollowing\fR
 .RS 4
@@ -150,7 +150,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: following [screenname] [userid] [cursor]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/friends/ids\fR\m[]
+show whom a particular user following\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/friends/ids\fR\m[]
 .PP
 \fBfollowers\fR
 .RS 4
@@ -158,7 +158,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: followers [screenname] [userid] [cursor]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/followers/ids\fR\m[]
+show who are all following a particular user\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/followers/ids\fR\m[]
 .PP
 \fBupdatemedia\fR
 .RS 4
@@ -166,7 +166,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: updatemedia [status] [filepath]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/update_with_media\fR\m[]
+update your status with a picture\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/update_with_media\fR\m[]
 .PP
 \fBupdate\fR
 .RS 4
@@ -174,7 +174,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: update [status]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/update\fR\m[]
+update your status\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/update\fR\m[]
 .PP
 \fBretweet\fR
 .RS 4
@@ -182,7 +182,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: retweet [postid]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/retweet/%3Aid\fR\m[]
+retweet particular tweet\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/retweet/%3Aid\fR\m[]
 .PP
 \fBdestroy\fR
 .RS 4
@@ -190,7 +190,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: destroy [postid]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/destroy/%3Aid\fR\m[]
+delete particular tweet\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/statuses/destroy/%3Aid\fR\m[]
 .PP
 \fBfollow\fR
 .RS 4
@@ -198,7 +198,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: follow [screenname] [userid]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/friendships/create\fR\m[]
+follow a particular user\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/friendships/create\fR\m[]
 .PP
 \fBunfollow\fR
 .RS 4
@@ -206,7 +206,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: unfollow [screenname] [userid]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/friendships/destroy\fR\m[]
+unfollow a particular user\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/friendships/destroy\fR\m[]
 .PP
 \fBblocklist\fR
 .RS 4
@@ -214,7 +214,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: blocklist [cursor]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/blocks/list\fR\m[]
+show blocked users\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/get/blocks/list\fR\m[]
 .PP
 \fBblock\fR
 .RS 4
@@ -222,7 +222,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: block [screenname] [userid]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/blocks/create\fR\m[]
+block a particular user\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/blocks/create\fR\m[]
 .PP
 \fBunblock\fR
 .RS 4
@@ -230,7 +230,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: unblock [screenname] [userid]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/blocks/destroy\fR\m[]
+unblock a particular user\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/blocks/destroy\fR\m[]
 .PP
 \fBprofile\fR
 .RS 4
@@ -238,7 +238,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: profile [name] [url] [location] [description]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/account/update_profile\fR\m[]
+update your profile information\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/account/update_profile\fR\m[]
 .PP
 \fBpbackground\fR
 .RS 4
@@ -246,7 +246,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: pbackground [filepath] [use] [tile]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/account/update_profile_background_image\fR\m[]
+update your profile background image\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/account/update_profile_background_image\fR\m[]
 .PP
 \fBpimage\fR
 .RS 4
@@ -254,7 +254,7 @@ show what is trending in specific [country]\&. give \fIworld\fR as \fIcountry\fR
 \fIsyntex\fR: pimage [filepath]
 .RE
 .sp
-\m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/account/update_profile_image\fR\m[]
+update your profile image\&. \m[blue]\fBhttps://dev\&.twitter\&.com/docs/api/1\&.1/post/account/update_profile_image\fR\m[]
 .PP
 \fBstartrecord\fR
 .RS 4
@@ -303,7 +303,7 @@ Failure
 Please raise it on \m[blue]\fBhttps://github\&.com/mohan43u/tweetpts/issues\fR\m[]
 .SH "AUTHOR"
 .sp
-Till now, Its me Mohan "Mokka" Raman :)
+Till now, Its me Mohan Raman :)
 .SH "RESOURCES"
 .sp
 \m[blue]\fBhttps://github\&.com/mohan43u/tweetpts\fR\m[]

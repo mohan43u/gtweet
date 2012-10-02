@@ -12,7 +12,7 @@ tweetpts - A simple twitter terminal client
 SYNOPSIS
 --------
 
-*tweetpts*
+tweetpts [--help]
 
 DESCRIPTION
 -----------
@@ -46,37 +46,37 @@ press _Ctrl-h_ to get this help text
 
 _syntex_: tsearch [q] [result_type] [count] [geocode] [lang] [locale] [until] [since_id] [max_id]
 
-https://dev.twitter.com/docs/api/1.1/get/search/tweets
+search tweets. https://dev.twitter.com/docs/api/1.1/get/search/tweets 
 
 *filter*::
 
 _syntex_: filter [track] [follow] [locations]
 
-https://dev.twitter.com/docs/api/1.1/post/statuses/filter
+start streaming tweets with particular word. https://dev.twitter.com/docs/api/1.1/post/statuses/filter
 
 *sample*::
 
 _syntex_: sample
 
-https://dev.twitter.com/docs/api/1.1/get/statuses/sample
+random tweets. https://dev.twitter.com/docs/api/1.1/get/statuses/sample
 
 *htimelinestream*::
 
 _syntex_: htimelinestream [track] [locations]
 
-https://dev.twitter.com/docs/api/1.1/get/user
+start streaming your home timeline. https://dev.twitter.com/docs/api/1.1/get/user
 
 *htimeline*::
 
 _syntex_: htimeline [count] [since_id] [max_id]
 
-https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline
+show your home timeline. https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline
 
 *utimeline*::
 
 _syntex_: utimeline [screenname] [count] [since_id] [max_id]
 
-https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
+show particular user's timeline. https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
 
 *trends*::
 
@@ -88,97 +88,97 @@ show what is trending in specific [country]. give 'world' as 'country' to get wh
 
 _syntex_: lookup [screenname] [user_id]
 
-https://dev.twitter.com/docs/api/1.1/get/users/lookup
+search user matching exact screenname/user_id. https://dev.twitter.com/docs/api/1.1/get/users/lookup
 
 *usearch*::
 
 _syntex_: usearch [q] [page] [count]
 
-https://dev.twitter.com/docs/api/1.1/get/users/search
+search user. https://dev.twitter.com/docs/api/1.1/get/users/search
 
 *following*::
 
 _syntex_: following [screenname] [userid] [cursor]
 
-https://dev.twitter.com/docs/api/1.1/get/friends/ids
+show whom a particular user following. https://dev.twitter.com/docs/api/1.1/get/friends/ids
 
 *followers*::
 
 _syntex_: followers [screenname] [userid] [cursor]
 
-https://dev.twitter.com/docs/api/1.1/get/followers/ids
+show who are all following a particular user. https://dev.twitter.com/docs/api/1.1/get/followers/ids
 
 *updatemedia*::
 
 _syntex_: updatemedia [status] [filepath]
 
-https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media
+update your status with a picture. https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media
 
 *update*::
 
 _syntex_: update [status]
 
-https://dev.twitter.com/docs/api/1.1/post/statuses/update
+update your status. https://dev.twitter.com/docs/api/1.1/post/statuses/update
 
 *retweet*::
 
 _syntex_: retweet [postid]
 
-https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid
+retweet particular tweet. https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid
 
 *destroy*::
 
 _syntex_: destroy [postid]
 
-https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid
+delete particular tweet. https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid
 
 *follow*::
 
 _syntex_: follow [screenname] [userid]
 
-https://dev.twitter.com/docs/api/1.1/post/friendships/create
+follow a particular user. https://dev.twitter.com/docs/api/1.1/post/friendships/create
 
 *unfollow*::
 
 _syntex_: unfollow [screenname] [userid]
 
-https://dev.twitter.com/docs/api/1.1/post/friendships/destroy
+unfollow a particular user. https://dev.twitter.com/docs/api/1.1/post/friendships/destroy
 
 *blocklist*::
 
 _syntex_: blocklist [cursor]
 
-https://dev.twitter.com/docs/api/1.1/get/blocks/list
+show blocked users. https://dev.twitter.com/docs/api/1.1/get/blocks/list
 
 *block*::
 
 _syntex_: block [screenname] [userid]
 
-https://dev.twitter.com/docs/api/1.1/post/blocks/create
+block a particular user. https://dev.twitter.com/docs/api/1.1/post/blocks/create
 
 *unblock*::
 
 _syntex_: unblock [screenname] [userid]
 
-https://dev.twitter.com/docs/api/1.1/post/blocks/destroy
+unblock a particular user. https://dev.twitter.com/docs/api/1.1/post/blocks/destroy
 
 *profile*::
 
 _syntex_: profile [name] [url] [location] [description]
 
-https://dev.twitter.com/docs/api/1.1/post/account/update_profile
+update your profile information. https://dev.twitter.com/docs/api/1.1/post/account/update_profile
 
 *pbackground*::
 
 _syntex_: pbackground [filepath] [use] [tile]
 
-https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image
+update your profile background image. https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image
 
 *pimage*::
 
 _syntex_: pimage [filepath]
 
-https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image
+update your profile image. https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image
 
 *startrecord*::
 
@@ -221,7 +221,7 @@ Please raise it on https://github.com/mohan43u/tweetpts/issues
 AUTHOR
 ------
 
-Till now, Its me Mohan "Mokka" Raman :)
+Till now, Its me Mohan Raman :)
 
 RESOURCES
 ---------

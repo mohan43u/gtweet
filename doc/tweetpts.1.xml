@@ -26,7 +26,7 @@
     <refpurpose>A simple twitter terminal client</refpurpose>
 </refnamediv>
 <refsynopsisdiv id="_synopsis">
-<simpara><emphasis role="strong">tweetpts</emphasis></simpara>
+<simpara>tweetpts [--help]</simpara>
 </refsynopsisdiv>
 <refsect1 id="_description">
 <title>DESCRIPTION</title>
@@ -96,7 +96,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/search/tweets">https://dev.twitter.com/docs/api/1.1/get/search/tweets</ulink></simpara>
+<simpara>search tweets. <ulink url="https://dev.twitter.com/docs/api/1.1/get/search/tweets">https://dev.twitter.com/docs/api/1.1/get/search/tweets</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -109,7 +109,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/filter">https://dev.twitter.com/docs/api/1.1/post/statuses/filter</ulink></simpara>
+<simpara>start streaming tweets with particular word. <ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/filter">https://dev.twitter.com/docs/api/1.1/post/statuses/filter</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -122,7 +122,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/sample">https://dev.twitter.com/docs/api/1.1/get/statuses/sample</ulink></simpara>
+<simpara>random tweets. <ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/sample">https://dev.twitter.com/docs/api/1.1/get/statuses/sample</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -135,7 +135,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/user">https://dev.twitter.com/docs/api/1.1/get/user</ulink></simpara>
+<simpara>start streaming your home timeline. <ulink url="https://dev.twitter.com/docs/api/1.1/get/user">https://dev.twitter.com/docs/api/1.1/get/user</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -148,7 +148,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline">https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline</ulink></simpara>
+<simpara>show your home timeline. <ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline">https://dev.twitter.com/docs/api/1.1/get/statuses/home_timeline</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -161,7 +161,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline">https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline</ulink></simpara>
+<simpara>show particular user&#8217;s timeline. <ulink url="https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline">https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -187,7 +187,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/users/lookup">https://dev.twitter.com/docs/api/1.1/get/users/lookup</ulink></simpara>
+<simpara>search user matching exact screenname/user_id. <ulink url="https://dev.twitter.com/docs/api/1.1/get/users/lookup">https://dev.twitter.com/docs/api/1.1/get/users/lookup</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -200,7 +200,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/users/search">https://dev.twitter.com/docs/api/1.1/get/users/search</ulink></simpara>
+<simpara>search user. <ulink url="https://dev.twitter.com/docs/api/1.1/get/users/search">https://dev.twitter.com/docs/api/1.1/get/users/search</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -213,7 +213,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/friends/ids">https://dev.twitter.com/docs/api/1.1/get/friends/ids</ulink></simpara>
+<simpara>show whom a particular user following. <ulink url="https://dev.twitter.com/docs/api/1.1/get/friends/ids">https://dev.twitter.com/docs/api/1.1/get/friends/ids</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -226,7 +226,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/followers/ids">https://dev.twitter.com/docs/api/1.1/get/followers/ids</ulink></simpara>
+<simpara>show who are all following a particular user. <ulink url="https://dev.twitter.com/docs/api/1.1/get/followers/ids">https://dev.twitter.com/docs/api/1.1/get/followers/ids</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -239,7 +239,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media">https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media</ulink></simpara>
+<simpara>update your status with a picture. <ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media">https://dev.twitter.com/docs/api/1.1/post/statuses/update_with_media</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -252,7 +252,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/update">https://dev.twitter.com/docs/api/1.1/post/statuses/update</ulink></simpara>
+<simpara>update your status. <ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/update">https://dev.twitter.com/docs/api/1.1/post/statuses/update</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -265,7 +265,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid">https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid</ulink></simpara>
+<simpara>retweet particular tweet. <ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid">https://dev.twitter.com/docs/api/1.1/post/statuses/retweet/%3Aid</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -278,7 +278,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid">https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid</ulink></simpara>
+<simpara>delete particular tweet. <ulink url="https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid">https://dev.twitter.com/docs/api/1.1/post/statuses/destroy/%3Aid</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -291,7 +291,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/friendships/create">https://dev.twitter.com/docs/api/1.1/post/friendships/create</ulink></simpara>
+<simpara>follow a particular user. <ulink url="https://dev.twitter.com/docs/api/1.1/post/friendships/create">https://dev.twitter.com/docs/api/1.1/post/friendships/create</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -304,7 +304,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/friendships/destroy">https://dev.twitter.com/docs/api/1.1/post/friendships/destroy</ulink></simpara>
+<simpara>unfollow a particular user. <ulink url="https://dev.twitter.com/docs/api/1.1/post/friendships/destroy">https://dev.twitter.com/docs/api/1.1/post/friendships/destroy</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -317,7 +317,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/get/blocks/list">https://dev.twitter.com/docs/api/1.1/get/blocks/list</ulink></simpara>
+<simpara>show blocked users. <ulink url="https://dev.twitter.com/docs/api/1.1/get/blocks/list">https://dev.twitter.com/docs/api/1.1/get/blocks/list</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -330,7 +330,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/blocks/create">https://dev.twitter.com/docs/api/1.1/post/blocks/create</ulink></simpara>
+<simpara>block a particular user. <ulink url="https://dev.twitter.com/docs/api/1.1/post/blocks/create">https://dev.twitter.com/docs/api/1.1/post/blocks/create</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -343,7 +343,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/blocks/destroy">https://dev.twitter.com/docs/api/1.1/post/blocks/destroy</ulink></simpara>
+<simpara>unblock a particular user. <ulink url="https://dev.twitter.com/docs/api/1.1/post/blocks/destroy">https://dev.twitter.com/docs/api/1.1/post/blocks/destroy</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -356,7 +356,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile">https://dev.twitter.com/docs/api/1.1/post/account/update_profile</ulink></simpara>
+<simpara>update your profile information. <ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile">https://dev.twitter.com/docs/api/1.1/post/account/update_profile</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -369,7 +369,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image">https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image</ulink></simpara>
+<simpara>update your profile background image. <ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image">https://dev.twitter.com/docs/api/1.1/post/account/update_profile_background_image</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -382,7 +382,7 @@ press <emphasis>Ctrl-h</emphasis> to get this help text
 </listitem>
 </varlistentry>
 </variablelist>
-<simpara><ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image">https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image</ulink></simpara>
+<simpara>update your profile image. <ulink url="https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image">https://dev.twitter.com/docs/api/1.1/post/account/update_profile_image</ulink></simpara>
 <variablelist>
 <varlistentry>
 <term>
@@ -467,7 +467,7 @@ Failure
 </refsect1>
 <refsect1 id="_author">
 <title>AUTHOR</title>
-<simpara>Till now, Its me Mohan "Mokka" Raman :)</simpara>
+<simpara>Till now, Its me Mohan Raman :)</simpara>
 </refsect1>
 <refsect1 id="_resources">
 <title>RESOURCES</title>
