@@ -11,9 +11,10 @@ libcurl (http://curl.haxx.se/libcurl/)
 libjson-glib (http://developer.gnome.org/json-glib/unstable/)
 libreadline (http://www.gnu.org/software/readline/)
 
-Most of them will be installed already in your system because lot
+Most of them should have been installed already in your system because lot
 of packages pulls them as one of their dependency. But make sure their
-header files are available. Once they are ready, all you need to do is,
+header files are available. If they are not thre, then install corresponding
+devel packages. Once they are ready, all you need to do is,
 
 ./configure
 make
