@@ -8,4 +8,4 @@ Description: The tweetpts library
 Version: @VERSION@
 Requires: glib-2.0 ncursesw panelw oauth libcurl json-glib-1.0
 Cflags: -I${includedir}/tweetpts
-Libs: -L${libdir} -ltweetpts
+Libs: -L${libdir} -lreadline -ltweetpts
