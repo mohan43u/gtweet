@@ -25,6 +25,7 @@ AC_HEADER_STDBOOL
 AC_CHECK_FUNCS([memset setlocale])
 
 AC_CONFIG_FILES([Makefile
+		 libtweetpts.pc
                  doc/Makefile
                  src/Makefile])
 AC_OUTPUT
