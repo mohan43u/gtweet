@@ -11627,7 +11627,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile libtweetpts.pc doc/Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile tweetpts.pc doc/Makefile src/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -12640,7 +12640,7 @@ do
     "depfiles") CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
     "libtool") CONFIG_COMMANDS="$CONFIG_COMMANDS libtool" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
-    "libtweetpts.pc") CONFIG_FILES="$CONFIG_FILES libtweetpts.pc" ;;
+    "tweetpts.pc") CONFIG_FILES="$CONFIG_FILES tweetpts.pc" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
 

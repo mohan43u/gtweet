@@ -39,7 +39,7 @@ host_triplet = @host@
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(srcdir)/libtweetpts.pc.in $(top_srcdir)/configure INSTALL \
+	$(srcdir)/tweetpts.pc.in $(top_srcdir)/configure INSTALL \
 	config.guess config.sub depcomp install-sh ltmain.sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -52,7 +52,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES = libtweetpts.pc
+CONFIG_CLEAN_FILES = tweetpts.pc
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -251,7 +251,7 @@ top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src doc
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libtweetpts.pc
+pkgconfig_DATA = tweetpts.pc
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -307,7 +307,7 @@ $(srcdir)/config.h.in:  $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
-libtweetpts.pc: $(top_builddir)/config.status $(srcdir)/libtweetpts.pc.in
+tweetpts.pc: $(top_builddir)/config.status $(srcdir)/tweetpts.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 mostlyclean-libtool:
