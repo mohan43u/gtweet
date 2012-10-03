@@ -980,7 +980,7 @@ void cursesapi_help(gboolean console)
   g_string_append(help, "\n");
   g_string_append(help, "commands and keys:\n");
   g_string_append(help, "\n");
-  g_string_append(help, "' ' \t pause/resume streaming\n");
+  g_string_append(help, "[spacebar] \t pause/resume streaming\n");
   g_string_append(help, "Ctrl-f \t stop streaming\n");
   g_string_append(help, "Ctrl-r \t refresh screen\n");
   g_string_append(help, "Ctrl-l \t clear screen\n");

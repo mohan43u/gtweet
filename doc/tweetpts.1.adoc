@@ -24,7 +24,7 @@ COMMANDS AND KEYS
 
 *pause/resume streaming*::
 
-press _' '_ to  pause/resume streaming
+press _[spacebar]_ to  pause/resume streaming
 
 *stop streaming*::
 
