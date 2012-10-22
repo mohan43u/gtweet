@@ -1,33 +1,33 @@
 #include <tweet.h>
 
-static void tweet_object_class_init(TweetObjectClass *klass);
-static void tweet_object_init(TweetObject *object);
-G_DEFINE_TYPE(TweetObject, tweet_object, G_TYPE_OBJECT);
+static void g_tweet_object_class_init(GTweetObjectClass *klass);
+static void g_tweet_object_init(GTweetObject *object);
+G_DEFINE_TYPE(GTweetObject, g_tweet_object, G_TYPE_OBJECT);
 
-static GObject* tweet_object_constructor(GType type,
-					 guint n_construct_properties,
-					 GObjectConstructParam *construct_properties)
+static GObject* g_tweet_object_constructor(GType type,
+					   guint n_construct_properties,
+					   GObjectConstructParam *construct_properties)
 {
   GObject *object = NULL;
 
-  object = G_OBJECT_CLASS(tweet_object_parent_class)->constructor(type,
-								  n_construct_properties,
-								  construct_properties);
+  object = G_OBJECT_CLASS(g_tweet_object_parent_class)->constructor(type,
+								    n_construct_properties,
+								    construct_properties);
   return(object);
 }
 
-static void tweet_object_finalize(GObject *object)
+static void g_tweet_object_finalize(GObject *object)
 {
-  TweetObject *obj = NULL;
+  GTweetObject *obj = NULL;
   gchar *request_key = NULL;
   gchar *request_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
 
-  obj = TWEET_OBJECT(object);
-  g_return_if_fail(TWEET_IS_OBJECT(object));
-  if(G_OBJECT_CLASS(tweet_object_parent_class)->finalize)
-    G_OBJECT_CLASS(tweet_object_parent_class)->finalize(object);
+  obj = G_TWEETOBJECT(object);
+  g_return_if_fail(G_IS_TWEETOBJECT(object));
+  if(G_OBJECT_CLASS(g_tweet_object_parent_class)->finalize)
+    G_OBJECT_CLASS(g_tweet_object_parent_class)->finalize(object);
 
   g_object_get(object,
 	       "request_key", &request_key,
@@ -42,14 +42,14 @@ static void tweet_object_finalize(GObject *object)
   g_free(access_secret);
 }
 
-static void tweet_object_set_property(GObject *object,
-				      guint property_id,
-				      const GValue *value,
-				      GParamSpec *pspec)
+static void g_tweet_object_set_property(GObject *object,
+					guint property_id,
+					const GValue *value,
+					GParamSpec *pspec)
 {
-  TweetObject *tweetObject = TWEET_OBJECT(object);
+  GTweetObject *tweetObject = G_TWEETOBJECT(object);
 
-  g_return_if_fail(TWEET_IS_OBJECT(object));
+  g_return_if_fail(G_IS_TWEETOBJECT(object));
   g_return_if_fail(G_VALUE_HOLDS_STRING(value));
 
   switch(property_id)
@@ -71,14 +71,14 @@ static void tweet_object_set_property(GObject *object,
     }
 }
 
-static void tweet_object_get_property(GObject *object,
-				      guint property_id,
-				      GValue *value,
-				      GParamSpec *pspec)
+static void g_tweet_object_get_property(GObject *object,
+					guint property_id,
+					GValue *value,
+					GParamSpec *pspec)
 {
-  TweetObject *tweetObject = TWEET_OBJECT(object);
+  GTweetObject *tweetObject = G_TWEETOBJECT(object);
 
-  g_return_if_fail(TWEET_IS_OBJECT(object));
+  g_return_if_fail(G_IS_TWEETOBJECT(object));
   g_return_if_fail(G_VALUE_HOLDS_STRING(value));
 
   switch(property_id)
@@ -100,13 +100,13 @@ static void tweet_object_get_property(GObject *object,
     }
 }
 
-static void tweet_object_class_init(TweetObjectClass *klass)
+static void g_tweet_object_class_init(GTweetObjectClass *klass)
 {
   GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
-  gobjectClass->constructor = tweet_object_constructor;
-  gobjectClass->finalize = tweet_object_finalize;
-  gobjectClass->set_property = tweet_object_set_property;
-  gobjectClass->get_property = tweet_object_get_property;
+  gobjectClass->constructor = g_tweet_object_constructor;
+  gobjectClass->finalize = g_tweet_object_finalize;
+  gobjectClass->set_property = g_tweet_object_set_property;
+  gobjectClass->get_property = g_tweet_object_get_property;
 
   g_object_class_install_property(gobjectClass,
 				  REQUEST_KEY,
@@ -138,26 +138,17 @@ static void tweet_object_class_init(TweetObjectClass *klass)
 						      G_PARAM_READABLE|G_PARAM_WRITABLE));
 }
 
-static void tweet_object_init(TweetObject *self)
+static void g_tweet_object_init(GTweetObject *self)
 {
   g_object_ref(self);
 }
 
-/**
- * tweet_object_new:
- * Returns: (transfer none): a new #TweetObject
- */
-TweetObject* tweet_object_new(void)
+GTweetObject* g_tweet_object_new(void)
 {
-  return(g_object_new(TWEET_TYPE_OBJECT, NULL));
+  return(g_object_new(G_TYPE_TWEETOBJECT, NULL));
 }
 
-/**
- * tweet_object_initkeys:
- * @tweetObject: a #TweetObject
- * Returns: TRUE on success, FALSE on failure
- */
-gboolean tweet_object_initkeys(TweetObject *tweetObject)
+gboolean g_tweet_object_initkeys(GTweetObject *tweetObject)
 {
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
@@ -177,12 +168,7 @@ gboolean tweet_object_initkeys(TweetObject *tweetObject)
   return(result);
 }
 
-/**
- * tweet_object_authurl:
- * @tweetObject: a #TweetObject
- * Returns: (transfer full): A url to get permission to access twitter from user.
- */
-gchar* tweet_object_authurl(TweetObject *tweetObject)
+gchar* g_tweet_object_authurl(GTweetObject *tweetObject)
 {
   gchar *authurl = NULL;
   gchar *request_key = NULL;
@@ -206,14 +192,8 @@ gchar* tweet_object_authurl(TweetObject *tweetObject)
   return(authurl);
 }
 
-/**
- * tweet_object_auth:
- * @tweetObject: a #TweetObject
- * @pin: (transfer none): The pin, user get from twitter once he gave permission
- * Returns: TRUE on successful retrival of access_key, FALSE on failure
- */
-gboolean tweet_object_auth(TweetObject *tweetObject,
-		       gchar *pin)
+gboolean g_tweet_object_auth(GTweetObject *tweetObject,
+			     gchar *pin)
 {
   gboolean result = FALSE;
   gchar *request_key = NULL;
@@ -251,15 +231,10 @@ gboolean tweet_object_auth(TweetObject *tweetObject,
   return(result);
 }
 
-/**
- * tweet_object_samplestream:
- * @tweetObject: a #TweetObject
- * @func: (closure userdata) (scope call): a callback function to receive tweets.
- * @userdata: (closure): user data to #TweetObjectStreamFunc
- */
-void tweet_object_samplestream(TweetObject *tweetObject,
-			       TweetObjectStreamFunc func,
-			       gpointer userdata)
+void g_tweet_object_samplestream(GTweetObject *tweetObject,
+				 GTweetObjectStreamFunc func,
+				 gpointer userdata,
+				 GDestroyNotify notify)
 {
   gchar *access_key = NULL;
   gchar *access_secret = NULL;

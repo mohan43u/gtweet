@@ -9,7 +9,7 @@ static gboolean sample_stream_cb(gchar *string,
 
 int main(int argc, char **argv)
 {
-  TweetObject *tweetObject = NULL;
+  GTweetObject *tweetObject = NULL;
   GOptionContext *ctx = NULL;
   GError *error = NULL;
 
@@ -24,19 +24,19 @@ int main(int argc, char **argv)
       exit(EXIT_FAILURE);
     }
 
-  tweetObject = TWEET_OBJECT(tweet_object_new());
-  if(!tweet_object_initkeys(tweetObject))
+  tweetObject = G_TWEETOBJECT(g_tweet_object_new());
+  if(!g_tweet_object_initkeys(tweetObject))
     {
       gchar *authurl = NULL;
       gchar *cmdline = NULL;
       gchar *pin = NULL;
 
-      authurl = tweet_object_authurl(tweetObject);
+      authurl = g_tweet_object_authurl(tweetObject);
       cmdline = g_strdup_printf("xdg-open '%s'", authurl);
       if(g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, NULL))
 	{
 	  pin = readline("PIN: ");
-	  tweet_object_auth(tweetObject, pin);
+	  g_tweet_object_auth(tweetObject, pin);
 	}
 
       g_free(authurl);
@@ -44,9 +44,10 @@ int main(int argc, char **argv)
       g_free(pin);
     }
 
-  tweet_object_samplestream(tweetObject,
-			    sample_stream_cb,
-			    NULL);
+  g_tweet_object_samplestream(tweetObject,
+			      sample_stream_cb,
+			      NULL,
+			      NULL);
 
   g_object_unref(tweetObject);
   return(0);
