@@ -11,7 +11,7 @@ printObject = function(object) {
     }
 }
 
-sampleStreamCb = function(string, userdata, notify) {
+sampleStreamCb = function(string, userdata) {
     var tweet = JSON.parse(string);
     printObject(tweet);
     print("");
