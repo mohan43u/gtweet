@@ -42,7 +42,8 @@ $(GIRFILE): $(SOURCES) $(HEADERS)
 		--no-libtool \
 		--library=tweet \
 		--output=$(GIRFILE) \
-		$(GIRPKGS) $(SOURCES) $(HEADERS)
+		$(GIRPKGS) \
+		$(SOURCES) $(HEADERS)
 
 $(GIRTYPELIBFILE): $(GIRFILE)
 	$(GIRCOMPILER) --output=$(GIRTYPELIBFILE) $(GIRFILE)

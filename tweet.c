@@ -46,7 +46,6 @@ int main(int argc, char **argv)
 
   g_tweet_object_samplestream(tweetObject,
 			      sample_stream_cb,
-			      NULL,
 			      NULL);
 
   g_object_unref(tweetObject);

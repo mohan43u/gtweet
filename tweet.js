@@ -18,6 +18,8 @@ sampleStreamCb = function(string, userdata, notify) {
     return(true);
 }
 
+var GLib = imports.gi.GLib;
+var Gio = imports.gi.Gio;
 var GTweetObject = imports.gi.GTweetObject;
 var tweetObject = new GTweetObject.TweetObject();
 if(tweetObject.initkeys()) {

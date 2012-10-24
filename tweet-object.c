@@ -233,8 +233,7 @@ gboolean g_tweet_object_auth(GTweetObject *tweetObject,
 
 void g_tweet_object_samplestream(GTweetObject *tweetObject,
 				 GTweetObjectStreamFunc func,
-				 gpointer userdata,
-				 GDestroyNotify notify)
+				 gpointer user_data)
 {
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
@@ -246,7 +245,7 @@ void g_tweet_object_samplestream(GTweetObject *tweetObject,
   tweet_twitter_s_stat_sample(access_key,
 			      access_secret,
 			      func,
-			      userdata);
+			      user_data);
 
   g_free(access_key);
   g_free(access_secret);

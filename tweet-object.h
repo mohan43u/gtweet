@@ -44,44 +44,42 @@ enum
 GType g_tweet_object_get_type(void) G_GNUC_CONST;
 
 /**
- * tweet_object_new:
- *
- * Returns: (element-type Object): a new #TweetObject
+ * g_tweet_object_new:
  */
 GTweetObject* g_tweet_object_new(void);
 
 /**
- * tweet_object_initkeys:
- * @tweetObject: a #TweetObject
+ * g_tweet_object_initkeys:
  */
 gboolean g_tweet_object_initkeys(GTweetObject *tweetObject);
 
 /**
- * tweet_object_authurl:
- * @tweetObject: a #TweetObject
+ * g_tweet_object_authurl:
  */
 gchar* g_tweet_object_authurl(GTweetObject *tweetObject);
 
 /**
- * tweet_object_auth:
- * @tweetObject: a #TweetObject
+ * g_tweet_object_auth:
  */
 gboolean g_tweet_object_auth(GTweetObject *tweetObject,
 			     gchar *pin);
 
+/**
+ * GTweetObjectStreamFunc:
+ * @string: tweet data coming from twitter
+ * @userdata: user_data provided by the user
+ */
 typedef gboolean (*GTweetObjectStreamFunc)(gchar *string, gpointer userdata);
 
 /**
- * tweet_object_samplestream:
+ * g_tweet_object_samplestream:
  * @tweetObject: a #TweetObject
- * @func: (closure userdata) (scope async): a callback function to invoke for every tweet
- * @userdata: (closure): data to be sent to the callback.
- * @notify: notify object when this function called.
+ * @func: (closure user_data) (scope async): a callback function to invoke for every tweet
+ * @user_data: (closure): data to be sent to the callback.
  */
 void g_tweet_object_samplestream(GTweetObject *tweetObject,
 				 GTweetObjectStreamFunc func,
-				 gpointer userdata,
-				 GDestroyNotify notify);
+				 gpointer user_data);
 
 G_END_DECLS
 
