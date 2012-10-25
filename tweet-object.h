@@ -1,27 +1,27 @@
-#ifndef __G_TWEETOBJECT_H__
-#define __G_TWEETOBJECT_H__
+#ifndef __GTWEET_OBJECT_H__
+#define __GTWEET_OBJECT_H__
 
 #include <tweet.h>
 #include <glib-object.h>
 
 G_BEGIN_DECLS
 
-#define G_TYPE_TWEETOBJECT (g_tweet_object_get_type())
-#define G_TWEETOBJECT(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), G_TYPE_TWEETOBJECT, GTweetObject))
-#define G_IS_TWEETOBJECT(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), G_TYPE_TWEETOBJECT))
-#define G_TWEETOBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), G_TYPE_TWEETOBJECT, GTweetObjectClass))
-#define G_IS_TWEETOBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_TWEETOBJECT))
-#define G_TWEETOBJECT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), G_TYPE_TWEETOBJECT, GTweetObjectClass))
+#define GTWEET_TYPE_OBJECT (gtweet_object_get_type())
+#define GTWEET_OBJECT(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GTWEET_TYPE_OBJECT, GtweetObject))
+#define GTWEET_IS_OBJECT(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GTWEET_TYPE_OBJECT))
+#define GTWEET_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass), GTWEET_TYPE_OBJECT, GtweetObjectClass))
+#define GTWEET_IS_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GTWEET_TYPE_OBJECT))
+#define GTWEET_OBJECT_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS((obj), GTWEET_TYPE_OBJECT, GtweetObjectClass))
 
-typedef struct _GTweetObjectClass GTweetObjectClass;
-typedef struct _GTweetObject GTweetObject;
+typedef struct _GtweetObjectClass GtweetObjectClass;
+typedef struct _GtweetObject GtweetObject;
 
-struct _GTweetObjectClass
+struct _GtweetObjectClass
 {
   GObjectClass parentClass;
 };
 
-struct _GTweetObject
+struct _GtweetObject
 {
   GObject parent;
 
@@ -41,46 +41,46 @@ enum
     ACCESS_SECRET
   };
 
-GType g_tweet_object_get_type(void) G_GNUC_CONST;
+GType gtweet_object_get_type(void) G_GNUC_CONST;
 
 /**
- * g_tweet_object_new:
+ * gtweet_object_new:
  */
-GTweetObject* g_tweet_object_new(void);
+GtweetObject* gtweet_object_new(void);
 
 /**
- * g_tweet_object_initkeys:
+ * gtweet_object_initkeys:
  */
-gboolean g_tweet_object_initkeys(GTweetObject *tweetObject);
+gboolean gtweet_object_initkeys(GtweetObject *tweetObject);
 
 /**
- * g_tweet_object_authurl:
+ * gtweet_object_authurl:
  */
-gchar* g_tweet_object_authurl(GTweetObject *tweetObject);
+gchar* gtweet_object_authurl(GtweetObject *tweetObject);
 
 /**
- * g_tweet_object_auth:
+ * gtweet_object_auth:
  */
-gboolean g_tweet_object_auth(GTweetObject *tweetObject,
+gboolean gtweet_object_auth(GtweetObject *tweetObject,
 			     gchar *pin);
 
 /**
- * GTweetObjectStreamFunc:
+ * GtweetObjectStreamFunc:
  * @string: tweet data coming from twitter
  * @userdata: user_data provided by the user
  */
-typedef gboolean (*GTweetObjectStreamFunc)(gchar *string, gpointer userdata);
+typedef gboolean (*GtweetObjectStreamFunc)(gchar *string, gpointer userdata);
 
 /**
- * g_tweet_object_samplestream:
+ * gtweet_object_samplestream:
  * @tweetObject: a #TweetObject
  * @func: (closure user_data) (scope async): a callback function to invoke for every tweet
- * @user_data: (closure): data to be sent to the callback.
+ * @user_data: (closure) (allow-none): data to be sent to the callback.
  */
-void g_tweet_object_samplestream(GTweetObject *tweetObject,
-				 GTweetObjectStreamFunc func,
-				 gpointer user_data);
+void gtweet_object_samplestream(GtweetObject *tweetObject,
+				GtweetObjectStreamFunc func,
+				gpointer user_data);
 
 G_END_DECLS
 
-#endif /* __G_TWEETOBJECT_H__ */
+#endif /* __GTWEET_OBJECT_H__ */

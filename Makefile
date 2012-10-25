@@ -4,7 +4,7 @@ CC := gcc
 GIRSCANNER := g-ir-scanner
 GIRCOMPILER := g-ir-compiler
 
-MODULES := gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0
+MODULES := gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0 gtk+-3.0
 SOURCES := tweet-object.c tweet-curl.c tweet-oauth.c tweet-json.c tweet-twitter.c tweet.c
 HEADERS := $(SOURCES:%.c=%.h)
 CFLAGS += $(shell pkg-config --cflags $(MODULES)) -I. -O0 -ggdb -fPIC
@@ -16,9 +16,9 @@ LIBRARYOBJECTS := $(filter-out tweet.o, $(BINARYOBJECTS))
 LIBRARY := libtweet.so
 
 GIRPKGS := $(MODULES:%=--pkg=%)
-GIRNAMESPACE := GTweetObject
+GIRNAMESPACE := Gtweet
 GIRNSVERSION := 0.2
-IDPREFIX := G
+IDPREFIX := Gtweet
 GIRFILE := $(GIRNAMESPACE)-$(GIRNSVERSION).gir
 GIRTYPELIBFILE=$(GIRFILE:%.gir=%.typelib)
 
