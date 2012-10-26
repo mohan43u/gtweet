@@ -1,7 +1,5 @@
-#include <stdio.h>
-#include <glib-unix.h>
-#include <gtk/gtk.h>
 #include <tweet.h>
+#include <gtk/gtk.h>
 
 typedef struct
 {
@@ -17,7 +15,7 @@ typedef struct
   gchar *text;
 } InputWidget;
 
-InputWidget* input_widget_new(const gchar *text)
+static InputWidget* input_widget_new(const gchar *text)
 {
   InputWidget *inputWidget = g_new0(InputWidget, 1);
 
@@ -28,12 +26,9 @@ InputWidget* input_widget_new(const gchar *text)
   inputWidget->actionArea = gtk_dialog_get_action_area(GTK_DIALOG(inputWidget->inputDialog));
   inputWidget->contentArea = gtk_dialog_get_content_area(GTK_DIALOG(inputWidget->inputDialog));
 
-  /*creating action area box*/
+  /*creating action area box and adding ok/cancel buttons*/
   inputWidget->actionAreaHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
   gtk_box_set_homogeneous(GTK_BOX(inputWidget->actionAreaHbox), TRUE);
-  gtk_box_set_spacing(GTK_BOX(inputWidget->actionAreaHbox), 2);
-
-  /*adding ok and cancel button into action area box*/
   inputWidget->actionAreaOkButton = gtk_button_new_from_stock(GTK_STOCK_OK);
   inputWidget->actionAreaCancelButton = gtk_button_new_from_stock(GTK_STOCK_CANCEL);
   gtk_box_pack_end(GTK_BOX(inputWidget->actionAreaHbox),
@@ -41,12 +36,9 @@ InputWidget* input_widget_new(const gchar *text)
   gtk_box_pack_end(GTK_BOX(inputWidget->actionAreaHbox),
 		   inputWidget->actionAreaCancelButton, TRUE, TRUE, 2);
 
-  /*creating content area box*/
+  /*creating content area box and adding label/entry widgets*/
   inputWidget->contentAreaHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
   gtk_box_set_homogeneous(GTK_BOX(inputWidget->contentAreaHbox), FALSE);
-  gtk_box_set_spacing(GTK_BOX(inputWidget->contentAreaHbox), 2);
-
-  /*adding label and entry to content area*/
   inputWidget->contentAreaLabel = gtk_label_new(text);
   inputWidget->contentAreaEntry = gtk_entry_new();
   gtk_box_pack_start(GTK_BOX(inputWidget->contentAreaHbox),
@@ -63,7 +55,7 @@ InputWidget* input_widget_new(const gchar *text)
   return(inputWidget);
 }
 
-void ok_button_cb(GtkButton *button, gpointer user_data)
+static void ok_button_cb(GtkButton *button, gpointer user_data)
 {
   InputWidget *inputWidget = (InputWidget *) user_data;
   inputWidget->text = g_strdup(gtk_entry_get_text(GTK_ENTRY(inputWidget->contentAreaEntry)));
@@ -71,20 +63,20 @@ void ok_button_cb(GtkButton *button, gpointer user_data)
   gtk_main_quit();
 }
 
-void cancel_button_cb(GtkButton *button, gpointer user_data)
+static void cancel_button_cb(GtkButton *button, gpointer user_data)
 {
   InputWidget *inputWidget = (InputWidget *) user_data;
   gtk_widget_destroy(inputWidget->inputDialog);
   gtk_main_quit();
 }
 
-void dialog_delete_event_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data)
+static void dialog_cb(GtkWidget *widget, GdkEvent *event, gpointer user_data)
 {
   gtk_widget_destroy(widget);
   gtk_main_quit();
 }
 
-gchar* input_widget_get_text(int argc, char *argv[])
+static gchar* input_widget_get_text(int argc, char *argv[])
 {
   InputWidget *inputWidget = NULL;
   gchar *text = NULL;
@@ -99,7 +91,7 @@ gchar* input_widget_get_text(int argc, char *argv[])
 		   "signal::clicked", cancel_button_cb, inputWidget,
 		   NULL);
   g_object_connect(G_OBJECT(inputWidget->inputDialog),
-		   "signal::delete-event", dialog_delete_event_cb, NULL,
+		   "signal::delete-event", dialog_cb, NULL,
 		   NULL);
 
   gtk_widget_show_all(inputWidget->inputDialog);
