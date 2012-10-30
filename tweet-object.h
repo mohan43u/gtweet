@@ -66,10 +66,11 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
 
 /**
  * GtweetObjectStreamFunc:
+ * @tweetObject: which holds the object
  * @string: tweet data coming from twitter
  * @userdata: user_data provided by the user
  */
-typedef gboolean (*GtweetObjectStreamFunc)(gchar *string, gpointer userdata);
+typedef gboolean (*GtweetObjectStreamFunc)(gchar *string, gpointer user_data);
 
 /**
  * gtweet_object_samplestream:

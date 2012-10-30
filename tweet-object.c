@@ -13,7 +13,7 @@ static GObject* gtweet_object_constructor(GType type,
   object = G_OBJECT_CLASS(gtweet_object_parent_class)->constructor(type,
 								   n_construct_properties,
 								   construct_properties);
-  return(object);
+  return object;
 }
 
 static void gtweet_object_finalize(GObject *object)
@@ -140,12 +140,11 @@ static void gtweet_object_class_init(GtweetObjectClass *klass)
 
 static void gtweet_object_init(GtweetObject *self)
 {
-  g_object_ref(self);
 }
 
 GtweetObject* gtweet_object_new(void)
 {
-  return(g_object_new(GTWEET_TYPE_OBJECT, NULL));
+  return g_object_new(GTWEET_TYPE_OBJECT, NULL);
 }
 
 gboolean gtweet_object_initkeys(GtweetObject *tweetObject)
@@ -165,7 +164,7 @@ gboolean gtweet_object_initkeys(GtweetObject *tweetObject)
   g_free(access_key);
   g_free(access_secret);
 
-  return(result);
+  return result;
 }
 
 gchar* gtweet_object_authurl(GtweetObject *tweetObject)
@@ -189,7 +188,7 @@ gchar* gtweet_object_authurl(GtweetObject *tweetObject)
   g_free(request_key);
   g_free(request_secret);
 
-  return(authurl);
+  return authurl;
 }
 
 gboolean gtweet_object_auth(GtweetObject *tweetObject,
@@ -228,7 +227,7 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
   g_free(access_key);
   g_free(access_secret);
 
-  return(result);
+  return result;
 }
 
 void gtweet_object_samplestream(GtweetObject *tweetObject,

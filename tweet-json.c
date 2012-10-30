@@ -11,7 +11,7 @@ static guint tweet_json_length(JsonNode *root)
   else if(json_node_is_null(root) != TRUE)
     returnvalue = 1;
 
-  return(returnvalue);
+  return returnvalue;
 }
 
 static gchar* tweet_json_stringify(JsonNode *node,
@@ -130,7 +130,7 @@ static gchar* tweet_json_stringify(JsonNode *node,
       g_strfreev(typev);
       g_string_free(string, TRUE);
     }
-  return(result);
+  return result;
 }
 
 static JsonNode* tweet_json_get_element(JsonNode *root, guint index)
@@ -145,13 +145,13 @@ static JsonNode* tweet_json_get_element(JsonNode *root, guint index)
   if(JSON_NODE_HOLDS_OBJECT(root))
     returnNode = root;
 
-  return(returnNode);
+  return returnNode;
 }
 
 JsonParser* tweet_json_parser(void)
 {
   g_type_init();
-  return(json_parser_new());
+  return json_parser_new();
 }
 
 gchar* tweet_json_get_value(JsonNode *root,
@@ -168,7 +168,7 @@ gchar* tweet_json_get_value(JsonNode *root,
       json_node_free(result);
       g_strfreev(fieldv);
     }
-  return(string);
+  return string;
 }
 
 JsonNode* tweet_json_get_object(JsonNode *root,
@@ -184,7 +184,7 @@ JsonNode* tweet_json_get_object(JsonNode *root,
 	result = json_array_get_element(json_node_get_array(result), 0);
     }
 
-  return(result);
+  return result;
 }
 
 JsonNode* tweet_json_decode(JsonParser *parser,
@@ -194,7 +194,7 @@ JsonNode* tweet_json_decode(JsonParser *parser,
 
   json_parser_load_from_data(parser, string, -1, NULL);
   root = json_parser_get_root(parser);
-  return(root);
+  return root;
 }
 
 gchar* tweet_json_get_array(JsonNode *root,
@@ -221,5 +221,5 @@ gchar* tweet_json_get_array(JsonNode *root,
       g_string_free(string, TRUE);
     }
 
-  return(result);
+  return result;
 }

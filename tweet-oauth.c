@@ -9,7 +9,7 @@ gchar* tweet_oauth_expandfilename(gchar *filename)
   else
     result = g_strdup(filename);
   wordfree(&result_t);
-  return(result);
+  return result;
 }
 
 gchar* tweet_oauth_sign(gchar *access_key,
@@ -36,7 +36,7 @@ gchar* tweet_oauth_sign(gchar *access_key,
 			      access_secret);
 
   g_free(requesturl);
-  return(resulturl);
+  return resulturl;
 }
 
 void tweet_oauth_request_token(gchar **request_key,
@@ -106,7 +106,7 @@ gchar* tweet_oauth_gen_authurl(gchar *request_key,
   g_free(request_key_pair);
   g_free(request_secret_pair);
 
-  return(authurl);
+  return authurl;
 }
 
 void tweet_oauth_access_token(gchar *pin,
@@ -220,5 +220,5 @@ gboolean tweet_oauth_access_token_from_file(gchar **access_key,
     result = FALSE;
 
   g_free(oauthfile);
-  return(result);
+  return result;
 }

@@ -12,7 +12,7 @@ static int tweet_curl_debug(CURL *curlapi,
   edata = g_strndup(data, size);
   g_printerr("%s", edata);
   curl_free(edata);
-  return(0);
+  return 0;
 }
 
 static size_t tweet_curl_http_write_cb(char *ptr,
@@ -53,7 +53,7 @@ static size_t tweet_curl_http_write_cb(char *ptr,
       g_free(string);
     }
 
-  return(length);
+  return length;
 }
 
 static size_t tweet_curl_http_write(char *ptr,
@@ -66,7 +66,7 @@ static size_t tweet_curl_http_write(char *ptr,
 
   g_string_append_len(buffer, ptr, length);
   g_string_append(buffer, "\0");
-  return(length);
+  return length;
 }
 
 static struct curl_slist* tweet_curl_get_oauthheader(gchar **url,
@@ -157,10 +157,10 @@ static struct curl_slist* tweet_curl_get_oauthheader(gchar **url,
       g_free(baseurl);
       g_string_free(oauthparams, TRUE);
       g_string_free(leftparams, TRUE);
-      return(slist);
+      return slist;
     }
   else
-    return(NULL);
+    return NULL;
 }
 
 void tweet_curl_http_cb(gchar *inputurl,
@@ -262,7 +262,7 @@ gchar* tweet_curl_http(gchar *inputurl,
   if(oauthheader)
     curl_slist_free_all(oauthheader);
   curl_easy_cleanup(curlapi);
-  return(string);
+  return string;
 }
 
 gchar* tweet_curl_http_media(gchar *inputurl,
@@ -354,5 +354,5 @@ gchar* tweet_curl_http_media(gchar *inputurl,
     curl_slist_free_all(oauthheader);
   curl_formfree(firstitem);
   curl_easy_cleanup(curlapi);
-  return(string);
+  return string;
 }

@@ -48,5 +48,5 @@ int main(int argc, char **argv)
   tweetObject = g_object_new(TWEET_TYPE_OBJECT, NULL);
   tweet_oauth_init();
   g_object_unref(tweetObject);
-  return(0);
+  return 0;
 }

@@ -118,7 +118,7 @@ gchar* tweet_twitter_r_htimeline(gchar *access_key,
   g_free(geturl);
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_utimeline(gchar *access_key,
@@ -159,7 +159,7 @@ gchar* tweet_twitter_r_utimeline(gchar *access_key,
   g_free(geturl);
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_usersettings(gchar *access_key,
@@ -175,7 +175,7 @@ gchar* tweet_twitter_r_usersettings(gchar *access_key,
 			 "GET");
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_woeid(gchar *countryname)
@@ -207,7 +207,7 @@ gchar* tweet_twitter_r_woeid(gchar *countryname)
   else
     woeid = NULL;
 
-  return(woeid);
+  return woeid;
 }
 
 gchar* tweet_twitter_r_trends(gchar *access_key,
@@ -227,7 +227,7 @@ gchar* tweet_twitter_r_trends(gchar *access_key,
   g_free(geturl);
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_tweetsearch(gchar *access_key,
@@ -280,7 +280,7 @@ gchar* tweet_twitter_r_tweetsearch(gchar *access_key,
   g_free(geturl);
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_lookup(gchar *access_key,
@@ -312,7 +312,7 @@ gchar* tweet_twitter_r_lookup(gchar *access_key,
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
   g_free(postparams);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_usersearch(gchar *access_key,
@@ -347,7 +347,7 @@ gchar* tweet_twitter_r_usersearch(gchar *access_key,
   g_free(geturl);
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 static gchar* tweet_twitter_strsplit(gchar **str,
@@ -371,7 +371,7 @@ static gchar* tweet_twitter_strsplit(gchar **str,
     }
   result = g_strjoinv(",", strv);
   g_strfreev(strv);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_following(gchar *access_key,
@@ -443,7 +443,7 @@ gchar* tweet_twitter_r_following(gchar *access_key,
       finalresult = g_strdup(buffer->str);
     }
   g_string_free(buffer, TRUE);
-  return(finalresult);
+  return finalresult;
 }
 
 gchar* tweet_twitter_r_followers(gchar *access_key,
@@ -515,7 +515,7 @@ gchar* tweet_twitter_r_followers(gchar *access_key,
       finalresult = g_strdup(buffer->str);
     }
   g_string_free(buffer, TRUE);
-  return(finalresult);
+  return finalresult;
 }
 
 gchar* tweet_twitter_r_updatemedia(gchar *access_key,
@@ -571,7 +571,7 @@ gchar* tweet_twitter_r_updatemedia(gchar *access_key,
       iter++;
     }
   g_ptr_array_free(inputdata, FALSE);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_update(gchar *access_key,
@@ -607,7 +607,7 @@ gchar* tweet_twitter_r_update(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_retweet(gchar *access_key,
@@ -622,7 +622,7 @@ gchar* tweet_twitter_r_retweet(gchar *access_key,
   if(postid && strlen(postid))
     posturl = g_strdup_printf(T_R_RETWEET, postid);
   else
-    return(NULL);
+    return NULL;
 
   postparams = g_strdup("");
   url = tweet_oauth_sign(access_key,
@@ -633,7 +633,7 @@ gchar* tweet_twitter_r_retweet(gchar *access_key,
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(postparams);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_destroy(gchar *access_key,
@@ -648,7 +648,7 @@ gchar* tweet_twitter_r_destroy(gchar *access_key,
   if(postid && strlen(postid))
     posturl = g_strdup_printf(T_R_DESTROY, postid);
   else
-    return(NULL);
+    return NULL;
 
   postparams = g_strdup("");
   url = tweet_oauth_sign(access_key,
@@ -658,7 +658,7 @@ gchar* tweet_twitter_r_destroy(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_follow(gchar *access_key,
@@ -689,7 +689,7 @@ gchar* tweet_twitter_r_follow(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_unfollow(gchar *access_key,
@@ -720,7 +720,7 @@ gchar* tweet_twitter_r_unfollow(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_blocklist(gchar *access_key,
@@ -749,7 +749,7 @@ gchar* tweet_twitter_r_blocklist(gchar *access_key,
   g_free(geturl);
   result = tweet_curl_http(url, NULL, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_block(gchar *access_key,
@@ -780,7 +780,7 @@ gchar* tweet_twitter_r_block(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_unblock(gchar *access_key,
@@ -811,7 +811,7 @@ gchar* tweet_twitter_r_unblock(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_profile(gchar *access_key,
@@ -848,7 +848,7 @@ gchar* tweet_twitter_r_profile(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_pbackground(gchar *access_key,
@@ -929,7 +929,7 @@ gchar* tweet_twitter_r_pbackground(gchar *access_key,
       iter++;
     }
   g_ptr_array_free(inputdata, FALSE);
-  return(result);
+  return result;
 }
 
 gchar* tweet_twitter_r_pimage(gchar *access_key,
@@ -971,5 +971,5 @@ gchar* tweet_twitter_r_pimage(gchar *access_key,
 			 "POST");
   result = tweet_curl_http(url, postparams, TRUE);
   g_free(url);
-  return(result);
+  return result;
 }

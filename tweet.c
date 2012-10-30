@@ -52,7 +52,7 @@ static InputWidget* input_widget_new(const gchar *text)
   gtk_box_pack_start(GTK_BOX(inputWidget->contentArea),
 		     inputWidget->contentAreaHbox, TRUE, TRUE, 0);
 
-  return(inputWidget);
+  return inputWidget;
 }
 
 static void ok_button_cb(GtkButton *button, gpointer user_data)
@@ -99,7 +99,7 @@ static gchar* input_widget_get_text(int argc, char *argv[])
 
   text = inputWidget->text;
   g_free(inputWidget);
-  return(text);
+  return text;
 }
 
 static gboolean sample_stream_cb(gchar *string,
@@ -140,5 +140,5 @@ int main(int argc, char *argv[])
 
   g_object_unref(tweetObject);
 
-  return(0);
+  return 0;
 }
