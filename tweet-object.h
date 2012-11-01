@@ -65,21 +65,15 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
 			     gchar *pin);
 
 /**
- * GtweetObjectStreamFunc:
- * @tweetObject: which holds the object
- * @string: tweet data coming from twitter
- * @userdata: user_data provided by the user
- */
-typedef gboolean (*GtweetObjectStreamFunc)(gchar *string, gpointer user_data);
-
-/**
  * gtweet_object_samplestream:
  * @tweetObject: a #TweetObject
- * @func: (closure user_data) (scope async): a callback function to invoke for every tweet
+ * @cancel: a cancellable object
+ * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
  * @user_data: (closure) (allow-none): data to be sent to the callback.
  */
 void gtweet_object_samplestream(GtweetObject *tweetObject,
-				GtweetObjectStreamFunc func,
+				GCancellable *cancel,
+				GAsyncReadyCallback callback,
 				gpointer user_data);
 
 G_END_DECLS

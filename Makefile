@@ -36,6 +36,7 @@ $(LIBRARY): $(LIBRARYOBJECTS) $(HEADERS)
 $(GIRFILE): $(SOURCES) $(HEADERS)
 	$(GIRSCANNER) \
 		--include=GObject-2.0 \
+		--include=Gio-2.0 \
 		--identifier-prefix=$(IDPREFIX) \
 		--namespace=$(GIRNAMESPACE) \
 		--nsversion=$(GIRNSVERSION) \

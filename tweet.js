@@ -66,21 +66,21 @@ var printObject = function(object) {
     }
 }
 
-var sampleStreamCb = function(string, userdata) {
-    var tweet = JSON.parse(string);
-    printObject(tweet);
+var sampleStreamCb = function(self, res, user_data) {
+    print(user_data);
     print("");
-    return(true);
 }
 
 var main = function(argc, argv) {
     this.GLib = imports.gi.GLib;
+    this.Gio = imports.gi.Gio;
     this.Lang = imports.lang;
     this.Gtweet = imports.gi.Gtweet;
 
     var tweetObject = new Gtweet.Object();
+    var cancel = new Gio.Cancellable();
     if(tweetObject.initkeys()) {
-	tweetObject.samplestream(sampleStreamCb, null, null);
+	tweetObject.samplestream(cancel, Lang.bind(this, sampleStreamCb, "hello world"));
     }
     else {
 	var authurl = tweetObject.authurl();
@@ -89,7 +89,7 @@ var main = function(argc, argv) {
 	var pin = input_widget_get_text(argc, argv);
 	if(pin) {
 	    tweetObject.auth(pin);
-	    tweetObject.samplestream(sampleStreamCb, null, null);
+	    tweetObject.samplestream(cancel, Lang.bind(this, sampleStreamCb, "hello world"));
 	}
     }
 }

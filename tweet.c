@@ -102,15 +102,19 @@ static gchar* input_widget_get_text(int argc, char *argv[])
   return text;
 }
 
-static gboolean sample_stream_cb(gchar *string,
-				 gpointer userdata)
+static void sample_stream_cb(GObject *tweetObject,
+			     GAsyncResult *res,
+			     gpointer user_data)
 {
+  GSimpleAsyncResult *result = (GSimpleAsyncResult *) res;
+  gchar *string = g_simple_async_result_get_op_res_gpointer(result);
   g_print("%s\n", string);
 }
 
 int main(int argc, char *argv[])
 {
   GtweetObject *tweetObject = NULL;
+  GCancellable *cancel = NULL;
 
   g_type_init();
 
@@ -134,7 +138,9 @@ int main(int argc, char *argv[])
       g_free(pin);
     }
 
+  cancel = g_cancellable_new();
   gtweet_object_samplestream(tweetObject,
+			     cancel,
 			     sample_stream_cb,
 			     NULL);
 

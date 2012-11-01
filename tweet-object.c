@@ -230,22 +230,44 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
   return result;
 }
 
+static gboolean gtweet_generic_callback(gchar *string, gpointer user_data)
+{
+  GSimpleAsyncResult *result = (GSimpleAsyncResult *) user_data;
+  GCancellable *cancel = g_simple_async_result_get_source_tag(result);
+
+  g_simple_async_result_set_op_res_gpointer(result, string, NULL);
+  g_simple_async_result_complete(result);
+
+  if(!g_cancellable_is_cancelled(cancel))
+    return TRUE;
+  else
+    return FALSE;
+}
+
 void gtweet_object_samplestream(GtweetObject *tweetObject,
-				GtweetObjectStreamFunc func,
+				GCancellable *cancel,
+				GAsyncReadyCallback callback,
 				gpointer user_data)
 {
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
+  GSimpleAsyncResult *result = NULL;
 
   g_object_get(G_OBJECT(tweetObject),
 	       "access_key", &access_key,
 	       "access_secret", &access_secret,
 	       NULL);
+  result = g_simple_async_result_new(tweetObject,
+				     callback,
+				     user_data,
+				     cancel);
+  g_simple_async_result_set_check_cancellable(result,
+					      cancel);
   tweet_twitter_s_stat_sample(access_key,
 			      access_secret,
-			      func,
-			      user_data);
-
+			      gtweet_generic_callback,
+			      result);
   g_free(access_key);
   g_free(access_secret);
+  g_object_unref(result);
 }
