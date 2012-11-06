@@ -1,6 +1,8 @@
 #include <tweet.h>
 
-void tweet_twitter_s_stat_filter(gchar *access_key,
+void tweet_twitter_s_stat_filter(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gchar *track,
 				 gchar *follow,
@@ -25,7 +27,9 @@ void tweet_twitter_s_stat_filter(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_S_STAT_FILTER,
 			 &postparams,
@@ -35,14 +39,18 @@ void tweet_twitter_s_stat_filter(gchar *access_key,
   g_free(url);
 }
 
-void tweet_twitter_s_stat_sample(gchar *access_key,
+void tweet_twitter_s_stat_sample(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gpointer func,
 				 gpointer userdata)
 {
   gchar *url = NULL;
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_S_STAT_SAMPLE,
 			 NULL,
@@ -51,7 +59,9 @@ void tweet_twitter_s_stat_sample(gchar *access_key,
   g_free(url);
 }
 
-void tweet_twitter_s_htimeline(gchar *access_key,
+void tweet_twitter_s_htimeline(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar *access_key,
 			       gchar *access_secret,
 			       gchar *track,
 			       gchar *locations,
@@ -76,7 +86,9 @@ void tweet_twitter_s_htimeline(gchar *access_key,
 			     T_S_USER);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -86,7 +98,9 @@ void tweet_twitter_s_htimeline(gchar *access_key,
   g_free(url);
 }
 
-gchar* tweet_twitter_r_htimeline(gchar *access_key,
+gchar* tweet_twitter_r_htimeline(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gchar *count,
 				 gchar *since_id,
@@ -110,7 +124,9 @@ gchar* tweet_twitter_r_htimeline(gchar *access_key,
     geturl = g_strdup(T_R_HTIMELINE);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -121,7 +137,9 @@ gchar* tweet_twitter_r_htimeline(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_utimeline(gchar *access_key,
+gchar* tweet_twitter_r_utimeline(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gchar *userid,
 				 gchar *screenname,
@@ -151,7 +169,9 @@ gchar* tweet_twitter_r_utimeline(gchar *access_key,
     geturl = g_strdup(T_R_UTIMELINE);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -162,13 +182,17 @@ gchar* tweet_twitter_r_utimeline(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_usersettings(gchar *access_key,
+gchar* tweet_twitter_r_usersettings(gchar *consumer_key,
+				    gchar *consumer_secret,
+				    gchar *access_key,
 				    gchar *access_secret)
 {
   gchar *url = NULL;
   gchar *result = NULL;
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_ACCOUNTSETTINGS,
 			 NULL,
@@ -210,7 +234,9 @@ gchar* tweet_twitter_r_woeid(gchar *countryname)
   return woeid;
 }
 
-gchar* tweet_twitter_r_trends(gchar *access_key,
+gchar* tweet_twitter_r_trends(gchar *consumer_key,
+			      gchar *consumer_secret,
+			      gchar *access_key,
 			      gchar *access_secret,
 			      gchar *woeid)
 {
@@ -219,7 +245,9 @@ gchar* tweet_twitter_r_trends(gchar *access_key,
   gchar *result = NULL;
 
   geturl = g_strdup_printf(T_R_TRENDS, woeid);
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -230,7 +258,9 @@ gchar* tweet_twitter_r_trends(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_tweetsearch(gchar *access_key,
+gchar* tweet_twitter_r_tweetsearch(gchar *consumer_key,
+				   gchar *consumer_secret,
+				   gchar *access_key,
 				   gchar *access_secret,
 				   gchar *q,
 				   gchar *geocode,
@@ -272,7 +302,9 @@ gchar* tweet_twitter_r_tweetsearch(gchar *access_key,
     geturl = g_strdup(T_R_TWEETSEARCH);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -283,7 +315,9 @@ gchar* tweet_twitter_r_tweetsearch(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_lookup(gchar *access_key,
+gchar* tweet_twitter_r_lookup(gchar *consumer_key,
+			      gchar *consumer_secret,
+			      gchar *access_key,
 			      gchar *access_secret,
 			      gchar *screenname,
 			      gchar *user_id)
@@ -304,7 +338,9 @@ gchar* tweet_twitter_r_lookup(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_LOOKUP,
 			 &postparams,
@@ -315,7 +351,9 @@ gchar* tweet_twitter_r_lookup(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_usersearch(gchar *access_key,
+gchar* tweet_twitter_r_usersearch(gchar *consumer_key,
+				  gchar *consumer_secret,
+				  gchar *access_key,
 				  gchar *access_secret,
 				  gchar *q,
 				  gchar *page,
@@ -339,7 +377,9 @@ gchar* tweet_twitter_r_usersearch(gchar *access_key,
     geturl = g_strdup(T_R_USERSEARCH);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -374,7 +414,9 @@ static gchar* tweet_twitter_strsplit(gchar **str,
   return result;
 }
 
-gchar* tweet_twitter_r_following(gchar *access_key,
+gchar* tweet_twitter_r_following(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gchar *userid,
 				 gchar *screenname,
@@ -400,7 +442,9 @@ gchar* tweet_twitter_r_following(gchar *access_key,
     geturl = g_strdup(T_R_FOLLOWING);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -421,7 +465,9 @@ gchar* tweet_twitter_r_following(gchar *access_key,
       while(ids)
 	{
 	  limitids = tweet_twitter_strsplit(&ids, ",", 101);
-	  limitresult = tweet_twitter_r_lookup(access_key,
+	  limitresult = tweet_twitter_r_lookup(consumer_key,
+					       consumer_secret,
+					       access_key,
 					       access_secret,
 					       NULL,
 					       limitids);
@@ -446,7 +492,9 @@ gchar* tweet_twitter_r_following(gchar *access_key,
   return finalresult;
 }
 
-gchar* tweet_twitter_r_followers(gchar *access_key,
+gchar* tweet_twitter_r_followers(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gchar *userid,
 				 gchar *screenname,
@@ -472,7 +520,9 @@ gchar* tweet_twitter_r_followers(gchar *access_key,
     geturl = g_strdup(T_R_FOLLOWERS);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -493,7 +543,9 @@ gchar* tweet_twitter_r_followers(gchar *access_key,
       while(ids)
 	{
 	  limitids = tweet_twitter_strsplit(&ids, ",", 101);
-	  limitresult = tweet_twitter_r_lookup(access_key,
+	  limitresult = tweet_twitter_r_lookup(consumer_key,
+					       consumer_secret,
+					       access_key,
 					       access_secret,
 					       NULL,
 					       limitids);
@@ -518,7 +570,9 @@ gchar* tweet_twitter_r_followers(gchar *access_key,
   return finalresult;
 }
 
-gchar* tweet_twitter_r_updatemedia(gchar *access_key,
+gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
+				   gchar *consumer_secret,
+				   gchar *access_key,
 				   gchar *access_secret,
 				   gchar *status,
 				   gchar *filepath)
@@ -549,7 +603,9 @@ gchar* tweet_twitter_r_updatemedia(gchar *access_key,
 
   posturl = g_strdup(T_R_UPDATEMEDIA);
   postparams = g_strdup("");
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 posturl,
 			 &postparams,
@@ -574,7 +630,9 @@ gchar* tweet_twitter_r_updatemedia(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_update(gchar *access_key,
+gchar* tweet_twitter_r_update(gchar *consumer_key,
+			      gchar *consumer_secret,
+			      gchar *access_key,
 			      gchar *access_secret,
 			      gchar *status,
 			      gchar *replypostid)
@@ -600,7 +658,9 @@ gchar* tweet_twitter_r_update(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_UPDATE,
 			 &postparams,
@@ -610,7 +670,9 @@ gchar* tweet_twitter_r_update(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_retweet(gchar *access_key,
+gchar* tweet_twitter_r_retweet(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar *access_key,
 			       gchar *access_secret,
 			       gchar *postid)
 {
@@ -625,7 +687,9 @@ gchar* tweet_twitter_r_retweet(gchar *access_key,
     return NULL;
 
   postparams = g_strdup("");
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 posturl,
 			 &postparams,
@@ -636,7 +700,9 @@ gchar* tweet_twitter_r_retweet(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_destroy(gchar *access_key,
+gchar* tweet_twitter_r_destroy(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar *access_key,
 			       gchar *access_secret,
 			       gchar *postid)
 {
@@ -651,7 +717,9 @@ gchar* tweet_twitter_r_destroy(gchar *access_key,
     return NULL;
 
   postparams = g_strdup("");
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 posturl,
 			 &postparams,
@@ -661,7 +729,9 @@ gchar* tweet_twitter_r_destroy(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_follow(gchar *access_key,
+gchar* tweet_twitter_r_follow(gchar *consumer_key,
+			      gchar *consumer_secret,
+			      gchar *access_key,
 			      gchar *access_secret,
 			      gchar *screenname,
 			      gchar *userid)
@@ -682,7 +752,9 @@ gchar* tweet_twitter_r_follow(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_FOLLOW,
 			 &postparams,
@@ -692,7 +764,9 @@ gchar* tweet_twitter_r_follow(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_unfollow(gchar *access_key,
+gchar* tweet_twitter_r_unfollow(gchar *consumer_key,
+				gchar *consumer_secret,
+				gchar *access_key,
 				gchar *access_secret,
 				gchar *screenname,
 				gchar *userid)
@@ -713,7 +787,9 @@ gchar* tweet_twitter_r_unfollow(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_UNFOLLOW,
 			 &postparams,
@@ -723,7 +799,9 @@ gchar* tweet_twitter_r_unfollow(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_blocklist(gchar *access_key,
+gchar* tweet_twitter_r_blocklist(gchar *consumer_key,
+				 gchar *consumer_secret,
+				 gchar *access_key,
 				 gchar *access_secret,
 				 gchar *cursor)
 {
@@ -741,7 +819,9 @@ gchar* tweet_twitter_r_blocklist(gchar *access_key,
     geturl = g_strdup(T_R_BLOCKLIST);
   g_string_free(getargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 geturl,
 			 NULL,
@@ -752,7 +832,9 @@ gchar* tweet_twitter_r_blocklist(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_block(gchar *access_key,
+gchar* tweet_twitter_r_block(gchar *consumer_key,
+			     gchar *consumer_secret,
+			     gchar *access_key,
 			     gchar *access_secret,
 			     gchar *screenname,
 			     gchar *userid)
@@ -773,7 +855,9 @@ gchar* tweet_twitter_r_block(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_BLOCK,
 			 &postparams,
@@ -783,7 +867,9 @@ gchar* tweet_twitter_r_block(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_unblock(gchar *access_key,
+gchar* tweet_twitter_r_unblock(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar *access_key,
 			       gchar *access_secret,
 			       gchar *screenname,
 			       gchar *userid)
@@ -804,7 +890,9 @@ gchar* tweet_twitter_r_unblock(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_UNBLOCK,
 			 &postparams,
@@ -814,7 +902,9 @@ gchar* tweet_twitter_r_unblock(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_profile(gchar *access_key,
+gchar* tweet_twitter_r_profile(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar *access_key,
 			       gchar *access_secret,
 			       gchar *name,
 			       gchar *purl,
@@ -841,7 +931,9 @@ gchar* tweet_twitter_r_profile(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_PROFILE,
 			 &postparams,
@@ -851,7 +943,9 @@ gchar* tweet_twitter_r_profile(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_pbackground(gchar *access_key,
+gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
+				   gchar *consumer_secret,
+				   gchar *access_key,
 				   gchar *access_secret,
 				   gchar *filepath,
 				   gchar *tile,
@@ -877,7 +971,9 @@ gchar* tweet_twitter_r_pbackground(gchar *access_key,
 
   posturl = g_strdup(T_R_PBACKGROUND);
   postparams = g_strdup("");
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 posturl,
 			 &postparams,
@@ -906,7 +1002,9 @@ gchar* tweet_twitter_r_pbackground(gchar *access_key,
       g_free(result);
       posturl = g_strdup(T_R_PBACKGROUND);
       postparams = g_strdup(postargs->str);
-      url = tweet_oauth_sign(access_key,
+      url = tweet_oauth_sign(consumer_key,
+			     consumer_secret,
+			     access_key,
 			     access_secret,
 			     posturl,
 			     &postparams,
@@ -932,7 +1030,9 @@ gchar* tweet_twitter_r_pbackground(gchar *access_key,
   return result;
 }
 
-gchar* tweet_twitter_r_pimage(gchar *access_key,
+gchar* tweet_twitter_r_pimage(gchar *consumer_key,
+			      gchar *consumer_secret,
+			      gchar *access_key,
 			      gchar *access_secret,
 			      gchar *filepath)
 {
@@ -964,7 +1064,9 @@ gchar* tweet_twitter_r_pimage(gchar *access_key,
     postparams = g_strdup("");
   g_string_free(postargs, TRUE);
 
-  url = tweet_oauth_sign(access_key,
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
 			 access_secret,
 			 T_R_PIMAGE,
 			 &postparams,

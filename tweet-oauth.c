@@ -12,7 +12,9 @@ gchar* tweet_oauth_expandfilename(gchar *filename)
   return result;
 }
 
-gchar* tweet_oauth_sign(gchar *access_key,
+gchar* tweet_oauth_sign(gchar *consumer_key,
+			gchar *consumer_secret,
+			gchar *access_key,
 			gchar *access_secret,
 			gchar *url,
 			gchar **params,
@@ -30,8 +32,8 @@ gchar* tweet_oauth_sign(gchar *access_key,
 			      params,
 			      OA_HMAC,
 			      method,
-			      CONSUMER_KEY,
-			      CONSUMER_SECRET,
+			      consumer_key,
+			      consumer_secret,
 			      access_key,
 			      access_secret);
 
@@ -39,7 +41,9 @@ gchar* tweet_oauth_sign(gchar *access_key,
   return resulturl;
 }
 
-void tweet_oauth_request_token(gchar **request_key,
+void tweet_oauth_request_token(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar **request_key,
 			       gchar **request_secret)
 {
   gchar *request = NULL;
@@ -54,8 +58,8 @@ void tweet_oauth_request_token(gchar **request_key,
 		  &postarg,
 		  OA_HMAC,
 		  NULL,
-		  CONSUMER_KEY,
-		  CONSUMER_SECRET,
+		  consumer_key,
+		  consumer_secret,
 		  NULL,
 		  NULL);
 
@@ -79,37 +83,36 @@ void tweet_oauth_request_token(gchar **request_key,
   oauth_free_array(&argc, &argv);
 }
 
-gchar* tweet_oauth_gen_authurl(gchar *request_key,
+gchar* tweet_oauth_gen_authurl(gchar *consumer_key,
+			       gchar *consumer_secret,
+			       gchar *request_key,
 			       gchar *request_secret)
 {
   gchar *authurl = NULL;
   gchar *request = NULL;
-  gchar *request_key_pair = NULL;
-  gchar *request_secret_pair = NULL;
 
   request = oauth_sign_url2(AUTH_URL,
 			    NULL,
 			    OA_HMAC,
 			    NULL,
-			    CONSUMER_KEY,
-			    CONSUMER_SECRET,
+			    consumer_key,
+			    consumer_secret,
 			    request_key,
 			    request_secret);
-  request_key_pair = g_strdup_printf("oauth_token=%s", request_key);
-  request_secret_pair = g_strdup_printf("oauth_token_secret=%s", request_secret);
-  authurl = g_strdup_printf("%s&%s&%s",
+  authurl = g_strdup_printf("%s&"
+			    "oauth_token=%s&"
+			    "oauth_token_secret=%s",
 			    request,
-			    request_key_pair,
-			    request_secret_pair);
+			    request_key,
+			    request_secret);
 
   g_free(request);
-  g_free(request_key_pair);
-  g_free(request_secret_pair);
-
   return authurl;
 }
 
 void tweet_oauth_access_token(gchar *pin,
+			      gchar *consumer_key,
+			      gchar *consumer_secret,
 			      gchar *request_key,
 			      gchar *request_secret,
 			      gchar **access_key,
@@ -127,8 +130,8 @@ void tweet_oauth_access_token(gchar *pin,
 		  &postarg,
 		  OA_HMAC,
 		  NULL,
-		  CONSUMER_KEY,
-		  CONSUMER_SECRET,
+		  consumer_key,
+		  consumer_secret,
 		  request_key,
 		  request_secret);
 
@@ -158,37 +161,40 @@ void tweet_oauth_access_token(gchar *pin,
   oauth_free_array(&argc, &argv);
 }
 
-void tweet_oauth_access_token_to_file(gchar *access_key,
-				      gchar *access_secret)
+void tweet_oauth_to_file(gchar *consumer_key,
+			 gchar *consumer_secret,
+			 gchar *access_key,
+			 gchar *access_secret)
 {
-  gchar *access_key_pair = NULL;
-  gchar *access_secret_pair = NULL;
   gchar *content = NULL;
   gchar *oauthfile = NULL;
 
-  access_key_pair = g_strdup_printf("oauth_token=%s", access_key);
-  access_secret_pair = g_strdup_printf("oauth_token_secret=%s", access_secret);
+  content = g_strdup_printf("consumer_key=%s&consumer_secret=%s&"
+			    "access_key=%s&access_secret=%s",
+			    consumer_key,
+			    consumer_secret,
+			    access_key,
+			    access_secret);
 
-  content = g_strdup_printf("%s&%s",access_key_pair, access_secret_pair);
   oauthfile = tweet_oauth_expandfilename(OAUTHFILE);
   g_file_set_contents(oauthfile,
 		      content,
 		      strlen(content),
 		      NULL);
 
-  g_free(access_key_pair);
-  g_free(access_secret_pair);
   g_free(content);
   g_free(oauthfile);
 }
 
-gboolean tweet_oauth_access_token_from_file(gchar **access_key,
-					    gchar **access_secret)
+gboolean tweet_oauth_from_file(gchar **consumer_key,
+			       gchar **consumer_secret,
+			       gchar **access_key,
+			       gchar **access_secret)
 {
   gchar *response = NULL;
   gint argc = 0;
   gchar **argv = NULL;
-  gchar **token = NULL;
+  gchar **pair = NULL;
   gboolean result = FALSE;
   gchar *oauthfile = NULL;
 
@@ -197,28 +203,28 @@ gboolean tweet_oauth_access_token_from_file(gchar **access_key,
   if(g_file_get_contents(oauthfile, &response, NULL, NULL))
     {
       argc = oauth_split_post_paramters(response, &argv, 0);
-      g_free(response);
       while(argc)
 	{
-	  token = g_strsplit(argv[argc - 1], "=", 0);
-	  if(g_strcmp0(token[0], "oauth_token") == 0)
-	    *access_key = g_strdup(token[1]);
-	  if(g_strcmp0(token[0], "oauth_token_secret") == 0)
-	    *access_secret = g_strdup(token[1]);
+	  pair = g_strsplit(argv[argc - 1], "=", 0);
+	  if(g_strcmp0(pair[0], "consumer_key") == 0)
+	    *consumer_key = g_strdup(pair[1]);
+	  if(g_strcmp0(pair[0], "consumer_secret") == 0)
+	    *consumer_secret = g_strdup(pair[1]);
+	  if(g_strcmp0(pair[0], "access_key") == 0)
+	    *access_key = g_strdup(pair[1]);
+	  if(g_strcmp0(pair[0], "access_secret") == 0)
+	    *access_secret = g_strdup(pair[1]);
 	  argc--;
-	  g_strfreev(token);
+	  g_strfreev(pair);
 	}
 
-      if(access_key == NULL || access_secret == NULL)
-	result = FALSE;
-      else
+      if(consumer_key && consumer_secret && access_key && access_secret)
 	result = TRUE;
 
       oauth_free_array(&argc, &argv);
     }
-  else
-    result = FALSE;
 
+  g_free(response);
   g_free(oauthfile);
   return result;
 }

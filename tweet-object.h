@@ -26,6 +26,8 @@ struct _GtweetObject
   GObject parent;
 
   /*<private>*/
+  const gchar *consumer_key;
+  const gchar *consumer_secret;
   const gchar *request_key;
   const gchar *request_secret;
   const gchar *access_key;
@@ -35,6 +37,8 @@ struct _GtweetObject
 enum
   {
     PROP_0,
+    CONSUMER_KEY,
+    CONSUMER_SECRET,
     REQUEST_KEY,
     REQUEST_SECRET,
     ACCESS_KEY,
@@ -55,8 +59,12 @@ gboolean gtweet_object_initkeys(GtweetObject *tweetObject);
 
 /**
  * gtweet_object_authurl:
+ * @consumer_key: twitter consumer key
+ * @consumer_secret: twitter consumer_secret
  */
-gchar* gtweet_object_authurl(GtweetObject *tweetObject);
+gchar* gtweet_object_authurl(GtweetObject *tweetObject,
+			     gchar *consumer_key,
+			     gchar *consumer_secret);
 
 /**
  * gtweet_object_auth:
