@@ -1,8 +1,17 @@
 #include <tweet.h>
 
+static void samplestream_cb(GObject *source_object,
+			    GAsyncResult *res,
+			    gpointer user_data)
+{
+  gchar *tweet = (gchar *) g_simple_async_result_get_op_res_gpointer(G_SIMPLE_ASYNC_RESULT(res));
+  g_print("%s\n", tweet);
+}
+
 int main(int argc, char *argv[])
 {
   GtweetObject *tweetObject = NULL;
+  GCancellable *cancel = NULL;
 
   g_type_init();
 
@@ -34,6 +43,11 @@ int main(int argc, char *argv[])
       g_free(cmdline);
       g_free(pin);
     }
+
+  gtweet_object_samplestream(tweetObject,
+			     cancel,
+			     samplestream_cb,
+			     NULL);
 
   return 0;
 }
