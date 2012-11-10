@@ -31,7 +31,7 @@ AC_HEADER_STDBOOL
 AC_CHECK_FUNCS([memset])
 
 AC_CONFIG_FILES([Makefile
+		 gtweet.pc
                  doc/Makefile
-                 src/Makefile
-		 src/gtweet.pc])
+                 src/Makefile])
 AC_OUTPUT

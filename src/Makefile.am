@@ -23,9 +23,6 @@ tweet_CFLAGS = $(PKGCFG_CFLAGS)
 tweet_LDFLAGS = $(PKGCFG_LIBS) -lreadline
 tweet_LDADD = libgtweet.la
 
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = gtweet.pc
-
 if HAVE_INTROSPECTION
 
 -include $(INTROSPECTION_MAKEFILE)
