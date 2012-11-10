@@ -27,9 +27,9 @@ int main(int argc, char *argv[])
       
       consumer_key = readline("consumer_key: ");
       consumer_secret = readline("consumer_secret: ");
-      authurl = gtweet_object_authurl(tweetObject,
-				      consumer_key,
-				      consumer_secret);
+      authurl = gtweet_object_gen_authurl(tweetObject,
+					  consumer_key,
+					  consumer_secret);
       cmdline = g_strdup_printf("xdg-open '%s'", authurl);
       if(g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, NULL))
 	{

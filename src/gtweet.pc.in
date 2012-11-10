@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=${prefix}
+libdir=@libdir@
+includedir=@includedir@
+pkgincludedir=${includedir}/@PACKAGE@
+
+Name: @PACKAGE@
+Description: The twitter client library
+Version: @VERSION@
+Requires: @packages@
+Cflags: -I${pkgincludedir}
+Libs: -L${libdir} -lreadline -lgtweet
