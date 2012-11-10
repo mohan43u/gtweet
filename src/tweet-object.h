@@ -71,18 +71,6 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
 			     gchar *pin);
 
 /**
- * gtweet_object_samplestream:
- * @tweetObject: a #TweetObject
- * @cancel: a cancellable object
- * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
- * @user_data: (closure) (allow-none): data to be sent to the callback.
- */
-void gtweet_object_samplestream(GtweetObject *tweetObject,
-				GCancellable *cancel,
-				GAsyncReadyCallback callback,
-				gpointer user_data);
-
-/**
  * gtweet_object_hometimeline:
  */
 gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
@@ -238,6 +226,53 @@ gchar* gtweet_object_pbackground(GtweetObject *tweetObject,
  */
 gchar* gtweet_object_pimage(GtweetObject *tweetObject,
 			    gchar *filepath);
+
+/**
+ * gtweet_object_samplestream:
+ * @tweetObject: a #TweetObject
+ * @cancel: a cancellable object
+ * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
+ * @user_data: (closure) (allow-none): data to be sent to the callback.
+ */
+void gtweet_object_samplestream(GtweetObject *tweetObject,
+				GCancellable *cancel,
+				GAsyncReadyCallback callback,
+				gpointer user_data);
+
+/**
+ * gtweet_object_filterstream:
+ * @tweetObject: a #TweetObject
+ * @cancel: a cancellable object
+ * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
+ * @user_data: (closure) (allow-none): data to be sent to the callback
+ * @track: string used to filter tweets
+ * @follow: userid used to filter tweets
+ * @locations: location string used to filter tweets
+ */
+
+void gtweet_object_filterstream(GtweetObject *tweetObject,
+				GCancellable *cancel,
+				GAsyncReadyCallback callback,
+				gpointer user_data,
+				gchar *track,
+				gchar *follow,
+				gchar *locations);
+
+/**
+ * gtweet_object_homestream:
+ * @tweetObject: a #TweetObject
+ * @cancel: a cancellable object
+ * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
+ * @user_data: (closure) (allow-none): data to be sent to the callback
+ * @track: string used to filter tweets
+ * @locations: location string used to filter tweets
+ */
+void gtweet_object_homestream(GtweetObject *tweetObject,
+			      GCancellable *cancel,
+			      GAsyncReadyCallback callback,
+			      gpointer user_data,
+			      gchar *track,
+			      gchar *locations);
 
 G_END_DECLS
 
