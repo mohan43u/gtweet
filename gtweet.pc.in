@@ -9,4 +9,4 @@ Description: The twitter client library
 Version: @VERSION@
 Requires: @packages@
 Cflags: -I${pkgincludedir}
-Libs: -L${libdir} -lreadline -lgtweet
+Libs: -L${libdir} -lgtweet
