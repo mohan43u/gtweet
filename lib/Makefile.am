@@ -17,12 +17,6 @@ libgtweet_la_SOURCES = tweet-object.c \
 libgtweet_la_CFLAGS = $(PKGCFG_CFLAGS)
 libgtweet_la_LDFLAGS = $(PKGCFG_LIBS)
 
-bin_PROGRAMS = tweet
-tweet_SOURCES = tweet.c
-tweet_CFLAGS = $(PKGCFG_CFLAGS)
-tweet_LDFLAGS = $(PKGCFG_LIBS) -lreadline
-tweet_LDADD = libgtweet.la
-
 if HAVE_INTROSPECTION
 
 -include $(INTROSPECTION_MAKEFILE)

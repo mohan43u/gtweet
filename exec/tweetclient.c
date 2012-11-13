@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
       g_free(pin);
     }
 
+  g_print("Press ctrl-c to stop streaming..\n");
   gtweet_object_samplestream(tweetObject,
 			     cancel,
 			     samplestream_cb,

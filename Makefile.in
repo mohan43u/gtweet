@@ -290,7 +290,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src doc
+SUBDIRS = lib doc exec
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gtweet.pc
 all: config.h

@@ -575,7 +575,7 @@ PACKAGE_STRING='gtweet 0.3'
 PACKAGE_BUGREPORT='mohan43u@gmail.com'
 PACKAGE_URL='http://github.com/mohan43u/tweetpts/tree/gtweet'
 
-ac_unique_file="src/tweet-object.c"
+ac_unique_file="lib/tweet-object.c"
 # Factoring default headers for most tests.
 ac_includes_default="\
 #include <stdio.h>
@@ -11299,7 +11299,7 @@ CC="$lt_save_CC"
 
 
 # Checks for libraries.
-packages='gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0'
+packages='gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0 gtk+-3.0'
 packages=$packages
 
 
@@ -11743,7 +11743,7 @@ fi
 done
 
 
-ac_config_files="$ac_config_files Makefile gtweet.pc doc/Makefile src/Makefile"
+ac_config_files="$ac_config_files Makefile gtweet.pc doc/Makefile lib/Makefile exec/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -12762,7 +12762,8 @@ do
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "gtweet.pc") CONFIG_FILES="$CONFIG_FILES gtweet.pc" ;;
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
-    "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
+    "lib/Makefile") CONFIG_FILES="$CONFIG_FILES lib/Makefile" ;;
+    "exec/Makefile") CONFIG_FILES="$CONFIG_FILES exec/Makefile" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

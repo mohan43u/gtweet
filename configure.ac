@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT([gtweet], [0.3], [mohan43u@gmail.com], [], [http://github.com/mohan43u/tweetpts/tree/gtweet])
-AC_CONFIG_SRCDIR([src/tweet-object.c])
+AC_CONFIG_SRCDIR([lib/tweet-object.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
@@ -12,7 +12,7 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-packages='gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0'
+packages='gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0 gtk+-3.0'
 AC_SUBST([packages], [$packages])
 PKG_CHECK_MODULES([PKGCFG], [$packages])
 LDFLAGS='-lreadline'
@@ -33,5 +33,6 @@ AC_CHECK_FUNCS([memset])
 AC_CONFIG_FILES([Makefile
 		 gtweet.pc
                  doc/Makefile
-                 src/Makefile])
+                 lib/Makefile
+		 exec/Makefile])
 AC_OUTPUT

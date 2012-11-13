@@ -1,7 +1,7 @@
 # root makefile
 
 ACLOCAL_AMFLAGS = -I m4
-SUBDIRS = src doc
+SUBDIRS = lib doc exec
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gtweet.pc
