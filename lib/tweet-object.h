@@ -72,6 +72,9 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_hometimeline:
+ * @count: (allow-none): number of tweets to get
+ * @since_id: (allow-none): tweets to retrive since since_id
+ * @max_id: (allow-none): tweets to retrive from max_id
  */
 gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
 				  gchar *count,
