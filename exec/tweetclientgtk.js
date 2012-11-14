@@ -1,6 +1,4 @@
 #!/usr/bin/env gjs
-// run this script from top build dir like this,
-// (LD_LIBRARY_PATH="$(pwd)/lib/.libs"; GI_TYPELIB_PATH="$(pwd)/lib" exec/tweetclientgtk.js)
 
 const jsUnit = imports.jsUnit;
 const Lang = imports.lang;
@@ -185,9 +183,9 @@ var scrolledWindow = new Gtk.ScrolledWindow();
 var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 10});
 var stylecontext = twitterClientWindow.get_style_context();
 var cssProvider = new Gtk.CssProvider();
-var css = "* { background-color: red }";
+var css = "GtkLabel { background-color: blue }";
 
-cssProvider.load_from_data(css, -1, null);
+cssProvider.load_from_data(css, css.length);
 stylecontext.add_provider(cssProvider, Gtk.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 twitterClientWindow.set_default_size(500, 800);
 twitterClientWindow.connect("destroy", Gtk.main_quit);
