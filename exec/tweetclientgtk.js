@@ -6,6 +6,7 @@ const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 const Gtweet = imports.gi.Gtweet;
+const Soup = imports.gi.Soup;
 
 const InputField = new Lang.Class({
     Name: "InputField",
@@ -89,18 +90,47 @@ const samplestream_cb = function(twitterObject, res, box) {
 // to complete this function
 }
 
+const HTTPClient = new Lang.Class({
+    Name: "HTTPClient",
+    _init: function() {
+	this.soupSyncSession = new Soup.SessionSync();
+    },
+    call: function(uri) {
+	var message = Soup.Message.new("GET", uri);
+	var responseBody = null;
+	var responsecode = this.soupSyncSession.send_message(message);
+	if(responsecode == 200)
+	{
+	    responseBody = message[Soup.MESSAGE_RESPONSE_BODY];
+	    this.soupBuffer = responseBody.flatten();
+	}
+	return responsecode;
+    },
+    getdata: function() {
+	return this.soupBuffer.data;
+    },
+    getlength: function() {
+	return this.soupBuffer.length;
+    }
+});
+
 const TweetField = new Lang.Class({
     Name: "TweetField",
     _init: function(field, value) {
 	var label1 = new Gtk.Label({label: field});
-	var label2 = new Gtk.Label({label: value});
+	var label2 = new Gtk.Label();
 	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+
+	label2.set_markup(value.replace(/(http[^\s]*)/g,"<a href=\"$1\">$1</a>"));
+	label2.set_selectable(true);
+
 	label1.set_width_chars(10);
 	label2.set_width_chars(20);
 	label1.set_line_wrap(true);
 	label2.set_line_wrap(true);
 	label1.set_alignment(0, 0);
 	label2.set_alignment(0, 0);
+
 	this.hbox.add(label1);
 	this.hbox.add(label2);
     }
@@ -109,13 +139,18 @@ const TweetField = new Lang.Class({
 const Tweet = new Lang.Class({
     Name: "Tweet",
     _init: function(element) {
-	var createtime = new TweetField("created_at", element["created_at"]);
 	var name = new TweetField("name", element.user["name"]);
 	var text = new TweetField("text", element["text"]);
+	var timestamp = new Date(element["created_at"]);
+	var createtime = new TweetField("created_at", timestamp.toLocaleString());
 	this.vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	this.vbox.add(createtime.hbox);
 	this.vbox.add(name.hbox);
 	this.vbox.add(text.hbox);
+
+	var httpClient = new HTTPClient();
+	httpClient.call(element.user["profile_image_url_https"]);
+	print(httpClient.getlength());
     }
 });
 
@@ -175,6 +210,10 @@ const TwitterClient = new Lang.Class({
     }
 });
 
+const show_cb = function(self, twitterClient, vbox) {
+    twitterClient.showHomeTimeline(vbox);
+}
+
 Gtk.init(null, null);
 
 var twitterClient = new TwitterClient();
@@ -188,9 +227,10 @@ var css = "GtkLabel { background-color: blue }";
 cssProvider.load_from_data(css, css.length);
 stylecontext.add_provider(cssProvider, Gtk.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 twitterClientWindow.set_default_size(500, 800);
-twitterClientWindow.connect("destroy", Gtk.main_quit);
 scrolledWindow.add_with_viewport(vbox);
 twitterClientWindow.add(scrolledWindow);
+
+twitterClientWindow.connect("destroy", Gtk.main_quit);
+twitterClientWindow.connect("show", Lang.bind(this, show_cb, twitterClient, vbox));
 twitterClientWindow.show_all();
-twitterClient.showHomeTimeline(vbox);
 Gtk.main();

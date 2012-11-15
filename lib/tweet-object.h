@@ -277,6 +277,13 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
 			      gchar *track,
 			      gchar *locations);
 
+/**
+ * gtweet_object_http:
+ * @url: url to request
+ */
+void gtweet_object_http(GtweetObject *tweetObject,
+			gchar *url);
+
 G_END_DECLS
 
 #endif /* __GTWEET_OBJECT_H__ */

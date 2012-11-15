@@ -1111,3 +1111,9 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
   g_free(access_secret);
   g_object_unref(result);
 }
+
+void gtweet_object_http(GtweetObject *tweetObject,
+			gchar *url)
+{
+  return tweet_curl_http(url, NULL, FALSE);
+}
