@@ -1,13 +1,11 @@
 #!/usr/bin/env gjs
 
-const jsUnit = imports.jsUnit;
 const Lang = imports.lang;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gtweet = imports.gi.Gtweet;
-const Soup = imports.gi.Soup;
 
 const InputField = new Lang.Class({
     Name: "InputField",
