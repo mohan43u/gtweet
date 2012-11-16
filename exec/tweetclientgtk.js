@@ -5,6 +5,7 @@ const Lang = imports.lang;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Gtk = imports.gi.Gtk;
+const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gtweet = imports.gi.Gtweet;
 const Soup = imports.gi.Soup;
 
@@ -90,74 +91,55 @@ const samplestream_cb = function(twitterObject, res, box) {
 // to complete this function
 }
 
-const HTTPClient = new Lang.Class({
-    Name: "HTTPClient",
-    _init: function() {
-	this.soupSyncSession = new Soup.SessionSync();
-    },
-    call: function(uri) {
-	var message = Soup.Message.new("GET", uri);
-	var responseBody = null;
-	var responsecode = this.soupSyncSession.send_message(message);
-	if(responsecode == 200)
-	{
-	    responseBody = message[Soup.MESSAGE_RESPONSE_BODY];
-	    this.soupBuffer = responseBody.flatten();
-	}
-	return responsecode;
-    },
-    getdata: function() {
-	return this.soupBuffer.data;
-    },
-    getlength: function() {
-	return this.soupBuffer.length;
-    }
-});
+const tweet_field = function(field, value, addlink) {
+    var label1 = new Gtk.Label({label: field});
+    var label2 = new Gtk.Label();
+    var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+    if(addlink)
+	value = value.replace(/(http[^\s]*)/g,"<a href=\"$1\">$1</a>")
+    label2.set_markup(value);
+    label2.set_selectable(true);
+    label1.set_width_chars(10);
+    label2.set_width_chars(20);
+    label1.set_line_wrap(true);
+    label2.set_line_wrap(true);
+    label1.set_alignment(0, 0);
+    label2.set_alignment(0, 0);
+    hbox.add(label1);
+    hbox.add(label2);
+    return hbox;
+}
 
-const TweetField = new Lang.Class({
-    Name: "TweetField",
-    _init: function(field, value) {
-	var label1 = new Gtk.Label({label: field});
-	var label2 = new Gtk.Label();
-	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+const create_image = function(data) {
+    var memoryInputStream = Gio.MemoryInputStream.new_from_data(data, data.length);
+    var pixBuf = GdkPixbuf.Pixbuf.new_from_stream(memoryInputStream, null);
+    var image = Gtk.Image.new_from_pixbuf(pixBuf);
+    return image;
+}
 
-	label2.set_markup(value.replace(/(http[^\s]*)/g,"<a href=\"$1\">$1</a>"));
-	label2.set_selectable(true);
-
-	label1.set_width_chars(10);
-	label2.set_width_chars(20);
-	label1.set_line_wrap(true);
-	label2.set_line_wrap(true);
-	label1.set_alignment(0, 0);
-	label2.set_alignment(0, 0);
-
-	this.hbox.add(label1);
-	this.hbox.add(label2);
-    }
-});
-
-const Tweet = new Lang.Class({
-    Name: "Tweet",
-    _init: function(element) {
-	var name = new TweetField("name", element.user["name"]);
-	var text = new TweetField("text", element["text"]);
-	var timestamp = new Date(element["created_at"]);
-	var createtime = new TweetField("created_at", timestamp.toLocaleString());
-	this.vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	this.vbox.add(createtime.hbox);
-	this.vbox.add(name.hbox);
-	this.vbox.add(text.hbox);
-
-	var httpClient = new HTTPClient();
-	httpClient.call(element.user["profile_image_url_https"]);
-	print(httpClient.getlength());
-    }
-});
+const tweetbox = function(twitterClient, element) {
+    var name = tweet_field("name", element.user["name"] + " (" + element.user["screen_name"] + ")", false);
+    var text = tweet_field("text", element["text"], true);
+    var timestamp = new Date(element["created_at"]);
+    var createtime = tweet_field("created_at", timestamp.toLocaleString(), false);
+    var source = tweet_field("source", element["source"].replace(/ rel=[^>]*>/g, ">"), false);
+    var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+    vbox.add(createtime);
+    vbox.add(name);
+    vbox.add(source);
+    vbox.add(text);
+    var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+    var data = twitterClient.tweetObject.http(element.user["profile_image_url_https"]);
+    var profileImage = create_image(data);
+    hbox.pack_start(profileImage, false, false, 0);
+    hbox.pack_start(vbox, true, true, 10);
+    return hbox;
+}
 
 const hometimeline_cb = function(element, index, array, box) {
-    var tweet = new Tweet(element);
+    var tweet  = tweetbox(this, element);
     var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-    box.add(tweet.vbox);
+    box.add(tweet);
     box.add(separator);
     box.show_all();
 }
@@ -219,11 +201,12 @@ Gtk.init(null, null);
 var twitterClient = new TwitterClient();
 var twitterClientWindow = new Gtk.Window({title: "twitterClient"});
 var scrolledWindow = new Gtk.ScrolledWindow();
-var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 10});
+var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
 var stylecontext = twitterClientWindow.get_style_context();
 var cssProvider = new Gtk.CssProvider();
 var css = "GtkLabel { background-color: blue }";
 
+vbox.show();
 cssProvider.load_from_data(css, css.length);
 stylecontext.add_provider(cssProvider, Gtk.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 twitterClientWindow.set_default_size(500, 800);

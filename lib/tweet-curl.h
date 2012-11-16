@@ -3,6 +3,8 @@
 
 #include <curl/curl.h>
 
+void tweet_curl_init(void);
+void tweet_curl_free(void);
 void tweet_curl_http_cb(gchar *inputurl,
 			gchar *inputparams,
 			gpointer func,
@@ -11,6 +13,9 @@ void tweet_curl_http_cb(gchar *inputurl,
 gchar* tweet_curl_http(gchar *url,
 		       gchar *params,
 		       gboolean oauth);
+GString* tweet_curl_gstring_http(gchar *inputurl,
+				 gchar *inputparams,
+				 gboolean oauth);
 gchar* tweet_curl_http_media(gchar *inputurl,
 			     gchar *inputparams,
 			     GPtrArray *inputdata,
@@ -24,5 +29,6 @@ struct _tweet_curl_multipart_t
   gchar *contents;
   gchar *filepath;
 };
+CURL *curlapi;
 
 #endif /* __TWEET_CURL_H__ */

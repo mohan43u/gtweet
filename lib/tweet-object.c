@@ -13,6 +13,7 @@ static GObject* gtweet_object_constructor(GType type,
   object = G_OBJECT_CLASS(gtweet_object_parent_class)->constructor(type,
 								   n_construct_properties,
 								   construct_properties);
+  tweet_curl_init();
   return object;
 }
 
@@ -31,6 +32,7 @@ static void gtweet_object_finalize(GObject *object)
   if(G_OBJECT_CLASS(gtweet_object_parent_class)->finalize)
     G_OBJECT_CLASS(gtweet_object_parent_class)->finalize(object);
 
+  tweet_curl_free();
   g_object_get(object,
 	       "consumer_key", &consumer_key,
 	       "consumer_secret", &consumer_secret,
@@ -1112,8 +1114,10 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
   g_object_unref(result);
 }
 
-void gtweet_object_http(GtweetObject *tweetObject,
-			gchar *url)
+GByteArray* gtweet_object_http(GtweetObject *tweetObject,
+			       gchar *url)
 {
-  return tweet_curl_http(url, NULL, FALSE);
+  GString *buffer = tweet_curl_gstring_http(url, NULL, FALSE);
+  GByteArray *array = g_byte_array_new_take(buffer->str, buffer->len);
+  return array;
 }

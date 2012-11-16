@@ -163,6 +163,16 @@ static struct curl_slist* tweet_curl_get_oauthheader(gchar **url,
     return NULL;
 }
 
+void tweet_curl_init(void)
+{
+  curlapi = curl_easy_init();
+}
+
+void tweet_curl_free(void)
+{
+  curl_easy_cleanup(curlapi);
+}
+  
 void tweet_curl_http_cb(gchar *inputurl,
 			gchar *inputparams,
 			gpointer func,
@@ -172,7 +182,6 @@ void tweet_curl_http_cb(gchar *inputurl,
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
   struct curl_slist *oauthheader = NULL;
-  CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
   GPtrArray *cbargs = g_ptr_array_new();
   CURLcode returncode;
@@ -210,17 +219,25 @@ void tweet_curl_http_cb(gchar *inputurl,
   g_ptr_array_free(cbargs, FALSE);
   if(oauthheader)
     curl_slist_free_all(oauthheader);
-  curl_easy_cleanup(curlapi);
 }
 
 gchar* tweet_curl_http(gchar *inputurl,
 		       gchar *inputparams,
 		       gboolean oauth)
 {
+  GString *buffer = tweet_curl_gstring_http(inputurl, inputparams, oauth);
+  gchar *string = g_strdup(buffer->str);
+  g_string_free(buffer, TRUE);
+  return string;
+}
+
+GString* tweet_curl_gstring_http(gchar *inputurl,
+				 gchar *inputparams,
+				 gboolean oauth)
+{
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
   struct curl_slist *oauthheader = NULL;
-  CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
   GString *debugbuffer = g_string_new(NULL);
   gchar *string = NULL;
@@ -253,16 +270,13 @@ gchar* tweet_curl_http(gchar *inputurl,
     {
       if(g_strcmp0("\r\n", &(buffer->str[buffer->len - 2])) == 0)
 	g_string_truncate(buffer, buffer->len - 2);
-      string = g_strdup(buffer->str);
     }
 
   g_free(url);
   g_free(params);
-  g_string_free(buffer, TRUE);
   if(oauthheader)
     curl_slist_free_all(oauthheader);
-  curl_easy_cleanup(curlapi);
-  return string;
+  return buffer;
 }
 
 gchar* tweet_curl_http_media(gchar *inputurl,
@@ -275,7 +289,6 @@ gchar* tweet_curl_http_media(gchar *inputurl,
   struct curl_slist *oauthheader = NULL;
   struct curl_httppost *firstitem = NULL;
   struct curl_httppost *lastitem = NULL;
-  CURL *curlapi = curl_easy_init();
   GString *buffer = g_string_new(NULL);
   GString *debugbuffer = g_string_new(NULL);
   gchar *version = NULL;
@@ -353,6 +366,5 @@ gchar* tweet_curl_http_media(gchar *inputurl,
   if(oauthheader)
     curl_slist_free_all(oauthheader);
   curl_formfree(firstitem);
-  curl_easy_cleanup(curlapi);
   return string;
 }

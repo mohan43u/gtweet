@@ -279,10 +279,13 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_http:
+ * @tweetObject: a #TweetObject
  * @url: url to request
+ *
+ * Returns: (transfer full): response
  */
-void gtweet_object_http(GtweetObject *tweetObject,
-			gchar *url);
+GByteArray* gtweet_object_http(GtweetObject *tweetObject,
+			       gchar *url);
 
 G_END_DECLS
 
