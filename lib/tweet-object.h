@@ -81,9 +81,6 @@ gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
 				  gchar *since_id,
 				  gchar *max_id);
 
-/**
- * gtweet_object_usertimeline:
- */
 gchar* gtweet_object_usertimeline(GtweetObject *tweetObject,
 				  gchar *userid,
 				  gchar *screenname,
@@ -104,6 +101,15 @@ gchar* gtweet_object_trends(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_tweetsearch:
+ * @q: (allow-none): search string
+ * @geocode: (allow-none): geo code spec to search
+ * @lang: (allow-none): language specific search
+ * @locale: (allow-none): locale spec
+ * @result_type: (allow-none):
+ * @count: (allow-none): number of tweet to return
+ * @until: (allow-none): return tweets until this id
+ * @since_id: (allow-none): return tweets from this id
+ * @max_id: (allow-none): return tweets till this id
  */
 gchar* gtweet_object_tweetsearch(GtweetObject *tweetObject,
 				 gchar *q,

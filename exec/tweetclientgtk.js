@@ -9,7 +9,7 @@ const Gtweet = imports.gi.Gtweet;
 
 const InputField = new Lang.Class({
     Name: "InputField",
-    _init: function(text) {
+    _init: function(text, type) {
 	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 2});
 	this.hbox.set_homogeneous(true);
 	this.label = new Gtk.Label({label: text});
@@ -66,7 +66,6 @@ const get_consumer_keys_from_user = function(twitterClient) {
 const pin_cb = function(self, response_id, pin) {
     if(response_id == Gtk.ResponseType.OK)
 	this.pin = pin.get_text();
-
     self.destroy();
     Gtk.main_quit();
 }
@@ -82,11 +81,6 @@ const get_pin_from_user = function(twitterClient) {
     dialog.connect("close", Lang.bind(twitterClient, close_cb));
     dialog.show_all();
     Gtk.main();
-}
-
-const samplestream_cb = function(twitterObject, res, box) {
-// someone need to export g_simple_async_result_get_op_res_gpointer() in gio
-// to complete this function
 }
 
 const tweet_field = function(field, value, addlink) {
@@ -115,7 +109,7 @@ const create_image = function(data) {
     return image;
 }
 
-const tweetbox = function(twitterClient, element) {
+const create_tweet = function(twitterClient, element) {
     var name = tweet_field("name", element.user["name"] + " (" + element.user["screen_name"] + ")", false);
     var text = tweet_field("text", element["text"], true);
     var timestamp = new Date(element["created_at"]);
@@ -131,16 +125,42 @@ const tweetbox = function(twitterClient, element) {
     var profileImage = create_image(data);
     hbox.pack_start(profileImage, false, false, 0);
     hbox.pack_start(vbox, true, true, 10);
+    hbox.show_all();
     return hbox;
 }
 
-const hometimeline_cb = function(element, index, array, box) {
-    var tweet  = tweetbox(this, element);
-    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-    box.add(tweet);
-    box.add(separator);
-    box.show_all();
+var create_radio_tool_button = function(twitterObject, box, stock_id) {
+    var icon;
+    if(twitterObject.lastIcon == undefined)
+	icon = new Gtk.RadioToolButton();
+    else
+	icon = Gtk.RadioToolButton.new_from_widget(twitterObject.lastIcon);
+    icon.set_stock_id(stock_id);
+    icon.connect("toggled", Lang.bind(twitterObject, function(self, box) {
+	if(box.get_visible())
+	    box.set_visible(false);
+	else
+	    box.show_all();
+    }, box));
+    twitterObject.toolBar.insert(icon, -1);
+    twitterObject.lastIcon = icon;
+    icon.show();
 }
+
+var FindBox = new Lang.Class({
+    Name: "findBox",
+    _init: function(text) {
+	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+	this.entry = new Gtk.Entry();
+	this.entry.set_placeholder_text(text);
+	this.button = Gtk.Button.new_from_stock(Gtk.STOCK_FIND);
+	this.hbox.pack_start(this.entry, true, true, 0);
+	this.hbox.pack_start(this.button, false, false, 0);
+    },
+    get_text: function() {
+	return this.entry.get_text();
+    }
+});
 
 const TwitterClient = new Lang.Class({
     Name: "TwitterClient",
@@ -180,38 +200,110 @@ const TwitterClient = new Lang.Class({
 	    }
 	}
     },
-    showSampleStream: function(cancellable, box) {
-	this.tweetObject.samplestream(cancellable, samplestream_cb, box);
+    drawToolBar: function() {
+	this.toolBar = new Gtk.Toolbar();
+	this.toolBar.show_all();
+	return this.toolBar;
     },
-    showHomeTimeline: function(box) {
-	var jsonText = this.tweetObject.hometimeline(null, null, null);
-	var tweetArray = JSON.parse(jsonText);
-	tweetArray.forEach(Lang.bind(this, hometimeline_cb, box));
+    drawHomeTimeline: function() {
+	if(this.homeBox == undefined)
+	{
+	    this.homeBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    var refreshButton = Gtk.Button.new_from_stock(Gtk.STOCK_REFRESH);
+	    this.homeBox.add(refreshButton);
+	    this.tweetWindow = new Gtk.ScrolledWindow();
+	    this.tweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
+	    this.tweetWindow.add_with_viewport(this.tweetBox);
+	    create_radio_tool_button(this, this.homeBox, Gtk.STOCK_HOME);
+	    this.homeBox.pack_start(this.tweetWindow, true, true, 0);
+
+	    var _clicked = function(self, userdata){
+		this.tweetBox.foreach(function(child, userdata){child.destroy()});
+		var jsonText = this.tweetObject.hometimeline(null,
+							     null,
+							     null);
+		var tweetArray = JSON.parse(jsonText);
+		var _foreach = function(element, index, array) {
+		    var tweet  = create_tweet(this, element);
+		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+		    this.tweetBox.pack_start(tweet, true, true, 0);
+		    this.tweetBox.pack_start(separator, true, true, 0);
+		    this.tweetBox.show_all();
+		}
+		tweetArray.forEach(Lang.bind(this, _foreach));
+	    }
+	    refreshButton.connect("clicked", Lang.bind(this, _clicked));
+	    refreshButton.emit("clicked");
+
+	    this.homeBox.show_all();
+	}
+	return this.homeBox;
+    },
+    drawTweetSearch: function() {
+	if(this.tweetFindBox == undefined)
+	{
+	    this.tweetFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    this.findbox = new FindBox("type query string here..");
+	    this.tweetFindBox.add(this.findbox.hbox);
+	    this.tweetFindWindow = new Gtk.ScrolledWindow();
+	    this.tweetFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
+	    this.tweetFindWindow.add_with_viewport(this.tweetFindTweetBox);
+	    create_radio_tool_button(this, this.tweetFindBox, Gtk.STOCK_FIND);
+	    this.tweetFindBox.pack_start(this.tweetFindWindow, true, true, 0);
+
+	    var _clicked = function(self, userdata) {
+		this.tweetFindTweetBox.foreach(function(child, userdata){child.destroy()});
+		var jsonText = this.tweetObject.tweetsearch(this.findbox.get_text(),
+							    null,
+							    null,
+							    null,
+							    null,
+							    null,
+							    null,
+							    null,
+							    null);
+		var jsonObject = JSON.parse(jsonText);
+		var tweetArray = jsonObject["statuses"];
+		var _foreach = function(element, index, array) {
+		    var tweet  = create_tweet(this, element);
+		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+		    this.tweetFindTweetBox.pack_start(tweet, true, true, 0);
+		    this.tweetFindTweetBox.pack_start(separator, true, true, 0);
+		    this.tweetFindTweetBox.show_all();
+		}
+		tweetArray.forEach(Lang.bind(this, _foreach));
+	    }
+	    this.findbox.button.connect("clicked", Lang.bind(this, _clicked));
+
+	    this.tweetFindBox.hide();
+	}
+	return this.tweetFindBox;
+    },
+    getMainBox: function() {
+	this.mainBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	this.mainBox.pack_start(this.drawToolBar(), false, false, 0);
+	this.mainBox.pack_start(this.drawHomeTimeline(), true, true, 0);
+	this.mainBox.pack_start(this.drawTweetSearch(), true, true, 0);
+	this.mainBox.show();
+	return this.mainBox;
+    },
+    main: function(argc, argv) {
+	Gtk.init(argc, argv);
+	var twitterClientWindow = new Gtk.Window({title: "twitterClient"});
+	var stylecontext = twitterClientWindow.get_style_context();
+	var cssProvider = new Gtk.CssProvider();
+	var css = "GtkLabel { background-color: blue }";
+
+	cssProvider.load_from_data(css, css.length);
+	stylecontext.add_provider(cssProvider, Gtk.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	twitterClientWindow.set_default_size(500, 800);
+	twitterClientWindow.add(this.getMainBox());
+
+	twitterClientWindow.connect("destroy", Gtk.main_quit);
+	twitterClientWindow.show();
+	Gtk.main();
     }
 });
 
-const show_cb = function(self, twitterClient, vbox) {
-    twitterClient.showHomeTimeline(vbox);
-}
-
-Gtk.init(null, null);
-
 var twitterClient = new TwitterClient();
-var twitterClientWindow = new Gtk.Window({title: "twitterClient"});
-var scrolledWindow = new Gtk.ScrolledWindow();
-var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
-var stylecontext = twitterClientWindow.get_style_context();
-var cssProvider = new Gtk.CssProvider();
-var css = "GtkLabel { background-color: blue }";
-
-vbox.show();
-cssProvider.load_from_data(css, css.length);
-stylecontext.add_provider(cssProvider, Gtk.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-twitterClientWindow.set_default_size(500, 800);
-scrolledWindow.add_with_viewport(vbox);
-twitterClientWindow.add(scrolledWindow);
-
-twitterClientWindow.connect("destroy", Gtk.main_quit);
-twitterClientWindow.connect("show", Lang.bind(this, show_cb, twitterClient, vbox));
-twitterClientWindow.show_all();
-Gtk.main();
+twitterClient.main(null, null);
