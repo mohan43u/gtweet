@@ -99,7 +99,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(girdir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libgtweet_la_LIBADD =
 am_libgtweet_la_OBJECTS = libgtweet_la-tweet-object.lo \
-	libgtweet_la-tweet-curl.lo libgtweet_la-tweet-json.lo \
+	libgtweet_la-tweet-soup.lo libgtweet_la-tweet-json.lo \
 	libgtweet_la-tweet-oauth.lo libgtweet_la-tweet-twitter.lo
 libgtweet_la_OBJECTS = $(am_libgtweet_la_OBJECTS)
 libgtweet_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -262,20 +262,20 @@ top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libgtweet.la
 pkginclude_HEADERS = tweet-object.h \
 			tweet.h \
-			tweet-curl.h \
+			tweet-soup.h \
 			tweet-json.h \
 			tweet-oauth.h \
 			tweet-twitter.h
 
 libgtweet_la_SOURCES = tweet-object.c \
-			tweet-curl.c \
+			tweet-soup.c \
 			tweet-json.c \
 			tweet-oauth.c \
 			tweet-twitter.c
 
 libgtweet_la_CFLAGS = $(PKGCFG_CFLAGS)
 libgtweet_la_LDFLAGS = $(PKGCFG_LIBS)
-@HAVE_INTROSPECTION_TRUE@INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+@HAVE_INTROSPECTION_TRUE@INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) # --warn-all
 @HAVE_INTROSPECTION_TRUE@INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 @HAVE_INTROSPECTION_TRUE@INTROSPECTION_GIRS = Gtweet-@VERSION@.gir
 @HAVE_INTROSPECTION_TRUE@Gtweet_0_3_gir_INCLUDES = GObject-2.0 Gio-2.0
@@ -362,10 +362,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtweet_la-tweet-curl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtweet_la-tweet-json.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtweet_la-tweet-oauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtweet_la-tweet-object.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtweet_la-tweet-soup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgtweet_la-tweet-twitter.Plo@am__quote@
 
 .c.o:
@@ -396,12 +396,12 @@ libgtweet_la-tweet-object.lo: tweet-object.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtweet_la_CFLAGS) $(CFLAGS) -c -o libgtweet_la-tweet-object.lo `test -f 'tweet-object.c' || echo '$(srcdir)/'`tweet-object.c
 
-libgtweet_la-tweet-curl.lo: tweet-curl.c
-@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtweet_la_CFLAGS) $(CFLAGS) -MT libgtweet_la-tweet-curl.lo -MD -MP -MF $(DEPDIR)/libgtweet_la-tweet-curl.Tpo -c -o libgtweet_la-tweet-curl.lo `test -f 'tweet-curl.c' || echo '$(srcdir)/'`tweet-curl.c
-@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libgtweet_la-tweet-curl.Tpo $(DEPDIR)/libgtweet_la-tweet-curl.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tweet-curl.c' object='libgtweet_la-tweet-curl.lo' libtool=yes @AMDEPBACKSLASH@
+libgtweet_la-tweet-soup.lo: tweet-soup.c
+@am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtweet_la_CFLAGS) $(CFLAGS) -MT libgtweet_la-tweet-soup.lo -MD -MP -MF $(DEPDIR)/libgtweet_la-tweet-soup.Tpo -c -o libgtweet_la-tweet-soup.lo `test -f 'tweet-soup.c' || echo '$(srcdir)/'`tweet-soup.c
+@am__fastdepCC_TRUE@	$(am__mv) $(DEPDIR)/libgtweet_la-tweet-soup.Tpo $(DEPDIR)/libgtweet_la-tweet-soup.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tweet-soup.c' object='libgtweet_la-tweet-soup.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtweet_la_CFLAGS) $(CFLAGS) -c -o libgtweet_la-tweet-curl.lo `test -f 'tweet-curl.c' || echo '$(srcdir)/'`tweet-curl.c
+@am__fastdepCC_FALSE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtweet_la_CFLAGS) $(CFLAGS) -c -o libgtweet_la-tweet-soup.lo `test -f 'tweet-soup.c' || echo '$(srcdir)/'`tweet-soup.c
 
 libgtweet_la-tweet-json.lo: tweet-json.c
 @am__fastdepCC_TRUE@	$(LIBTOOL)  --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgtweet_la_CFLAGS) $(CFLAGS) -MT libgtweet_la-tweet-json.lo -MD -MP -MF $(DEPDIR)/libgtweet_la-tweet-json.Tpo -c -o libgtweet_la-tweet-json.lo `test -f 'tweet-json.c' || echo '$(srcdir)/'`tweet-json.c

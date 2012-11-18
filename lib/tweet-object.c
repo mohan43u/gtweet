@@ -13,7 +13,7 @@ static GObject* gtweet_object_constructor(GType type,
   object = G_OBJECT_CLASS(gtweet_object_parent_class)->constructor(type,
 								   n_construct_properties,
 								   construct_properties);
-  tweet_curl_init();
+  tweet_soup_init();
   return object;
 }
 
@@ -32,7 +32,7 @@ static void gtweet_object_finalize(GObject *object)
   if(G_OBJECT_CLASS(gtweet_object_parent_class)->finalize)
     G_OBJECT_CLASS(gtweet_object_parent_class)->finalize(object);
 
-  tweet_curl_free();
+  tweet_soup_free();
   g_object_get(object,
 	       "consumer_key", &consumer_key,
 	       "consumer_secret", &consumer_secret,
@@ -175,6 +175,45 @@ static void gtweet_object_class_init(GtweetObjectClass *klass)
 GtweetObject* gtweet_object_new(void)
 {
   return g_object_new(GTWEET_TYPE_OBJECT, NULL);
+}
+
+static void print_properties(GtweetObject *tweetObject)
+{
+  gchar *consumer_key = NULL;
+  gchar *consumer_secret = NULL;
+  gchar *request_key = NULL;
+  gchar *request_secret = NULL;
+  gchar *access_key = NULL;
+  gchar *access_secret = NULL;
+
+  g_object_get(tweetObject,
+	       "consumer_key", &consumer_key,
+	       "consumer_secret", &consumer_secret,
+	       "request_key", &request_key,
+	       "request_secret", &request_secret,
+	       "access_key", &access_key,
+	       "access_secret", &access_secret,
+	       NULL);
+
+  g_printerr("consumer_key = %s\n"
+	     "consumer_secret = %s\n"
+	     "request_key = %s\n"
+	     "request_secret = %s\n"
+	     "access_key = %s\n"
+	     "access_secret = %s\n",
+	     consumer_key,
+	     consumer_secret,
+	     request_key,
+	     request_secret,
+	     access_key,
+	     access_secret);
+
+  g_free(consumer_key);
+  g_free(consumer_secret);
+  g_free(request_key);
+  g_free(request_secret);
+  g_free(access_key);
+  g_free(access_secret);
 }
 
 gboolean gtweet_object_initkeys(GtweetObject *tweetObject)
@@ -1117,7 +1156,7 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
 GByteArray* gtweet_object_http(GtweetObject *tweetObject,
 			       gchar *url)
 {
-  GString *buffer = tweet_curl_gstring_http(url, NULL, FALSE);
+  GString *buffer = tweet_soup_gstring_sync(url, NULL, FALSE);
   GByteArray *array = g_byte_array_new_take(buffer->str, buffer->len);
   return array;
 }

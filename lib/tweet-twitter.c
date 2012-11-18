@@ -34,7 +34,7 @@ void tweet_twitter_s_stat_filter(gchar *consumer_key,
 			 T_S_STAT_FILTER,
 			 &postparams,
 			 "POST");
-  tweet_curl_http_cb(url, postparams, func, userdata, TRUE);
+  tweet_soup_async(url, postparams, func, userdata, TRUE);
   g_free(postparams);
   g_free(url);
 }
@@ -55,7 +55,7 @@ void tweet_twitter_s_stat_sample(gchar *consumer_key,
 			 T_S_STAT_SAMPLE,
 			 NULL,
 			 "GET");
-  tweet_curl_http_cb(url, NULL, func, userdata, TRUE);
+  tweet_soup_async(url, NULL, func, userdata, TRUE);
   g_free(url);
 }
 
@@ -94,7 +94,7 @@ void tweet_twitter_s_htimeline(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  tweet_curl_http_cb(url, NULL, func, userdata, TRUE);
+  tweet_soup_async(url, NULL, func, userdata, TRUE);
   g_free(url);
 }
 
@@ -132,7 +132,7 @@ gchar* tweet_twitter_r_htimeline(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -177,7 +177,7 @@ gchar* tweet_twitter_r_utimeline(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -197,7 +197,7 @@ gchar* tweet_twitter_r_usersettings(gchar *consumer_key,
 			 T_R_ACCOUNTSETTINGS,
 			 NULL,
 			 "GET");
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -214,7 +214,7 @@ gchar* tweet_twitter_r_woeid(gchar *countryname)
 			    Y_R_WOEID,
 			    countryname,
 			    YAHOO_APPID);
-      result = tweet_curl_http(url, NULL, FALSE);
+      result = tweet_soup_sync(url, NULL, FALSE);
       if(result && strlen(result) && result[0] == '{')
       	{
       	  JsonParser *parser = tweet_json_parser();
@@ -253,7 +253,7 @@ gchar* tweet_twitter_r_trends(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -310,7 +310,7 @@ gchar* tweet_twitter_r_tweetsearch(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -345,7 +345,7 @@ gchar* tweet_twitter_r_lookup(gchar *consumer_key,
 			 T_R_LOOKUP,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   g_free(postparams);
   return result;
@@ -385,7 +385,7 @@ gchar* tweet_twitter_r_usersearch(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -450,7 +450,7 @@ gchar* tweet_twitter_r_following(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
 
   buffer = g_string_new(NULL);
   if(result && strlen(result) && result[0] == '{')
@@ -528,7 +528,7 @@ gchar* tweet_twitter_r_followers(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
 
   buffer = g_string_new(NULL);
   if(result && strlen(result) && result[0] == '{')
@@ -580,26 +580,7 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
   gchar *url = NULL;
   gchar *posturl = NULL;
   gchar *postparams = NULL;
-  GPtrArray *inputdata = NULL;
-  tweet_curl_multipart_t *data = NULL;
   gchar *result = NULL;
-  gchar iter = 0;
-
-  inputdata = g_ptr_array_new();
-  if(filepath && strlen(filepath))
-    {
-      data = g_new0(tweet_curl_multipart_t, 1);
-      data->name = g_strdup("media[]");
-      data->filepath = tweet_oauth_expandfilename(filepath);
-      g_ptr_array_add(inputdata, data);
-    }
-  if(status && strlen(status))
-    {
-      data = g_new0(tweet_curl_multipart_t, 1);
-      data->name = g_strdup("status");
-      data->contents = g_strdup(status);
-      g_ptr_array_add(inputdata, data);
-    }
 
   posturl = g_strdup(T_R_UPDATEMEDIA);
   postparams = g_strdup("");
@@ -611,22 +592,13 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
 			 &postparams,
 			 "POST");
   g_free(posturl);
-  result = tweet_curl_http_media(url, postparams, inputdata, TRUE);
+  result = tweet_soup_sync_media(url,
+				 postparams, 
+				 TRUE,
+				 status,
+				 filepath);
   g_free(url);
   g_free(postparams);
-
-  iter = 0;
-  while(iter < inputdata->len)
-    {
-      data = (tweet_curl_multipart_t *) g_ptr_array_index(inputdata, iter);
-      g_free(data->name);
-      g_free(data->contenttype);
-      g_free(data->contents);
-      g_free(data->filepath);
-      g_free(data);
-      iter++;
-    }
-  g_ptr_array_free(inputdata, FALSE);
   return result;
 }
 
@@ -665,7 +637,7 @@ gchar* tweet_twitter_r_update(gchar *consumer_key,
 			 T_R_UPDATE,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -694,7 +666,7 @@ gchar* tweet_twitter_r_retweet(gchar *consumer_key,
 			 posturl,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(postparams);
   g_free(url);
   return result;
@@ -724,7 +696,7 @@ gchar* tweet_twitter_r_destroy(gchar *consumer_key,
 			 posturl,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -759,7 +731,7 @@ gchar* tweet_twitter_r_follow(gchar *consumer_key,
 			 T_R_FOLLOW,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -794,7 +766,7 @@ gchar* tweet_twitter_r_unfollow(gchar *consumer_key,
 			 T_R_UNFOLLOW,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -827,7 +799,7 @@ gchar* tweet_twitter_r_blocklist(gchar *consumer_key,
 			 NULL,
 			 "GET");
   g_free(geturl);
-  result = tweet_curl_http(url, NULL, TRUE);
+  result = tweet_soup_sync(url, NULL, TRUE);
   g_free(url);
   return result;
 }
@@ -862,7 +834,7 @@ gchar* tweet_twitter_r_block(gchar *consumer_key,
 			 T_R_BLOCK,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -897,7 +869,7 @@ gchar* tweet_twitter_r_unblock(gchar *consumer_key,
 			 T_R_UNBLOCK,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -938,7 +910,7 @@ gchar* tweet_twitter_r_profile(gchar *consumer_key,
 			 T_R_PROFILE,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }
@@ -955,19 +927,7 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
   gchar *posturl = NULL;
   gchar *postparams = NULL;
   GString *postargs = NULL;
-  GPtrArray *inputdata = NULL;
-  tweet_curl_multipart_t *data = NULL;
   gchar *result = NULL;
-  gchar iter = 0;
-
-  inputdata = g_ptr_array_new();
-  if(filepath && strlen(filepath))
-    {
-      data = g_new0(tweet_curl_multipart_t, 1);
-      data->name = g_strdup("image");
-      data->filepath = tweet_oauth_expandfilename(filepath);
-      g_ptr_array_add(inputdata, data);
-    }
 
   posturl = g_strdup(T_R_PBACKGROUND);
   postparams = g_strdup("");
@@ -979,7 +939,11 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
 			 &postparams,
 			 "POST");
   g_free(posturl);
-  result = tweet_curl_http_media(url, postparams, inputdata, TRUE);
+  result = tweet_soup_sync_media(url,
+				 postparams, 
+				 TRUE,
+				 NULL,
+				 filepath);
   if(result && strlen(result) && result[0] == '{')
     {
       if(use && strlen(use))
@@ -1010,23 +974,11 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
 			     &postparams,
 			     "POST");
       g_free(posturl);
-      result = tweet_curl_http(url, postparams, TRUE);
+      result = tweet_soup_sync(url, postparams, TRUE);
     }
   g_free(url);
   g_free(postparams);
 
-  iter = 0;
-  while(iter < inputdata->len)
-    {
-      data = (tweet_curl_multipart_t *) g_ptr_array_index(inputdata, iter);
-      g_free(data->name);
-      g_free(data->contenttype);
-      g_free(data->contents);
-      g_free(data->filepath);
-      g_free(data);
-      iter++;
-    }
-  g_ptr_array_free(inputdata, FALSE);
   return result;
 }
 
@@ -1071,7 +1023,7 @@ gchar* tweet_twitter_r_pimage(gchar *consumer_key,
 			 T_R_PIMAGE,
 			 &postparams,
 			 "POST");
-  result = tweet_curl_http(url, postparams, TRUE);
+  result = tweet_soup_sync(url, postparams, TRUE);
   g_free(url);
   return result;
 }

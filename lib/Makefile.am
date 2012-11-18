@@ -3,13 +3,13 @@ lib_LTLIBRARIES = libgtweet.la
 
 pkginclude_HEADERS = tweet-object.h \
 			tweet.h \
-			tweet-curl.h \
+			tweet-soup.h \
 			tweet-json.h \
 			tweet-oauth.h \
 			tweet-twitter.h
 
 libgtweet_la_SOURCES = tweet-object.c \
-			tweet-curl.c \
+			tweet-soup.c \
 			tweet-json.c \
 			tweet-oauth.c \
 			tweet-twitter.c
@@ -20,7 +20,7 @@ libgtweet_la_LDFLAGS = $(PKGCFG_LIBS)
 if HAVE_INTROSPECTION
 
 -include $(INTROSPECTION_MAKEFILE)
-INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) # --warn-all
 INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 INTROSPECTION_GIRS = Gtweet-@VERSION@.gir

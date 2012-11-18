@@ -12,7 +12,7 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 
 # Checks for libraries.
-packages='gobject-2.0 oauth libcurl json-glib-1.0 gobject-introspection-1.0 gtk+-3.0'
+packages='gobject-2.0 oauth json-glib-1.0 gobject-introspection-1.0 gtk+-3.0 libsoup-2.4'
 AC_SUBST([packages], [$packages])
 PKG_CHECK_MODULES([PKGCFG], [$packages])
 LDFLAGS='-lreadline'

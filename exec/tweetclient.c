@@ -45,10 +45,26 @@ int main(int argc, char *argv[])
     }
 
   g_print("Press ctrl-c to stop streaming..\n");
-  gtweet_object_samplestream(tweetObject,
-			     cancel,
-			     samplestream_cb,
-			     NULL);
-
+  /* 
+   * gtweet_object_samplestream(tweetObject,
+   * 			     cancel,
+   * 			     samplestream_cb,
+   * 			     NULL);
+   */
+  /* 
+   * gtweet_object_hometimeline(tweetObject,
+   * 			     NULL,
+   * 			     NULL,
+   * 			     NULL);
+   */
+  /* 
+   * gtweet_object_updatemedia(tweetObject,
+   * 			    "test upload",
+   * 			    "/home/mohan/Pictures/Tajmahal.jpg");
+   */
+  gtweet_object_pbackground(tweetObject,
+  			    "/home/mohan/Pictures/nature.jpg",
+  			    NULL,
+  			    NULL);
   return 0;
 }

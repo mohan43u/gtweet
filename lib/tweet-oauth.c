@@ -63,7 +63,7 @@ void tweet_oauth_request_token(gchar *consumer_key,
 		  NULL,
 		  NULL);
 
-  response = tweet_curl_http(REQ_TOKEN_URL, postarg, FALSE);
+  response = tweet_soup_sync(REQ_TOKEN_URL, postarg, FALSE);
   argc = oauth_split_post_paramters(response, &argv, 0);
 
   while(argc)
@@ -135,7 +135,7 @@ void tweet_oauth_access_token(gchar *pin,
 		  request_key,
 		  request_secret);
 
-  response = tweet_curl_http(ACCESS_TOKEN_URL, postarg, TRUE);
+  response = tweet_soup_sync(ACCESS_TOKEN_URL, postarg, TRUE);
   argc = oauth_split_post_paramters(response, &argv, 0);
 
   while(argc)
