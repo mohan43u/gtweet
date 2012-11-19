@@ -66,5 +66,6 @@ int main(int argc, char *argv[])
   			    "/home/mohan/Pictures/nature.jpg",
   			    NULL,
   			    NULL);
+		       
   return 0;
 }

@@ -162,6 +162,8 @@ gchar* gtweet_object_updatemedia(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_update:
+ * @status: text to update
+ * @replypostid: postid which you are replying
  */
 gchar* gtweet_object_update(GtweetObject *tweetObject,
 			    gchar *status,
@@ -169,6 +171,7 @@ gchar* gtweet_object_update(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_retweet:
+ * @postid: postid to retweet
  */
 gchar* gtweet_object_retweet(GtweetObject *tweetObject,
 			     gchar *postid);
@@ -181,6 +184,8 @@ gchar* gtweet_object_destroy(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_follow:
+ * @screenname: (allow-none): screen name to follow
+ * @userid: (allow-none): userid to follow
  */
 gchar* gtweet_object_follow(GtweetObject *tweetObject,
 			    gchar *screenname,
@@ -188,6 +193,8 @@ gchar* gtweet_object_follow(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_unfollow:
+ * @screenname: (allow-none): screen name to unfollow
+ * @userid: (allow-none): userid to follow
  */
 gchar* gtweet_object_unfollow(GtweetObject *tweetObject,
 			      gchar *screenname,

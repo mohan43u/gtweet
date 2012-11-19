@@ -196,9 +196,12 @@ const create_tweet = function(twitterClient, element) {
     var text = new Gtk.Label();
     var user = create_user(element.user);
     var profileImage = new Gtk.ToggleButton();
+    var follow = new Gtk.Button({label: "Follow"});
+    var unfollow = new Gtk.Button({label: "Unfollow"});
     var retweet = new Gtk.Button({label: "Retweet"});
     var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
     var controlVbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+    var controlHbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
     var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 
     var headerContent = element.user.name + " (" + element.user.screen_name + ")";
@@ -216,41 +219,61 @@ const create_tweet = function(twitterClient, element) {
     text.set_alignment(0, 0);
 
     profileImage.image = create_image(twitterClient.tweetObject.http(element.user.profile_image_url_https));
-    var _toggled = function(self, user) {
+    var _profileImage_toggled = function(self, user) {
 	if(user.get_visible())
 	    user.set_visible(false);
 	else
 	    user.show_all();
     }
-    profileImage.connect("toggled", Lang.bind(twitterClient, _toggled, user));
+    profileImage.connect("toggled", Lang.bind(twitterClient, _profileImage_toggled, user));
 
-    var _clicked = function(self, element) {
+    var _follow_clicked = function(self, element) {
+	jsonText = this.tweetObject.follow(null, element.user.id_str);
+	jsonObject = JSON.parse(jsonText);
+	if(jsonErrorShow(this.tweetObject, jsonObject)) return;
+    }
+    follow.connect("clicked", Lang.bind(twitterClient, _follow_clicked, element));
+    
+    var _unfollow_clicked = function(self, element) {
+	jsonText = this.tweetObject.unfollow(null, element.user.id_str);
+	jsonObject = JSON.parse(jsonText);
+	if(jsonErrorShow(this.tweetObject, jsonObject)) return;
+    }
+    unfollow.connect("clicked", Lang.bind(twitterClient, _unfollow_clicked, element));
+
+    var _retweet_clicked = function(self, element) {
 	jsonText = this.tweetObject.retweet(element.id_str);
-	print(jsonText);
 	jsonObject = JSON.parse(jsonText);
 	if(jsonErrorShow(this.tweetObject, jsonObject)) return;
 	var tweet  = create_tweet(this, element);
 	var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-	this.homeBox.tweetBox.pack_start(tweet, false, false, 0);
-	this.homeBox.tweetBox.pack_start(separator, false, false, 0);
+	this.homeTimeline.tweetBox.pack_end(tweet, false, false, 0);
+	this.homeTimeline.tweetBox.pack_end(separator, false, false, 0);
 	tweet.show();
 	separator.show();
+	this.homeTimeline.homeIcon.set_active(true);
     }
-    retweet.connect("clicked", Lang.bind(twitterClient, _clicked, element));
-    
+    retweet.connect("clicked", Lang.bind(twitterClient, _retweet_clicked, element));
+
+    controlHbox.pack_start(follow, false, false, 0);
+    controlHbox.pack_start(unfollow, false, false, 0);
+    controlHbox.pack_start(retweet, false, false, 0);
+    vbox.pack_start(controlHbox, false, false, 5);
     vbox.pack_start(header, false, false, 5);
     vbox.pack_start(text, false, false, 5);
     vbox.pack_start(user, false, false, 5);
     controlVbox.pack_start(profileImage, false, false, 0);
-    controlVbox.pack_start(retweet, false, false, 0);
     hbox.pack_start(controlVbox, false, false, 5);
     hbox.pack_start(vbox, false, false, 5);
+    profileImage.show();
+    controlVbox.show();
+    follow.show();
+    unfollow.show();
+    retweet.show();
+    controlHbox.show();
     header.show();
     text.show();
     user.hide();
-    profileImage.show();
-    retweet.show();
-    controlVbox.show();
     vbox.show();
 
     return hbox;
@@ -264,17 +287,18 @@ var create_radio_tool_button = function(twitterClient, box, stock_id) {
 	icon = Gtk.RadioToolButton.new_from_widget(twitterClient.lastIcon);
     icon.set_stock_id(stock_id);
 
-    var _toggled = function(self, box) {
+    var _icon_toggled = function(self, box) {
 	if(box.get_visible())
 	    box.set_visible(false);
 	else
 	    box.set_visible(true);
     }
-    icon.connect("toggled", Lang.bind(twitterClient, _toggled, box));
+    icon.connect("toggled", Lang.bind(twitterClient, _icon_toggled, box));
 
     twitterClient.toolBar.insert(icon, -1);
     twitterClient.lastIcon = icon;
     icon.show();
+    return icon;
 }
 
 var FindBox = new Lang.Class({
@@ -307,9 +331,9 @@ const HomeTimeline = new Lang.Class({
 	    this.refreshButton = Gtk.Button.new_from_stock(Gtk.STOCK_REFRESH);
 	    this.tweetWindow = new Gtk.ScrolledWindow();
 	    this.tweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
-	    create_radio_tool_button(this.twitterClient, this.homeBox, Gtk.STOCK_HOME);
+	    this.homeIcon = create_radio_tool_button(this.twitterClient, this.homeBox, Gtk.STOCK_HOME);
 
-	    var _clicked = function(self, userdata){
+	    var _refreshButton_clicked = function(self, userdata){
 		this.tweetBox.foreach(function(child, userdata){child.destroy()});
 		var jsonText = this.tweetObject.hometimeline(null,
 							     null,
@@ -317,17 +341,18 @@ const HomeTimeline = new Lang.Class({
 		var jsonObject = JSON.parse(jsonText);
 		if(jsonErrorShow(this.tweetObject, jsonObject)) return;
 		tweetArray = jsonObject;
+		tweetArray.reverse();
 		var _foreach = function(element, index, array) {
-		    var tweet  = create_tweet(this, element);
+		    var tweet  = create_tweet(this.twitterClient, element);
 		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-		    this.tweetBox.pack_start(tweet, false, false, 0);
-		    this.tweetBox.pack_start(separator, false, false, 0);
+		    this.tweetBox.pack_end(tweet, false, false, 0);
+		    this.tweetBox.pack_end(separator, false, false, 0);
 		    tweet.show();
 		    separator.show();
 		}
 		tweetArray.forEach(Lang.bind(this, _foreach));
 	    }
-	    this.refreshButton.connect("clicked", Lang.bind(this, _clicked));
+	    this.refreshButton.connect("clicked", Lang.bind(this, _refreshButton_clicked));
 	    this.refreshButton.emit("clicked");
 
 	    this.homeBox.pack_start(this.refreshButton, false, false, 0);
@@ -351,14 +376,14 @@ const TweetSearch = new Lang.Class({
 	if(this.tweetFindBox == undefined)
 	{
 	    this.tweetFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.findbox = new FindBox("type query string here..");
+	    this.findBox = new FindBox("type query string here..");
 	    this.tweetFindWindow = new Gtk.ScrolledWindow();
 	    this.tweetFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
-	    create_radio_tool_button(this.twitterClient, this.tweetFindBox, Gtk.STOCK_FIND);
+	    this.tweetFindIcon = create_radio_tool_button(this.twitterClient, this.tweetFindBox, Gtk.STOCK_FIND);
 
-	    var _clicked = function(self, userdata) {
+	    var _findBox_button_clicked = function(self, userdata) {
 		this.tweetFindTweetBox.foreach(function(child, userdata){child.destroy()});
-		var jsonText = this.tweetObject.tweetsearch(this.findbox.get_text(),
+		var jsonText = this.tweetObject.tweetsearch(this.findBox.get_text(),
 							    null,
 							    null,
 							    null,
@@ -371,22 +396,23 @@ const TweetSearch = new Lang.Class({
 		if(jsonErrorShow(this.tweetObject, jsonObject)) return;
 		print(Object.getOwnPropertyNames(jsonObject.statuses[0].user.entities));
 		var tweetArray = jsonObject.statuses;
+		tweetArray.reverse();
 		var _foreach = function(element, index, array) {
-		    var tweet  = create_tweet(this, element);
+		    var tweet  = create_tweet(this.twitterClient, element);
 		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-		    this.tweetFindTweetBox.pack_start(tweet, false, false, 0);
-		    this.tweetFindTweetBox.pack_start(separator, false, false, 0);
+		    this.tweetFindTweetBox.pack_end(tweet, false, false, 0);
+		    this.tweetFindTweetBox.pack_end(separator, false, false, 0);
 		    tweet.show();
 		    separator.show();
 		}
 		tweetArray.forEach(Lang.bind(this, _foreach));
 	    }
-	    this.findbox.button.connect("clicked", Lang.bind(this, _clicked));
+	    this.findBox.button.connect("clicked", Lang.bind(this, _findBox_button_clicked));
 
-	    this.tweetFindBox.pack_start(this.findbox.hbox, false, false, 0);
+	    this.tweetFindBox.pack_start(this.findBox.hbox, false, false, 0);
 	    this.tweetFindWindow.add_with_viewport(this.tweetFindTweetBox);
 	    this.tweetFindBox.pack_start(this.tweetFindWindow, true, true, 0);
-	    this.findbox.hbox.show();
+	    this.findBox.hbox.show();
 	    this.tweetFindTweetBox.show();
 	    this.tweetFindWindow.show();
 	}
