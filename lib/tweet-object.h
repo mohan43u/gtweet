@@ -26,12 +26,13 @@ struct _GtweetObject
   GObject parent;
 
   /*<private>*/
-  const gchar *consumer_key;
-  const gchar *consumer_secret;
-  const gchar *request_key;
-  const gchar *request_secret;
-  const gchar *access_key;
-  const gchar *access_secret;
+  gchar *consumer_key;
+  gchar *consumer_secret;
+  gchar *request_key;
+  gchar *request_secret;
+  gchar *access_key;
+  gchar *access_secret;
+  GString *stream_response;
 };
 
 enum
@@ -42,7 +43,8 @@ enum
     REQUEST_KEY,
     REQUEST_SECRET,
     ACCESS_KEY,
-    ACCESS_SECRET
+    ACCESS_SECRET,
+    STREAM_RESPONSE
   };
 
 GType gtweet_object_get_type(void) G_GNUC_CONST;

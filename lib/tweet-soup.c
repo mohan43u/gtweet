@@ -99,7 +99,7 @@ static void tweet_soup_async_got_chunk_cb(SoupMessage *msg,
 {
   GPtrArray *cbargs = NULL;
   GString *buffer = NULL;
-  gboolean (*write_cb)(gchar *string, gpointer userdata) = NULL;
+  gboolean (*write_cb)(gchar *string, gsize length, gpointer userdata) = NULL;
   gpointer writecb_userdata = NULL;
   gchar *string = NULL;
   gsize length = 0;
@@ -117,9 +117,10 @@ static void tweet_soup_async_got_chunk_cb(SoupMessage *msg,
       string[length - 2] = '\0';
       g_string_append(buffer, string);
       fullstring = g_strdup(buffer->str);
+      length = buffer->len;
       g_string_set_size(buffer, 0);
       //Make sure write_cb returns true, else die.
-      if(write_cb(fullstring, writecb_userdata) == FALSE)
+      if(write_cb(fullstring, length, writecb_userdata) == FALSE)
 	soup_session_cancel_message(tweet_soup_session, msg, SOUP_STATUS_CANCELLED);
       g_free(fullstring);
     }

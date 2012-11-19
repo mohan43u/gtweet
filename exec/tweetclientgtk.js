@@ -218,7 +218,10 @@ const create_tweet = function(twitterClient, element) {
     text.set_line_wrap(true);
     text.set_alignment(0, 0);
 
-    profileImage.image = create_image(twitterClient.tweetObject.http(element.user.profile_image_url_https));
+    var _profileImage_show = function(self, twitterClient) {
+	self.image = create_image(twitterClient.tweetObject.http(element.user.profile_image_url_https));
+    }
+    profileImage.connect("show", Lang.bind(this, _profileImage_show, twitterClient));
     var _profileImage_toggled = function(self, user) {
 	if(user.get_visible())
 	    user.set_visible(false);
@@ -353,7 +356,9 @@ const HomeTimeline = new Lang.Class({
 		tweetArray.forEach(Lang.bind(this, _foreach));
 	    }
 	    this.refreshButton.connect("clicked", Lang.bind(this, _refreshButton_clicked));
-	    this.refreshButton.emit("clicked");
+
+	    var _homeBox_show = _refreshButton_clicked;
+	    this.refreshButton.connect("show", Lang.bind(this, _homeBox_show));
 
 	    this.homeBox.pack_start(this.refreshButton, false, false, 0);
 	    this.tweetWindow.add_with_viewport(this.tweetBox);

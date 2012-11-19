@@ -4,8 +4,20 @@ static void samplestream_cb(GObject *source_object,
 			    GAsyncResult *res,
 			    gpointer user_data)
 {
-  gchar *tweet = (gchar *) g_simple_async_result_get_op_res_gpointer(G_SIMPLE_ASYNC_RESULT(res));
-  g_print("%s\n", tweet);
+  GtweetObject *tweetObject = GTWEET_OBJECT(source_object);
+  GCancellable *cancel = G_CANCELLABLE(user_data);
+  GString *stream_response = NULL;
+  static guint count = 0;
+
+  g_object_get(GTWEET_OBJECT(source_object),
+	       "stream_response", &stream_response,
+	       NULL);
+  g_print("%s\n", stream_response->str);
+  count++;
+  if(count >= 10)
+    g_cancellable_cancel(cancel);
+    
+  g_string_free(stream_response, TRUE);
 }
 
 int main(int argc, char *argv[])
@@ -16,6 +28,7 @@ int main(int argc, char *argv[])
   g_type_init();
 
   tweetObject = GTWEET_OBJECT(gtweet_object_new());
+  cancel = g_cancellable_new();
   if(!gtweet_object_initkeys(tweetObject))
     {
       gchar *consumer_key = NULL;
@@ -45,12 +58,10 @@ int main(int argc, char *argv[])
     }
 
   g_print("Press ctrl-c to stop streaming..\n");
-  /* 
-   * gtweet_object_samplestream(tweetObject,
-   * 			     cancel,
-   * 			     samplestream_cb,
-   * 			     NULL);
-   */
+  gtweet_object_samplestream(tweetObject,
+  			     cancel,
+  			     samplestream_cb,
+  			     cancel);
   /* 
    * gtweet_object_hometimeline(tweetObject,
    * 			     NULL,
@@ -62,10 +73,12 @@ int main(int argc, char *argv[])
    * 			    "test upload",
    * 			    "/home/mohan/Pictures/Tajmahal.jpg");
    */
-  gtweet_object_pbackground(tweetObject,
-  			    "/home/mohan/Pictures/nature.jpg",
-  			    NULL,
-  			    NULL);
+  /* 
+   * gtweet_object_pbackground(tweetObject,
+   * 			    "/home/mohan/Pictures/nature.jpg",
+   * 			    NULL,
+   * 			    NULL);
+   */
 		       
   return 0;
 }

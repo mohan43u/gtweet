@@ -14,18 +14,13 @@ static GObject* gtweet_object_constructor(GType type,
 								   n_construct_properties,
 								   construct_properties);
   tweet_soup_init();
+
   return object;
 }
 
 static void gtweet_object_finalize(GObject *object)
 {
   GtweetObject *obj = NULL;
-  gchar *consumer_key = NULL;
-  gchar *consumer_secret = NULL;
-  gchar *request_key = NULL;
-  gchar *request_secret = NULL;
-  gchar *access_key = NULL;
-  gchar *access_secret = NULL;
 
   obj = GTWEET_OBJECT(object);
   g_return_if_fail(GTWEET_IS_OBJECT(object));
@@ -33,21 +28,6 @@ static void gtweet_object_finalize(GObject *object)
     G_OBJECT_CLASS(gtweet_object_parent_class)->finalize(object);
 
   tweet_soup_free();
-  g_object_get(object,
-	       "consumer_key", &consumer_key,
-	       "consumer_secret", &consumer_secret,
-	       "request_key", &request_key,
-	       "request_secret", &request_secret,
-	       "access_key", &access_key,
-	       "access_secret", &access_secret,
-	       NULL);
-
-  g_free(consumer_key);
-  g_free(consumer_secret);
-  g_free(request_key);
-  g_free(request_secret);
-  g_free(access_key);
-  g_free(access_secret);
 }
 
 static void gtweet_object_set_property(GObject *object,
@@ -58,7 +38,6 @@ static void gtweet_object_set_property(GObject *object,
   GtweetObject *tweetObject = GTWEET_OBJECT(object);
 
   g_return_if_fail(GTWEET_IS_OBJECT(object));
-  g_return_if_fail(G_VALUE_HOLDS_STRING(value));
 
   switch(property_id)
     {
@@ -80,8 +59,11 @@ static void gtweet_object_set_property(GObject *object,
     case ACCESS_SECRET:
       tweetObject->access_secret = g_value_dup_string(value);
       break;
+    case STREAM_RESPONSE:
+	tweetObject->stream_response = g_value_dup_boxed(value);
+      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
     }
 }
 
@@ -93,7 +75,6 @@ static void gtweet_object_get_property(GObject *object,
   GtweetObject *tweetObject = GTWEET_OBJECT(object);
 
   g_return_if_fail(GTWEET_IS_OBJECT(object));
-  g_return_if_fail(G_VALUE_HOLDS_STRING(value));
 
   switch(property_id)
     {
@@ -115,8 +96,11 @@ static void gtweet_object_get_property(GObject *object,
     case ACCESS_SECRET:
       g_value_set_string(value, tweetObject->access_secret);
       break;
+    case STREAM_RESPONSE:
+	g_value_take_boxed(value, tweetObject->stream_response);
+      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
     }
 }
 
@@ -170,6 +154,13 @@ static void gtweet_object_class_init(GtweetObjectClass *klass)
 						      "will be used to sign",
 						      NULL,
 						      G_PARAM_READABLE|G_PARAM_WRITABLE));
+  g_object_class_install_property(gobjectClass,
+				  STREAM_RESPONSE,
+				  g_param_spec_boxed("stream_response",
+						     "http response chunk",
+						     "will be used on stream api calls",
+						     G_TYPE_GSTRING,
+						     G_PARAM_READABLE|G_PARAM_WRITABLE));
 }
 
 GtweetObject* gtweet_object_new(void)
@@ -185,6 +176,7 @@ static void print_properties(GtweetObject *tweetObject)
   gchar *request_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
+  gchar *stream_response = NULL;
 
   g_object_get(tweetObject,
 	       "consumer_key", &consumer_key,
@@ -193,6 +185,7 @@ static void print_properties(GtweetObject *tweetObject)
 	       "request_secret", &request_secret,
 	       "access_key", &access_key,
 	       "access_secret", &access_secret,
+	       "stream_response", &stream_response,
 	       NULL);
 
   g_printerr("consumer_key = %s\n"
@@ -1018,12 +1011,16 @@ gchar* gtweet_object_pimage(GtweetObject *tweetObject,
   return result;
 }
 
-static gboolean gtweet_generic_callback(gchar *string, gpointer user_data)
+static gboolean gtweet_generic_callback(gchar *string, gsize length, gpointer user_data)
 {
   GSimpleAsyncResult *result = (GSimpleAsyncResult *) user_data;
   GCancellable *cancel = g_simple_async_result_get_source_tag(result);
+  GObject *tweetObject = g_async_result_get_source_object(G_ASYNC_RESULT(result));
+  GString *gstring = g_string_new_len(string, length);
 
-  g_simple_async_result_set_op_res_gpointer(result, string, NULL);
+  g_object_set(tweetObject,
+	       "stream_response", gstring,
+	       NULL);
   g_simple_async_result_complete(result);
 
   if(!g_cancellable_is_cancelled(cancel))
