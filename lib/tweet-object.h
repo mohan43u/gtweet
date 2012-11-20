@@ -32,7 +32,7 @@ struct _GtweetObject
   gchar *request_secret;
   gchar *access_key;
   gchar *access_secret;
-  GString *stream_response;
+  gchar *stream_response;
 };
 
 enum
@@ -263,9 +263,9 @@ void gtweet_object_samplestream(GtweetObject *tweetObject,
  * @cancel: a cancellable object
  * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
  * @user_data: (closure) (allow-none): data to be sent to the callback
- * @track: string used to filter tweets
- * @follow: userid used to filter tweets
- * @locations: location string used to filter tweets
+ * @track: (allow-none): string used to filter tweets
+ * @follow: (allow-none): userid used to filter tweets
+ * @locations: (allow-none): location string used to filter tweets
  */
 
 void gtweet_object_filterstream(GtweetObject *tweetObject,
@@ -282,8 +282,8 @@ void gtweet_object_filterstream(GtweetObject *tweetObject,
  * @cancel: a cancellable object
  * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
  * @user_data: (closure) (allow-none): data to be sent to the callback
- * @track: string used to filter tweets
- * @locations: location string used to filter tweets
+ * @track: (allow-none): string used to filter tweets
+ * @locations: (allow-none): location string used to filter tweets
  */
 void gtweet_object_homestream(GtweetObject *tweetObject,
 			      GCancellable *cancel,

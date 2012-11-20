@@ -1,8 +1,8 @@
 #include <tweet.h>
 
-static void samplestream_cb(GObject *source_object,
-			    GAsyncResult *res,
-			    gpointer user_data)
+static void stream_cb(GObject *source_object,
+		      GAsyncResult *res,
+		      gpointer user_data)
 {
   GtweetObject *tweetObject = GTWEET_OBJECT(source_object);
   GCancellable *cancel = G_CANCELLABLE(user_data);
@@ -57,11 +57,15 @@ int main(int argc, char *argv[])
       g_free(pin);
     }
 
-  g_print("Press ctrl-c to stop streaming..\n");
-  gtweet_object_samplestream(tweetObject,
-  			     cancel,
-  			     samplestream_cb,
-  			     cancel);
+  /* 
+   * gtweet_object_filterstream(tweetObject,
+   * 			     cancel,
+   * 			     stream_cb,
+   * 			     cancel,
+   * 			     "linux,unix",
+   * 			     NULL,
+   * 			     NULL);
+   */
   /* 
    * gtweet_object_hometimeline(tweetObject,
    * 			     NULL,
@@ -73,12 +77,10 @@ int main(int argc, char *argv[])
    * 			    "test upload",
    * 			    "/home/mohan/Pictures/Tajmahal.jpg");
    */
-  /* 
-   * gtweet_object_pbackground(tweetObject,
-   * 			    "/home/mohan/Pictures/nature.jpg",
-   * 			    NULL,
-   * 			    NULL);
-   */
+  gtweet_object_pbackground(tweetObject,
+  			    "/home/mohan/Pictures/nature.jpg",
+  			    NULL,
+  			    NULL);
 		       
   return 0;
 }

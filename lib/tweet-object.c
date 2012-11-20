@@ -60,7 +60,7 @@ static void gtweet_object_set_property(GObject *object,
       tweetObject->access_secret = g_value_dup_string(value);
       break;
     case STREAM_RESPONSE:
-	tweetObject->stream_response = g_value_dup_boxed(value);
+	tweetObject->stream_response = g_value_dup_string(value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -97,7 +97,7 @@ static void gtweet_object_get_property(GObject *object,
       g_value_set_string(value, tweetObject->access_secret);
       break;
     case STREAM_RESPONSE:
-	g_value_take_boxed(value, tweetObject->stream_response);
+	g_value_take_string(value, tweetObject->stream_response);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -156,10 +156,10 @@ static void gtweet_object_class_init(GtweetObjectClass *klass)
 						      G_PARAM_READABLE|G_PARAM_WRITABLE));
   g_object_class_install_property(gobjectClass,
 				  STREAM_RESPONSE,
-				  g_param_spec_boxed("stream_response",
+				  g_param_spec_string("stream_response",
 						     "http response chunk",
 						     "will be used on stream api calls",
-						     G_TYPE_GSTRING,
+						     NULL,
 						     G_PARAM_READABLE|G_PARAM_WRITABLE));
 }
 
@@ -1016,10 +1016,9 @@ static gboolean gtweet_generic_callback(gchar *string, gsize length, gpointer us
   GSimpleAsyncResult *result = (GSimpleAsyncResult *) user_data;
   GCancellable *cancel = g_simple_async_result_get_source_tag(result);
   GObject *tweetObject = g_async_result_get_source_object(G_ASYNC_RESULT(result));
-  GString *gstring = g_string_new_len(string, length);
 
   g_object_set(tweetObject,
-	       "stream_response", gstring,
+	       "stream_response", string,
 	       NULL);
   g_simple_async_result_complete(result);
 
@@ -1092,15 +1091,16 @@ void gtweet_object_filterstream(GtweetObject *tweetObject,
 				     cancel);
   g_simple_async_result_set_check_cancellable(result,
 					      cancel);
+
   tweet_twitter_s_stat_filter(consumer_key,
-			      consumer_secret,
-			      access_key,
-			      access_secret,
-			      track,
-			      follow,
-			      locations,
-			      gtweet_generic_callback,
-			      result);
+  			      consumer_secret,
+  			      access_key,
+  			      access_secret,
+  			      track,
+  			      follow,
+  			      locations,
+  			      gtweet_generic_callback,
+  			      result);
 
   g_free(consumer_key);
   g_free(consumer_secret);

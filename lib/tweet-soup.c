@@ -133,20 +133,16 @@ static void tweet_soup_async_got_chunk_cb(SoupMessage *msg,
 void tweet_soup_init(void)
 {
   tweet_soup_session = soup_session_sync_new();
-  /* 
-   * tweet_soup_logger = soup_logger_new(SOUP_LOGGER_LOG_BODY, -1);
-   * soup_logger_attach(tweet_soup_logger,
-   * 		     tweet_soup_session);
-   */
+  tweet_soup_logger = soup_logger_new(SOUP_LOGGER_LOG_BODY, -1);
+  soup_logger_attach(tweet_soup_logger,
+  		     tweet_soup_session);
 }
 
 void tweet_soup_free(void)
 {
-  /* 
-   * soup_logger_detach(tweet_soup_logger,
-   * 		     tweet_soup_session);
-   * g_object_unref(tweet_soup_logger);
-   */
+  soup_logger_detach(tweet_soup_logger,
+  		     tweet_soup_session);
+  g_object_unref(tweet_soup_logger);
   g_object_unref(tweet_soup_session);
 }
 
@@ -168,12 +164,18 @@ void tweet_soup_async(gchar *inputurl,
   g_ptr_array_add(cbargs, func);
   g_ptr_array_add(cbargs, user_data);
 
-  if(inputparams)
-    msg = soup_message_new("POST", inputurl);
-  else
-    msg = soup_message_new("GET", inputurl);
-
   value = tweet_soup_get_oauthheader(&url, &params, oauth);
+  if(inputparams)
+    {
+      msg = soup_message_new("POST", url);
+      soup_message_set_request(msg,
+			       "application/x-www-form-urlencoded",
+			       SOUP_MEMORY_COPY,
+			       params,
+			       strlen(params));
+    }
+  else
+    msg = soup_message_new("GET", url);
   soup_message_headers_append(msg->request_headers,
 			      "Authorization", value);
   g_object_connect(G_OBJECT(msg),
@@ -182,7 +184,7 @@ void tweet_soup_async(gchar *inputurl,
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
   if(http_code >= 400)
-      g_printerr("error: http_code returned as %d\n", http_code);
+    g_printerr("error: http_code returned as %d\n", http_code);
 
   g_free(url);
   g_free(params);
@@ -213,12 +215,18 @@ GString* tweet_soup_gstring_sync(gchar *inputurl,
   gchar *value = NULL;
   guint http_code = 0;
 
-  if(inputparams)
-    msg = soup_message_new("POST", inputurl);
-  else
-    msg = soup_message_new("GET", inputurl);
-
   value = tweet_soup_get_oauthheader(&url, &params, oauth);
+  if(inputparams)
+    {
+      msg = soup_message_new("POST", url);
+      soup_message_set_request(msg,
+			       "application/x-www-form-urlencoded",
+			       SOUP_MEMORY_COPY,
+			       params,
+			       strlen(params));
+    }
+  else
+    msg = soup_message_new("GET", url);
   soup_message_headers_append(msg->request_headers,
 			      "Authorization", value);
   http_code = soup_session_send_message(tweet_soup_session,
@@ -255,6 +263,12 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   guint http_code = 0;
   gchar *string = NULL;
 
+  value = tweet_soup_get_oauthheader(&url, &params, oauth);
+  if(inputparams)
+    msg = soup_message_new("POST", url);
+  else
+    msg = soup_message_new("GET", url);
+
   g_file_get_contents(filename, &filecontent, &filelength, NULL);
   filebuffer = soup_buffer_new(SOUP_MEMORY_TAKE, filecontent, filelength);
   multi = soup_multipart_new("multipart/form-data");
@@ -270,15 +284,9 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
 				      "status",
 				      status);
 
-  if(inputparams)
-    msg = soup_message_new("POST", inputurl);
-  else
-    msg = soup_message_new("GET", inputurl);
-
   soup_multipart_to_message(multi,
 			    msg->request_headers,
 			    msg->request_body);
-  value = tweet_soup_get_oauthheader(&url, &params, oauth);
   soup_message_headers_append(msg->request_headers,
 			      "Authorization", value);
   http_code = soup_session_send_message(tweet_soup_session,
