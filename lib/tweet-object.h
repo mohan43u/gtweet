@@ -61,6 +61,8 @@ gboolean gtweet_object_initkeys(GtweetObject *tweetObject);
 
 /**
  * gtweet_object_gen_authurl:
+ * @consumer_key: your twitter app consumer key
+ * @consumer_secret: your twitter app consumer secret
  */
 gchar* gtweet_object_gen_authurl(GtweetObject *tweetObject,
 				 gchar *consumer_key,
@@ -68,6 +70,7 @@ gchar* gtweet_object_gen_authurl(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_auth:
+ * @pin: pin from twitter
  */
 gboolean gtweet_object_auth(GtweetObject *tweetObject,
 			     gchar *pin);
@@ -83,6 +86,14 @@ gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
 				  gchar *since_id,
 				  gchar *max_id);
 
+/**
+ * gtweet_object_usertimeline:
+ * @userid: (allow-none): userid to get information
+ * @screenname: (allow-none): screenname to get information
+ * @since_id: (allow-none): tweets to retrive since since_id
+ * @count: (allow-none): number of tweets to get
+ * @max_id: (allow-none): tweets to retrive from max_id
+ */
 gchar* gtweet_object_usertimeline(GtweetObject *tweetObject,
 				  gchar *userid,
 				  gchar *screenname,
@@ -97,6 +108,7 @@ gchar* gtweet_object_usersettings(GtweetObject *tweetObject);
 
 /**
  * gtweet_object_trends:
+ * @countryname: countryname to retrive trends
  */
 gchar* gtweet_object_trends(GtweetObject *tweetObject,
 			    gchar *countryname);
@@ -126,13 +138,27 @@ gchar* gtweet_object_tweetsearch(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_lookup:
+ * @screenname: (allow-none): screenname to get user data
+ * @user_id: (allow-none): user_id to get user data
  */
 gchar* gtweet_object_lookup(GtweetObject *tweetObject,
 			    gchar *screenname,
 			    gchar *user_id);
 
 /**
+ * gtweet_object_show:
+ * @user_id: (allow-none): user_id to get user data
+ * @screenname: (allow-none): screenname to get user data
+ */
+gchar* gtweet_object_show(GtweetObject *tweetObject,
+			  gchar *user_id,
+			  gchar *screenname);
+
+/**
  * gtweet_object_usersearch:
+ * @q: (allow-none): query about a user
+ * @page: (allow-none): page numer to retrive tweets
+ * @count: (allow-none): number of tweets to retrive
  */
 gchar* gtweet_object_usersearch(GtweetObject *tweetObject,
 				gchar *q,
@@ -141,6 +167,9 @@ gchar* gtweet_object_usersearch(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_following:
+ * @userid: (allow-none): userid to get his friends id
+ * @screenname: (allow-none): screenname to get his friends id
+ * @cursor: (allow-none): cursor to traverse
  */
 gchar* gtweet_object_following(GtweetObject *tweetObject,
 			       gchar *userid,
@@ -149,6 +178,9 @@ gchar* gtweet_object_following(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_followers:
+ * @userid: (allow-none): userid to get his followers id
+ * @screenname: (allow-none): screenname to get his friends id
+ * @cursor: (allow-none): cursor to traverse
  */
 gchar* gtweet_object_followers(GtweetObject *tweetObject,
 			       gchar *userid,
@@ -157,6 +189,7 @@ gchar* gtweet_object_followers(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_updatemedia:
+ * @
  */
 gchar* gtweet_object_updatemedia(GtweetObject *tweetObject,
 				 gchar *status,
@@ -180,6 +213,7 @@ gchar* gtweet_object_retweet(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_destroy:
+ * @postid: postid to destroy
  */
 gchar* gtweet_object_destroy(GtweetObject *tweetObject,
 			     gchar *postid);

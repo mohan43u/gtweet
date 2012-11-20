@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
    * 			    NULL,
    * 			    NULL);
    */
+  gtweet_object_usersettings(tweetObject);
 		       
   return 0;
 }

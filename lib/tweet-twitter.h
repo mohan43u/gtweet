@@ -10,6 +10,7 @@
 #define T_R_TRENDS "https://api.twitter.com/1.1/trends/place.json?id=%s"
 #define T_R_TWEETSEARCH "https://api.twitter.com/1.1/search/tweets.json"
 #define T_R_LOOKUP "https://api.twitter.com/1.1/users/lookup.json"
+#define T_R_SHOW "http://api.twitter.com/1.1/users/show.json"
 #define T_R_USERSEARCH "https://api.twitter.com/1.1/users/search.json"
 #define T_R_FOLLOWING "https://api.twitter.com/1.1/friends/ids.json"
 #define T_R_FOLLOWERS "https://api.twitter.com/1.1/followers/ids.json"
@@ -95,6 +96,12 @@ gchar* tweet_twitter_r_lookup(gchar *consumer_key,
 			      gchar *access_secret,
 			      gchar *screenname,
 			      gchar *user_id);
+gchar* tweet_twitter_r_show(gchar *consumer_key,
+			    gchar *consumer_secret,
+			    gchar *access_key,
+			    gchar *access_secret,
+			    gchar *user_id,
+			    gchar *screenname);
 gchar* tweet_twitter_r_usersearch(gchar *consumer_key,
 				  gchar *consumer_secret,
 				  gchar *access_key,

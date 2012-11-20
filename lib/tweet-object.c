@@ -527,6 +527,38 @@ gchar* gtweet_object_lookup(GtweetObject *tweetObject,
   return result;
 }
 
+gchar* gtweet_object_show(GtweetObject *tweetObject,
+			  gchar *user_id,
+			  gchar *screenname)
+{
+  gchar *consumer_key = NULL;
+  gchar *consumer_secret = NULL;
+  gchar *access_key = NULL;
+  gchar *access_secret = NULL;
+  gchar *result = NULL;
+
+  g_object_get(G_OBJECT(tweetObject),
+	       "consumer_key", &consumer_key,
+	       "consumer_secret", &consumer_secret,
+	       "access_key", &access_key,
+	       "access_secret", &access_secret,
+	       NULL);
+
+  result = tweet_twitter_r_show(consumer_key,
+				consumer_secret,
+				access_key,
+				access_secret,
+				user_id,
+				screenname);
+
+  g_free(consumer_key);
+  g_free(consumer_secret);
+  g_free(access_key);
+  g_free(access_secret);
+
+  return result;
+}
+
 gchar* gtweet_object_usersearch(GtweetObject *tweetObject,
 				gchar *q,
 				gchar *page,

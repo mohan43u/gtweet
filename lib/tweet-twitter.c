@@ -351,6 +351,42 @@ gchar* tweet_twitter_r_lookup(gchar *consumer_key,
   return result;
 }
 
+gchar* tweet_twitter_r_show(gchar *consumer_key,
+			    gchar *consumer_secret,
+			    gchar *access_key,
+			    gchar *access_secret,
+			    gchar *user_id,
+			    gchar *screenname)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  GString *getargs = NULL;
+  gchar *result = NULL;
+
+  getargs = g_string_new(NULL);
+  if(user_id && strlen(user_id))
+    g_string_append_printf(getargs, "&user_id=%s", user_id);
+  if(screenname && strlen(screenname))
+    g_string_append_printf(getargs, "&screen_name=%s", screenname);
+  if(getargs->len)
+    geturl = g_strdup_printf("%s?%s", T_R_SHOW, &(getargs->str[1]));
+  else
+    geturl = g_strdup(T_R_SHOW);
+  g_string_free(getargs, TRUE);
+
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
+			 access_secret,
+			 geturl,
+			 NULL,
+			 "GET");
+  g_free(geturl);
+  result = tweet_soup_sync(url, NULL, TRUE);
+  g_free(url);
+  return result;
+}
+
 gchar* tweet_twitter_r_usersearch(gchar *consumer_key,
 				  gchar *consumer_secret,
 				  gchar *access_key,
@@ -390,30 +426,6 @@ gchar* tweet_twitter_r_usersearch(gchar *consumer_key,
   return result;
 }
 
-static gchar* tweet_twitter_strsplit(gchar **str,
-				     gchar *delimit,
-				     guint length)
-{
-  gchar **strv = NULL;
-  guint strc = 0;
-  gchar *result = NULL;
-
-  strv = g_strsplit(*str, delimit, length);
-  g_free(*str);
-  *str = NULL;
-
-  while(strv[strc]) strc++;
-  if(strc == length)
-    {
-      *str = g_strdup(strv[length - 1]);
-      g_free(strv[length - 1]);
-      strv[length - 1] = NULL;
-    }
-  result = g_strjoinv(",", strv);
-  g_strfreev(strv);
-  return result;
-}
-
 gchar* tweet_twitter_r_following(gchar *consumer_key,
 				 gchar *consumer_secret,
 				 gchar *access_key,
@@ -426,8 +438,6 @@ gchar* tweet_twitter_r_following(gchar *consumer_key,
   gchar *geturl = NULL;
   GString *getargs = NULL;
   gchar *result = NULL;
-  GString *buffer = NULL;
-  gchar *finalresult = NULL;
 
   getargs = g_string_new(NULL);
   if(userid && strlen(userid))
@@ -437,7 +447,7 @@ gchar* tweet_twitter_r_following(gchar *consumer_key,
   if(cursor && strlen(cursor))
     g_string_append_printf(getargs, "&cursor=%s", cursor);
   if(getargs->len)
-    geturl = g_strdup_printf("%s?%s", T_R_FOLLOWING, &(getargs->str[1]));
+    geturl = g_strdup_printf("%s?%s&stringify_ids=true", T_R_FOLLOWING, &(getargs->str[1]));
   else
     geturl = g_strdup(T_R_FOLLOWING);
   g_string_free(getargs, TRUE);
@@ -451,45 +461,8 @@ gchar* tweet_twitter_r_following(gchar *consumer_key,
 			 "GET");
   g_free(geturl);
   result = tweet_soup_sync(url, NULL, TRUE);
-
-  buffer = g_string_new(NULL);
-  if(result && strlen(result) && result[0] == '{')
-    {
-      JsonParser *parser = tweet_json_parser();
-      JsonNode *root = tweet_json_decode(parser, result);
-      JsonNode *child = tweet_json_get_object(root, "$.ids");
-      gchar *ids = tweet_json_get_array(child, "$.*|int");
-      gchar *limitids = NULL;
-      gchar *limitresult = NULL;
-
-      while(ids)
-	{
-	  limitids = tweet_twitter_strsplit(&ids, ",", 101);
-	  limitresult = tweet_twitter_r_lookup(consumer_key,
-					       consumer_secret,
-					       access_key,
-					       access_secret,
-					       NULL,
-					       limitids);
-	  g_string_append_printf(buffer, "%s\n", limitresult);
-	  g_free(limitresult);
-	}
-	  
-      json_node_free(child);
-      g_object_unref(parser);
-    }
-  else
-    buffer = g_string_append(buffer, result);
-
   g_free(url);
-  g_free(result);
-  if(buffer->len)
-    {
-      g_string_truncate(buffer, buffer->len - 1);
-      finalresult = g_strdup(buffer->str);
-    }
-  g_string_free(buffer, TRUE);
-  return finalresult;
+  return result;
 }
 
 gchar* tweet_twitter_r_followers(gchar *consumer_key,
@@ -504,8 +477,6 @@ gchar* tweet_twitter_r_followers(gchar *consumer_key,
   gchar *geturl = NULL;
   GString *getargs = NULL;
   gchar *result = NULL;
-  GString *buffer = NULL;
-  gchar *finalresult = NULL;
 
   getargs = g_string_new(NULL);
   if(userid && strlen(userid))
@@ -515,7 +486,7 @@ gchar* tweet_twitter_r_followers(gchar *consumer_key,
   if(cursor && strlen(cursor))
     g_string_append_printf(getargs, "&cursor=%s", cursor);
   if(getargs->len)
-    geturl = g_strdup_printf("%s?%s", T_R_FOLLOWERS, &(getargs->str[1]));
+    geturl = g_strdup_printf("%s?%s&stringify_ids=true", T_R_FOLLOWERS, &(getargs->str[1]));
   else
     geturl = g_strdup(T_R_FOLLOWERS);
   g_string_free(getargs, TRUE);
@@ -529,45 +500,8 @@ gchar* tweet_twitter_r_followers(gchar *consumer_key,
 			 "GET");
   g_free(geturl);
   result = tweet_soup_sync(url, NULL, TRUE);
-
-  buffer = g_string_new(NULL);
-  if(result && strlen(result) && result[0] == '{')
-    {
-      JsonParser *parser = tweet_json_parser();
-      JsonNode *root = tweet_json_decode(parser, result);
-      JsonNode *child = tweet_json_get_object(root, "$.ids");
-      gchar *ids = tweet_json_get_array(child, "$.*|int");
-      gchar *limitids = NULL;
-      gchar *limitresult = NULL;
-
-      while(ids)
-	{
-	  limitids = tweet_twitter_strsplit(&ids, ",", 101);
-	  limitresult = tweet_twitter_r_lookup(consumer_key,
-					       consumer_secret,
-					       access_key,
-					       access_secret,
-					       NULL,
-					       limitids);
-	  g_string_append_printf(buffer, "%s\n", limitresult);
-	  g_free(limitresult);
-	}
-	  
-      json_node_free(child);
-      g_object_unref(parser);
-    }
-  else
-    buffer = g_string_append(buffer, result);
-
   g_free(url);
-  g_free(result);
-  if(buffer->len)
-    {
-      g_string_truncate(buffer, buffer->len - 1);
-      finalresult = g_strdup(buffer->str);
-    }
-  g_string_free(buffer, TRUE);
-  return finalresult;
+  return result;
 }
 
 gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
