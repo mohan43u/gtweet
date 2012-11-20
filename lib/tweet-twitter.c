@@ -581,6 +581,11 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
   gchar *posturl = NULL;
   gchar *postparams = NULL;
   gchar *result = NULL;
+  gchar *statuspair = NULL;
+  gchar *filepathpair = NULL;
+
+  statuspair = g_strdup_printf("status:%s", status);
+  filepathpair = g_strdup_printf("media[]:%s", filepath);
 
   posturl = g_strdup(T_R_UPDATEMEDIA);
   postparams = g_strdup("");
@@ -595,10 +600,12 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
   result = tweet_soup_sync_media(url,
 				 postparams, 
 				 TRUE,
-				 status,
-				 filepath);
+				 statuspair,
+				 filepathpair);
   g_free(url);
   g_free(postparams);
+  g_free(statuspair);
+  g_free(filepathpair);
   return result;
 }
 
@@ -928,6 +935,9 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
   gchar *postparams = NULL;
   GString *postargs = NULL;
   gchar *result = NULL;
+  gchar *filepathpair = NULL;
+
+  filepathpair = g_strdup_printf("image:%s", filepath);
 
   posturl = g_strdup(T_R_PBACKGROUND);
   postparams = g_strdup("");
@@ -943,7 +953,7 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
 				 postparams, 
 				 TRUE,
 				 NULL,
-				 filepath);
+				 filepathpair);
   if(result && strlen(result) && result[0] == '{')
     {
       if(use && strlen(use))
@@ -978,6 +988,7 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
     }
   g_free(url);
   g_free(postparams);
+  g_free(filepathpair);
 
   return result;
 }

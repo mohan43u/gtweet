@@ -77,10 +77,12 @@ int main(int argc, char *argv[])
    * 			    "test upload",
    * 			    "/home/mohan/Pictures/Tajmahal.jpg");
    */
-  gtweet_object_pbackground(tweetObject,
-  			    "/home/mohan/Pictures/nature.jpg",
-  			    NULL,
-  			    NULL);
+  /* 
+   * gtweet_object_pbackground(tweetObject,
+   * 			    "/home/mohan/Pictures/nature.jpg",
+   * 			    NULL,
+   * 			    NULL);
+   */
 		       
   return 0;
 }

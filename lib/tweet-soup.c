@@ -248,8 +248,8 @@ GString* tweet_soup_gstring_sync(gchar *inputurl,
 gchar* tweet_soup_sync_media(gchar *inputurl,
 			     gchar *inputparams,
 			     gboolean oauth,
-			     gchar *status,
-			     gchar *filename)
+			     gchar *statuspair,
+			     gchar *filenamepair)
 {
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
@@ -262,6 +262,13 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   gchar *value = NULL;
   guint http_code = 0;
   gchar *string = NULL;
+  gchar **filename = NULL;
+  gchar **status = NULL;
+  gchar *filebasename = NULL;
+  gchar *content_type = NULL;
+
+  status = g_strsplit(statuspair, ":", 2);
+  filename = g_strsplit(filenamepair, ":", 2);
 
   value = tweet_soup_get_oauthheader(&url, &params, oauth);
   if(inputparams)
@@ -269,20 +276,26 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   else
     msg = soup_message_new("GET", url);
 
-  g_file_get_contents(filename, &filecontent, &filelength, NULL);
-  filebuffer = soup_buffer_new(SOUP_MEMORY_TAKE, filecontent, filelength);
+  
   multi = soup_multipart_new("multipart/form-data");
 
   if(filename)
-    soup_multipart_append_form_file(multi,
-				    "media[]",
-				    filename,
-				    NULL,
-				    filebuffer);
+    {
+      g_file_get_contents(filename[1], &filecontent, &filelength, NULL);
+      filebuffer = soup_buffer_new(SOUP_MEMORY_TAKE, filecontent, filelength);
+
+      filebasename = g_strdup(strrchr(filename[1], '/') + 1);
+      content_type = g_strdup_printf("image/%s", strrchr(filename[1], '.') + 1);
+      soup_multipart_append_form_file(multi,
+				      filename[0],
+				      filebasename,
+				      content_type,
+				      filebuffer);
+    }
   if(status)
     soup_multipart_append_form_string(multi,
-				      "status",
-				      status);
+				      status[0],
+				      status[1]);
 
   soup_multipart_to_message(multi,
 			    msg->request_headers,
@@ -301,6 +314,10 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   g_free(url);
   g_free(params);
   g_free(value);
+  g_strfreev(status);
+  g_strfreev(filename);
+  g_free(filebasename);
+  g_free(content_type);
   g_object_unref(msg);
   g_string_free(buffer, TRUE);
 
