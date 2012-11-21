@@ -131,7 +131,8 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
 				   gchar *access_key,
 				   gchar *access_secret,
 				   gchar *status,
-				   gchar *filepath);
+				   gchar *filepath,
+				   gchar *replypostid);
 gchar* tweet_twitter_r_update(gchar *consumer_key,
 			      gchar *consumer_secret,
 			      gchar *access_key,

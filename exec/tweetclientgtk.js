@@ -121,7 +121,7 @@ var create_pair = function(key, value, markup) {
     return hbox;
 }
 
-const create_user = function(user) {
+const create_user = function(user, isfull) {
     var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 
     if(user.name && user.screen_name)
@@ -131,7 +131,7 @@ const create_user = function(user) {
 	name.show();
     }
 
-    if(user.created_at)
+    if(isfull && user.created_at)
     {
 	var createtime = create_pair("createtime", (new Date(user.created_at)).toLocaleString());
 	vbox.pack_start(createtime, false, false, 0);
@@ -145,27 +145,27 @@ const create_user = function(user) {
 	verified.show();
     }
 
-    if(user.time_zone)
+    if(isfull && user.time_zone)
     {
 	var tz = create_pair("time_zone", user.time_zone);
 	vbox.pack_start(tz, false, false, 0);
 	tz.show();
     }
 
-    if(user.followers_count){
+    if(isfull && user.followers_count){
 	var followers = create_pair("followers", user.followers_count);
 	vbox.pack_start(followers, false, false, 0);
 	followers.show();
     }
 
-    if(user.friends_count)
+    if(isfull && user.friends_count)
     {
 	var friends = create_pair("friends", user.friends_count);
 	vbox.pack_start(friends, false, false, 0);
 	friends.show();
     }
 
-    if(user.statuses_count)
+    if(isfull && user.statuses_count)
     {
 	var tweets = create_pair("tweets", user.statuses_count);
 	vbox.pack_start(tweets, false, false, 0);
@@ -189,7 +189,7 @@ const create_user = function(user) {
 	url.show();
     }
 
-    if(user.description)
+    if(isfull && user.description)
     {
 	var desc = create_pair("description", user.description);
 	vbox.pack_start(desc, false, false, 0);
@@ -217,124 +217,138 @@ const jsonErrorShow = function(twitterClient, jsonObject) {
     return 0;
 }
 
-const create_tweet = function(twitterClient, element) {
+const create_tweet = function(twitterClient, element_orig) {
     var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-    if(element.user)
-    {
-	var header = new Gtk.Label();
-	var text = new Gtk.Label();
-	var user = create_user(element.user);
-	var profileImage = new Gtk.ToggleButton();
-	var follow = new Gtk.Button({label: "Follow"});
-	var unfollow = new Gtk.Button({label: "Unfollow"});
-	var retweet = new Gtk.Button({label: "Retweet"});
-	var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	var controlVbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	var controlHbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 
-	var headerContent = element.user.name + " (" + element.user.screen_name + ")";
-	headerContent += (new Date(element.created_at)).toLocaleFormat(" On %a %b %dth, At %I:%M %p");
-	if(element.place) headerContent += ", From " + element.place.name;
-	headerContent += ", Using " + element.source.replace(/<a *href="([^"]*)"[^>]*>/g, "<a href=\"$1\">");
-	header.set_markup(headerContent);
-	header.set_selectable(true);
-	header.set_line_wrap(true);
-	header.set_alignment(0, 0);
-
-	text.set_markup(element.text.replace(/(http[^\s]*)/g,"<a href=\"$1\">$1</a>"));
-	text.set_selectable(true);
-	text.set_line_wrap(true);
-	text.set_alignment(0, 0);
-
-	var _profileImage_show = function(self, twitterClient) {
-	    self.image = create_image(twitterClient.tweetObject.http(element.user.profile_image_url_https));
-	}
-	profileImage.connect("show", Lang.bind(this, _profileImage_show, twitterClient));
-	var _profileImage_toggled = function(self, user) {
-	    if(user.get_visible())
-		user.set_visible(false);
-	    else
-		user.show();
-	}
-	profileImage.connect("toggled", Lang.bind(twitterClient, _profileImage_toggled, user));
-
-	var _follow_clicked = function(self, element) {
-	    jsonText = this.tweetObject.follow(null, element.user.id_str);
-	    jsonObject = JSON.parse(jsonText);
-	    if(jsonErrorShow(this, jsonObject)) return;
-	    this.status("you are now following " + element.user.name);
-	}
-	follow.connect("clicked", Lang.bind(twitterClient, _follow_clicked, element));
-	
-	var _unfollow_clicked = function(self, element) {
-	    jsonText = this.tweetObject.unfollow(null, element.user.id_str);
-	    jsonObject = JSON.parse(jsonText);
-	    if(jsonErrorShow(this, jsonObject)) return;
-	    this.status("you are now unfollowing " + element.user.name);
-	}
-	unfollow.connect("clicked", Lang.bind(twitterClient, _unfollow_clicked, element));
-
-	var _retweet_clicked = function(self, element) {
-	    jsonText = this.tweetObject.retweet(element.id_str);
-	    jsonObject = JSON.parse(jsonText);
-	    if(jsonErrorShow(this, jsonObject)) return;
-	    var tweet  = create_tweet(this, element);
-	    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-	    this.homeTimeline.tweetBox.pack_end(tweet, false, false, 0);
-	    this.homeTimeline.tweetBox.pack_end(separator, false, false, 0);
-	    tweet.show();
-	    separator.show();
-	    this.homeTimeline.homeIcon.set_active(true);
-	}
-	retweet.connect("clicked", Lang.bind(twitterClient, _retweet_clicked, element));
-
-	controlHbox.pack_start(follow, false, false, 0);
-	controlHbox.pack_start(unfollow, false, false, 0);
-	controlHbox.pack_start(retweet, false, false, 0);
-	vbox.pack_start(controlHbox, false, false, 5);
-	vbox.pack_start(header, false, false, 5);
-	vbox.pack_start(text, false, false, 5);
-	vbox.pack_start(user, false, false, 5);
-	controlVbox.pack_start(profileImage, false, false, 0);
-	hbox.pack_start(controlVbox, false, false, 5);
-	hbox.pack_start(vbox, false, false, 5);
-	profileImage.show();
-	controlVbox.show();
-	follow.show();
-	unfollow.show();
-	retweet.show();
-	controlHbox.show();
-	header.show();
-	text.show();
-	user.hide();
-	vbox.show();
-    }
+    if(element_orig.retweeted_status)
+	var element = element_orig.retweeted_status;
     else
-    {
-	var header = new Gtk.Label();
-	var text = new Gtk.Label();
-	var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	var element = element_orig;
 
-	var headerContent = (new Date(element.created_at)).toLocaleFormat(" On %a %b %dth, At %I:%M %p");
-	if(element.place) headerContent += ", From " + element.place.name;
-	headerContent += ", Using " + element.source.replace(/<a *href="([^"]*)"[^>]*>/g, "<a href=\"$1\">");
-	header.set_markup(headerContent);
-	header.set_selectable(true);
-	header.set_line_wrap(true);
-	header.set_alignment(0, 0);
+    var header = new Gtk.Label();
+    var text = new Gtk.Label();
+    var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+    var controlVbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+    var retweetedby = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+    var user = create_user(element.user, true);
+    var controlHbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 
-	text.set_markup(element.text.replace(/(http[^\s]*)/g,"<a href=\"$1\">$1</a>"));
-	text.set_selectable(true);
-	text.set_line_wrap(true);
-	text.set_alignment(0, 0);
-
-	vbox.pack_start(header, false, false, 5);
-	vbox.pack_start(text, false, false, 5);
-	hbox.pack_start(vbox, false, false, 5);
-	header.show();
-	text.show();
-	vbox.show();
+    var profileImage = new Gtk.ToggleButton();
+    var _profileImage_show = function(self, twitterClient) {
+	self.image = create_image(twitterClient.tweetObject.http(element.user.profile_image_url_https));
     }
+    profileImage.connect("show", Lang.bind(this, _profileImage_show, twitterClient));
+    var _profileImage_toggled = function(self, user) {
+	if(self.get_active())
+	    user.show();
+	else
+	    user.hide();
+    }
+    profileImage.connect("toggled", Lang.bind(twitterClient, _profileImage_toggled, user));
+    controlVbox.pack_start(profileImage, false, false, 5);
+    profileImage.show();
+
+    var headerContent = element.user.name + " (" + element.user.screen_name + ")";
+    headerContent += (new Date(element.created_at)).toLocaleFormat(" On %a %b %dth, At %I:%M %p");
+    if(element.place) headerContent += ", From " + element.place.name;
+    headerContent += ", Using " + element.source.replace(/<a *href="([^"]*)"[^>]*>/g, "<a href=\"$1\">");
+    header.set_markup(headerContent);
+    header.set_selectable(true);
+    header.set_line_wrap(true);
+    header.set_alignment(0, 0);
+
+    var follow = new Gtk.Button({label: "Follow"});
+    var _follow_clicked = function(self, element) {
+	jsonText = this.tweetObject.follow(null, element.user.id_str);
+	jsonObject = JSON.parse(jsonText);
+	if(jsonErrorShow(this, jsonObject)) return;
+	this.status("you are now following " + element.user.name);
+    }
+    follow.connect("clicked", Lang.bind(twitterClient, _follow_clicked, element));
+    controlHbox.pack_end(follow, false, false, 0);
+    follow.show();
+    
+    var unfollow = new Gtk.Button({label: "Unfollow"});
+    var _unfollow_clicked = function(self, element) {
+	jsonText = this.tweetObject.unfollow(null, element.user.id_str);
+	jsonObject = JSON.parse(jsonText);
+	if(jsonErrorShow(this, jsonObject)) return;
+	this.status("you are now unfollowing " + element.user.name);
+    }
+    unfollow.connect("clicked", Lang.bind(twitterClient, _unfollow_clicked, element));
+    controlHbox.pack_end(unfollow, false, false, 0);
+    unfollow.show();
+    
+    var retweet = new Gtk.Button({label: "Retweet"});
+    var _retweet_clicked = function(self, element) {
+	jsonText = this.tweetObject.retweet(element.id_str);
+	jsonObject = JSON.parse(jsonText);
+	if(jsonErrorShow(this, jsonObject)) return;
+	var tweet  = create_tweet(this, element);
+	var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+	this.homeTimeline.tweetBox.pack_end(tweet, false, false, 0);
+	this.homeTimeline.tweetBox.pack_end(separator, false, false, 0);
+	tweet.show();
+	separator.show();
+	this.homeTimeline.homeIcon.set_active(true);
+    }
+    retweet.connect("clicked", Lang.bind(twitterClient, _retweet_clicked, element));
+    controlHbox.pack_end(retweet, false, false, 0);
+    retweet.show();
+
+    var updateButton = new Gtk.Button({label: "Reply"});
+    var _updateButton_clicked = function(self, post_id) {
+	this.updateBox.setPostId(post_id);
+	this.updateBox.box.show();
+    }
+    updateButton.connect("clicked", Lang.bind(twitterClient, _updateButton_clicked, element.id_str));
+    controlHbox.pack_end(updateButton, false, false, 0);
+    updateButton.show();
+
+
+    if(element.user.id == twitterClient.owner.userObject.id)
+    {
+	var deleteButton = new Gtk.Button({label: "Delete"});
+	var _deleteButton_clicked = function(self, element, hbox) {
+	    jsonText = this.tweetObject.destroy(element.id_str);
+	    jsonObject = JSON.parse(jsonText);
+	    if(jsonErrorShow(this, jsonObject)) return;
+	    hbox.hide();
+	}
+	deleteButton.connect("clicked", Lang.bind(twitterClient, _deleteButton_clicked, element, hbox));
+	controlHbox.pack_end(deleteButton, false, false, 0);
+	deleteButton.show();
+    }
+
+    if(element.id != element_orig.id)
+    {
+	var rlabel = new Gtk.Label();
+	rlabel.set_text("Retweeted by, " + element_orig.user.name + " (" + element_orig.user.screen_name + ")");
+	rlabel.set_width_chars(10);
+	rlabel.set_alignment(0, 0);
+	retweetedby.pack_start(rlabel, false, false, 0);
+	rlabel.show();
+    }
+
+    text.set_markup(element.text.replace(/(http[^\s]*)/g,"<a href=\"$1\">$1</a>"));
+    text.set_selectable(true);
+    text.set_line_wrap(true);
+    text.set_alignment(0, 0);
+
+    hbox.pack_start(controlVbox, false, false, 5);
+    vbox.pack_start(controlHbox, false, false, 5);
+    vbox.pack_start(header, false, false, 5);
+    vbox.pack_start(retweetedby, false, false, 5);
+    vbox.pack_start(text, false, false, 5);
+    vbox.pack_start(user, false, false, 5);
+    hbox.pack_start(vbox, false, false, 5);
+    controlVbox.show();
+    controlHbox.show();
+    header.show();
+    retweetedby.show();
+    text.show();
+    user.hide();
+    vbox.show();
 
     return hbox;
 }
@@ -348,10 +362,10 @@ var create_radio_tool_button = function(twitterClient, box, stock_id) {
     icon.set_stock_id(stock_id);
 
     var _icon_toggled = function(self, box) {
-	if(box.get_visible())
-	    box.set_visible(false);
+	if(self.get_active())
+	    box.show();
 	else
-	    box.set_visible(true);
+	    box.hide();
     }
     icon.connect("toggled", Lang.bind(twitterClient, _icon_toggled, box));
 
@@ -382,33 +396,51 @@ const Owner = new Lang.Class({
 	    var imageBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    var user = create_user(this.userObject);
+	    var usermini = create_user(this.userObject, false);
+	    var userfull = create_user(this.userObject, true);
 	    var profileImage = new Gtk.ToggleButton();
-	    var tweet = create_tweet(this.twitterClient, this.userObject.status);
+	    var controlVbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    var updateButton = new Gtk.Button({label: "Tweet"});
 
 	    var _profileImage_show = function(self, twitterClient) {
 		self.image = create_image(twitterClient.tweetObject.http(this.userObject.profile_image_url_https));
 	    }
 	    profileImage.connect("show", Lang.bind(this, _profileImage_show, this.twitterClient));
-	    var _profileImage_toggled = function(self, user) {
-		if(user.get_visible())
-		    user.set_visible(false);
+	    var _profileImage_toggled = function(self, usermini, userfull) {
+		if(self.get_active())
+		{
+		    usermini.hide();
+		    userfull.show();
+		}
 		else
-		    user.show();
+		{
+		    usermini.show();
+		    userfull.hide();
+		}
 	    }
-	    profileImage.connect("toggled", Lang.bind(twitterClient, _profileImage_toggled, user));
+	    profileImage.connect("toggled", Lang.bind(twitterClient, _profileImage_toggled, usermini, userfull));
 
-	    imageBox.pack_start(profileImage, false, false, 0);
-	    vbox.pack_start(tweet, false, false, 0);
-	    vbox.pack_start(user, false, false, 0);
+	    var _updateButton_clicked = function(self, post_id) {
+		this.updateBox.setPostId(post_id);
+		this.updateBox.box.show();
+	    }
+	    updateButton.connect("clicked", Lang.bind(twitterClient, _updateButton_clicked, null));
+
+	    imageBox.pack_start(profileImage, false, false, 5);
+	    vbox.pack_start(usermini, false, false, 0);
+	    vbox.pack_start(userfull, false, false, 0);
+	    controlVbox.pack_start(updateButton, false, false, 0);
 	    hbox.pack_start(imageBox, false, false, 0);
-	    hbox.pack_start(vbox, false, false, 0);
+	    hbox.pack_start(vbox, true, true, 0);
+	    hbox.pack_start(controlVbox, false, false, 0);
 	    this.ownerBox.pack_start(hbox, true, true, 0);
 	    profileImage.show();
+	    usermini.show();
+	    userfull.hide();
+	    updateButton.show();
 	    imageBox.show();
-	    tweet.show();
-	    user.hide();
 	    vbox.show();
+	    controlVbox.show();
 	    hbox.show();
 	}
 	return this.ownerBox;
@@ -420,7 +452,6 @@ const HomeTimeline = new Lang.Class({
     _init: function(twitterClient) {
 	this.twitterClient = twitterClient;
 	this.tweetObject = twitterClient.tweetObject;
-	this.owner = new Owner(this);
     },
     drawHomeTimeline: function() {
 	if(this.homeBox == undefined)
@@ -456,12 +487,10 @@ const HomeTimeline = new Lang.Class({
 
 	    this.controlBox.pack_start(this.refreshButton, true, true, 0);
 	    this.homeBox.pack_start(this.controlBox, false, false, 0);
-	    this.homeBox.pack_start(this.owner.drawOwner(), false, false, 0);
 	    this.tweetWindow.add_with_viewport(this.tweetBox);
 	    this.homeBox.pack_start(this.tweetWindow, true, true, 0);
 	    this.refreshButton.show();
 	    this.controlBox.show();
-	    this.owner.drawOwner().show();
 	    this.tweetWindow.show();
 	    this.tweetBox.show();
 	}
@@ -480,7 +509,6 @@ var FindBox = new Lang.Class({
 	this.hbox.pack_start(this.button, false, false, 0);
 	this.entry.show();
 	this.button.show();
-	this.hbox.show();
     },
     get_text: function() {
 	return this.entry.get_text();
@@ -540,12 +568,89 @@ const TweetSearch = new Lang.Class({
     }
 });
 
+const UpdateBox = new Lang.Class({
+    Name: "UpdateBox",
+    _init: function(twitterClient) {
+	this.twitterClient = twitterClient;
+	this.tweetObject = twitterClient.tweetObject;
+    },
+    setPostId: function(post_id) {
+	this.post_id = post_id;
+    },
+    drawUpdateBox: function() {
+	if(this.box == undefined)
+	{
+	    this.box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+	    this.textView = new Gtk.TextView();
+	    this.textBuffer = this.textView.get_buffer();
+	    this.fileChooserButton = Gtk.FileChooserButton.new("", Gtk.FileChooserAction.OPEN);
+	    this.ok = Gtk.Button.new_from_stock(Gtk.STOCK_OK);
+	    this.cancel = Gtk.Button.new_from_stock(Gtk.STOCK_CANCEL);
+
+	    this.textView.set_wrap_mode(Gtk.WrapMode.WORD);
+	    this.textView.set_size_request(-1, 50);
+
+	    var _ok_clicked = function(self, post_id) {
+		var startIter, endIter;
+		[startIter, endIter] = this.textBuffer.get_bounds();
+		var updateText = this.textBuffer.get_text(startIter, endIter, true);
+		var filename = this.fileChooserButton.get_filename();
+		if(filename)
+		{
+		    var jsonText = this.tweetObject.updatemedia(updateText, filename, this.post_id);
+		    var jsonObject = JSON.parse(jsonText);
+		    if(jsonErrorShow(this, jsonObject)) return;
+		}
+		else
+		{
+		    var jsonText = this.tweetObject.update(updateText, this.post_id);
+		    var jsonObject = JSON.parse(jsonText);
+		    if(jsonErrorShow(this, jsonObject)) return;
+		}
+		var tweet  = create_tweet(this.twitterClient, jsonObject);
+		var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+		this.twitterClient.homeTimeline.tweetBox.pack_end(tweet, false, false, 0);
+		this.twitterClient.homeTimeline.tweetBox.pack_end(separator, false, false, 0);
+		tweet.show();
+		separator.show();
+		this.twitterClient.homeTimeline.homeIcon.set_active(true);
+		this.cancel.clicked();
+	    }
+	    this.ok.connect("clicked", Lang.bind(this, _ok_clicked, this.post_id));
+
+	    var _cancel_clicked = function(self) {
+		var startIter, endIter;
+		[startIter, endIter] = this.textBuffer.get_bounds();
+		this.textBuffer.delete(startIter, endIter);
+		this.box.hide();
+	    }
+	    this.cancel.connect("clicked", Lang.bind(this, _cancel_clicked));
+
+	    this.box.pack_start(this.textView, true, true, 0);
+	    this.hbox.pack_start(this.fileChooserButton, true, true, 0);
+	    this.hbox.pack_start(this.ok, false, false, 0);
+	    this.hbox.pack_start(this.cancel, false, false, 0);
+	    this.box.pack_start(this.hbox, false, false, 0);
+	    this.textView.show();
+	    this.fileChooserButton.show();
+	    this.ok.show();
+	    this.cancel.show();
+	    this.hbox.show();
+	}
+
+	return this.box;
+    }
+});
+
 const TwitterClient = new Lang.Class({
     Name: "TwitterClient",
     _init: function() {
 	this.tweetObject = new Gtweet.Object();
 	this.toolBar = new Gtk.Toolbar();
+	this.owner = new Owner(this);
 	this.statusBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	this.updateBox = new UpdateBox(this);
 	this.homeTimeline = new HomeTimeline(this);
 	this.tweetSearch = new TweetSearch(this);
 	if(!this.tweetObject.initkeys())
@@ -587,6 +692,7 @@ const TwitterClient = new Lang.Class({
 	var msg = new Gtk.Label({label: message});
 	var ok = Gtk.Button.new_from_stock(Gtk.STOCK_OK);
 
+	msg.set_alignment(0, 0);
 	var _clicked = function(self) {
 	    this.destroy();
 	}
@@ -604,13 +710,17 @@ const TwitterClient = new Lang.Class({
 	{
 	    this.mainBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.mainBox.pack_start(this.toolBar, false, false, 0);
+	    this.mainBox.pack_start(this.owner.drawOwner(), false, false, 0);
 	    this.mainBox.pack_start(this.statusBox, false, false, 0);
+	    this.mainBox.pack_start(this.updateBox.drawUpdateBox(), false, false, 0);
 	    this.mainBox.pack_start(this.homeTimeline.drawHomeTimeline(), true, true, 0);
 	    this.mainBox.pack_start(this.tweetSearch.drawTweetSearch(), true, true, 0);
 	    this.toolBar.show();
+	    this.owner.ownerBox.show();
 	    this.statusBox.show();
-	    this.homeTimeline.drawHomeTimeline().show();
-	    this.tweetSearch.drawTweetSearch().hide();
+	    this.updateBox.box.hide();
+	    this.homeTimeline.homeBox.show();
+	    this.tweetSearch.tweetFindBox.hide();
 	}
 	return this.mainBox;
     },

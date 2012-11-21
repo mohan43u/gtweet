@@ -663,7 +663,8 @@ gchar* gtweet_object_followers(GtweetObject *tweetObject,
 
 gchar* gtweet_object_updatemedia(GtweetObject *tweetObject,
 				 gchar *status,
-				 gchar *filepath)
+				 gchar *filepath,
+				 gchar *replypostid)
 {
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
@@ -683,7 +684,8 @@ gchar* gtweet_object_updatemedia(GtweetObject *tweetObject,
 				       access_key,
 				       access_secret,
 				       status,
-				       filepath);
+				       filepath,
+				       replypostid);
 
   g_free(consumer_key);
   g_free(consumer_secret);

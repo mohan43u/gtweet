@@ -189,16 +189,19 @@ gchar* gtweet_object_followers(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_updatemedia:
- * @
+ * @status: text to update
+ * @filepath: image file path to update
+ * @replypostid: (allow-none): postid which you are replying
  */
 gchar* gtweet_object_updatemedia(GtweetObject *tweetObject,
 				 gchar *status,
-				 gchar *filepath);
+				 gchar *filepath,
+				 gchar *replypostid);
 
 /**
  * gtweet_object_update:
  * @status: text to update
- * @replypostid: postid which you are replying
+ * @replypostid: (allow-none): postid which you are replying
  */
 gchar* gtweet_object_update(GtweetObject *tweetObject,
 			    gchar *status,

@@ -258,7 +258,8 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
 			     gchar *inputparams,
 			     gboolean oauth,
 			     gchar *statuspair,
-			     gchar *filenamepair)
+			     gchar *filenamepair,
+			     gchar *replypostidpair)
 {
   gchar *url = g_strdup(inputurl);
   gchar *params = g_strdup(inputparams);
@@ -273,11 +274,13 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   gchar *string = NULL;
   gchar **filename = NULL;
   gchar **status = NULL;
+  gchar **replypostid = NULL;
   gchar *filebasename = NULL;
   gchar *content_type = NULL;
 
   status = g_strsplit(statuspair, ":", 2);
   filename = g_strsplit(filenamepair, ":", 2);
+  replypostid = g_strsplit(replypostidpair, ":", 2);
 
   value = tweet_soup_get_oauthheader(&url, &params, oauth);
   if(inputparams)
@@ -303,6 +306,10 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
     soup_multipart_append_form_string(multi,
 				      status[0],
 				      status[1]);
+  if(replypostid)
+    soup_multipart_append_form_string(multi,
+				      replypostid[0],
+				      replypostid[1]);
   soup_multipart_to_message(multi,
 			    msg->request_headers,
 			    msg->request_body);

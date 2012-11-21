@@ -20,8 +20,9 @@ GString* tweet_soup_gstring_sync(gchar *inputurl,
 gchar* tweet_soup_sync_media(gchar *inputurl,
 			     gchar *inputparams,
 			     gboolean oauth,
-			     gchar *status,
-			     gchar *filename);
+			     gchar *statuspair,
+			     gchar *filenamepair,
+			     gchar *replypostidpair);
 
 SoupSession *tweet_soup_session;
 SoupLogger *tweet_soup_logger;

@@ -509,7 +509,8 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
 				   gchar *access_key,
 				   gchar *access_secret,
 				   gchar *status,
-				   gchar *filepath)
+				   gchar *filepath,
+				   gchar *replypostid)
 {
   gchar *url = NULL;
   gchar *posturl = NULL;
@@ -517,9 +518,11 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
   gchar *result = NULL;
   gchar *statuspair = NULL;
   gchar *filepathpair = NULL;
+  gchar *replypostidpair = NULL;
 
   statuspair = g_strdup_printf("status:%s", status);
   filepathpair = g_strdup_printf("media[]:%s", filepath);
+  replypostidpair = g_strdup_printf("in_reply_to_post_id:%s", replypostid);
 
   posturl = g_strdup(T_R_UPDATEMEDIA);
   postparams = g_strdup("");
@@ -535,11 +538,13 @@ gchar* tweet_twitter_r_updatemedia(gchar *consumer_key,
 				 postparams, 
 				 TRUE,
 				 statuspair,
-				 filepathpair);
+				 filepathpair,
+				 replypostidpair);
   g_free(url);
   g_free(postparams);
   g_free(statuspair);
   g_free(filepathpair);
+  g_free(replypostidpair);
   return result;
 }
 
@@ -887,7 +892,8 @@ gchar* tweet_twitter_r_pbackground(gchar *consumer_key,
 				 postparams, 
 				 TRUE,
 				 NULL,
-				 filepathpair);
+				 filepathpair,
+				 NULL);
   if(result && strlen(result) && result[0] == '{')
     {
       if(use && strlen(use))
