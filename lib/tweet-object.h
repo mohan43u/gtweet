@@ -80,11 +80,13 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
  * @count: (allow-none): number of tweets to get
  * @since_id: (allow-none): tweets to retrive since since_id
  * @max_id: (allow-none): tweets to retrive from max_id
+ * @trimuser: (allow-none): trim user data in tweets
  */
 gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
 				  gchar *count,
 				  gchar *since_id,
-				  gchar *max_id);
+				  gchar *max_id,
+				  gchar *trimuser);
 
 /**
  * gtweet_object_usertimeline:
@@ -213,6 +215,13 @@ gchar* gtweet_object_update(GtweetObject *tweetObject,
  */
 gchar* gtweet_object_retweet(GtweetObject *tweetObject,
 			     gchar *postid);
+
+/**
+ * gtweet_object_showstatus:
+ * @postid: posid to get data
+ */
+gchar* gtweet_object_showstatus(GtweetObject *tweetObject,
+				gchar *postid);
 
 /**
  * gtweet_object_destroy:

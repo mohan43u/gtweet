@@ -104,7 +104,8 @@ gchar* tweet_twitter_r_htimeline(gchar *consumer_key,
 				 gchar *access_secret,
 				 gchar *count,
 				 gchar *since_id,
-				 gchar *max_id)
+				 gchar *max_id,
+				 gchar *trimuser)
 {
   gchar *url = NULL;
   gchar *geturl = NULL;
@@ -118,6 +119,8 @@ gchar* tweet_twitter_r_htimeline(gchar *consumer_key,
     g_string_append_printf(getargs, "&since_id=%s", since_id);
   if(max_id && strlen(max_id))
     g_string_append_printf(getargs, "&max_id=%s", max_id);
+  if(trimuser && strlen(trimuser))
+    g_string_append_printf(getargs, "&trim_user=%s", trimuser);
   if(getargs->len)
     geturl = g_strdup_printf("%s?%s", T_R_HTIMELINE, &(getargs->str[1]));
   else
@@ -615,6 +618,35 @@ gchar* tweet_twitter_r_retweet(gchar *consumer_key,
   result = tweet_soup_sync(url, postparams, TRUE);
   g_free(postparams);
   g_free(url);
+  g_free(posturl);
+  return result;
+}
+
+gchar* tweet_twitter_r_showstatus(gchar *consumer_key,
+				  gchar *consumer_secret,
+				  gchar *access_key,
+				  gchar *access_secret,
+				  gchar *postid)
+{
+  gchar *url = NULL;
+  gchar *geturl = NULL;
+  gchar *result = NULL;
+
+  if(postid && strlen(postid))
+    geturl = g_strdup_printf(T_R_SHOWSTATUS, postid);
+  else
+    return NULL;
+
+  url = tweet_oauth_sign(consumer_key,
+			 consumer_secret,
+			 access_key,
+			 access_secret,
+			 geturl,
+			 NULL,
+			 "GET");
+  result = tweet_soup_sync(url, NULL, TRUE);
+  g_free(url);
+  g_free(geturl);
   return result;
 }
 

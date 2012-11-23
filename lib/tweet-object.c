@@ -319,7 +319,8 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
 gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
 				  gchar *count,
 				  gchar *since_id,
-				  gchar *max_id)
+				  gchar *max_id,
+				  gchar *trimuser)
 {
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
@@ -340,7 +341,8 @@ gchar* gtweet_object_hometimeline(GtweetObject *tweetObject,
 				     access_secret,
 				     count,
 				     since_id,
-				     max_id);
+				     max_id,
+				     trimuser);
 
   g_free(consumer_key);
   g_free(consumer_secret);
@@ -748,6 +750,36 @@ gchar* gtweet_object_retweet(GtweetObject *tweetObject,
 				   access_key,
 				   access_secret,
 				   postid);
+
+  g_free(consumer_key);
+  g_free(consumer_secret);
+  g_free(access_key);
+  g_free(access_secret);
+
+  return result;
+}
+
+gchar* gtweet_object_showstatus(GtweetObject *tweetObject,
+				gchar *postid)
+{
+  gchar *consumer_key = NULL;
+  gchar *consumer_secret = NULL;
+  gchar *access_key = NULL;
+  gchar *access_secret = NULL;
+  gchar *result = NULL;
+
+  g_object_get(G_OBJECT(tweetObject),
+	       "consumer_key", &consumer_key,
+	       "consumer_secret", &consumer_secret,
+	       "access_key", &access_key,
+	       "access_secret", &access_secret,
+	       NULL);
+
+  result = tweet_twitter_r_showstatus(consumer_key,
+				      consumer_secret,
+				      access_key,
+				      access_secret,
+				      postid);
 
   g_free(consumer_key);
   g_free(consumer_secret);

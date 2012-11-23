@@ -17,6 +17,7 @@
 #define T_R_UPDATEMEDIA "https://api.twitter.com/1.1/statuses/update_with_media.json"
 #define T_R_UPDATE "https://api.twitter.com/1.1/statuses/update.json"
 #define T_R_RETWEET "https://api.twitter.com/1.1/statuses/retweet/%s.json"
+#define T_R_SHOWSTATUS "https://api.twitter.com/1.1/statuses/show/%s.json&include_my_retweet=true"
 #define T_R_DESTROY "https://api.twitter.com/1.1/statuses/destroy/%s.json"
 #define T_R_FOLLOW "https://api.twitter.com/1.1/friendships/create.json"
 #define T_R_UNFOLLOW "https://api.twitter.com/1.1/friendships/destroy.json"
@@ -57,7 +58,8 @@ gchar* tweet_twitter_r_htimeline(gchar *consumer_key,
 				 gchar *access_secret,
 				 gchar *count,
 				 gchar *since_id,
-				 gchar *max_id);
+				 gchar *max_id,
+				 gchar *trimuser);
 gchar* tweet_twitter_r_utimeline(gchar *consumer_key,
 				 gchar *consumer_secret,
 				 gchar *access_key,
@@ -144,6 +146,11 @@ gchar* tweet_twitter_r_retweet(gchar *consumer_key,
 			       gchar *access_key,
 			       gchar *access_secret,
 			       gchar *postid);
+gchar* tweet_twitter_r_showstatus(gchar *consumer_key,
+				  gchar *consumer_secret,
+				  gchar *access_key,
+				  gchar *access_secret,
+				  gchar *postid);
 gchar* tweet_twitter_r_destroy(gchar *consumer_key,
 			       gchar *consumer_secret,
 			       gchar *access_key,
