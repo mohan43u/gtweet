@@ -93,9 +93,14 @@ const get_pin_from_user = function(twitterClient) {
     Gtk.main();
 }
 
-const create_image = function(data) {
+const create_image = function(data, width, height, preserve_aspect_ratio) {
     var memoryInputStream = Gio.MemoryInputStream.new_from_data(data, data.length);
-    var pixBuf = GdkPixbuf.Pixbuf.new_from_stream(memoryInputStream, null);
+    var pixBuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(memoryInputStream,
+							   width,
+							   height,
+							   preserve_aspect_ratio,
+							   null,
+							   null);
     var image = Gtk.Image.new_from_pixbuf(pixBuf);
     return image;
 }
@@ -135,7 +140,7 @@ const create_user = function(user, isfull) {
 
     if(user.name && user.screen_name)
     {
-	var name = create_pair("name", user.name + "(" + user.screen_name + ")");
+	var name = create_pair("name", user.name + "(@" + user.screen_name + ")");
 	vbox.pack_start(name, false, false, 0);
 	name.show();
     }
@@ -246,7 +251,7 @@ const Tweet = new Lang.Class({
 	    if(this.tweet.retweeted_status)
 	    {
 		var retweetedBy = new Gtk.Label();
-		retweetedBy.set_text("Retweeted by, " + this.tweet.user.name + " (" + this.tweet.user.screen_name + ")");
+		retweetedBy.set_text("Retweeted by, " + this.tweet.user.name + " (@" + this.tweet.user.screen_name + ")");
 		retweetedBy.set_selectable(true);
 		retweetedBy.set_line_wrap(true);
 		retweetedBy.set_alignment(0, 0);
@@ -264,11 +269,12 @@ const Tweet = new Lang.Class({
 	    this.leftArrow = Gtk.Arrow.new(Gtk.ArrowType.LEFT, Gtk.ShadowType.IN);
 	    this.rightArrow = Gtk.Arrow.new(Gtk.ArrowType.RIGHT, Gtk.ShadowType.IN);
 	    this.userBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    this.mediaBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.headerBox = new Gtk.Label();
 	    this.textBox = new Gtk.Label();
 
 
-	    var headerContent = this.tweet.user.name + " (" + this.tweet.user.screen_name + ")";
+	    var headerContent = this.tweet.user.name + " (@" + this.tweet.user.screen_name + ")";
 	    headerContent += (new Date(this.tweet.created_at)).toLocaleFormat(" On %a %b %dth, At %I:%M %p");
 	    if(this.tweet.user.location) headerContent += ", From " + this.tweet.user.location;
 	    headerContent += ", Using " + this.tweet.source.replace(/<a *href="([^"]*)"[^>]*>/g, "<a href=\"$1\">");
@@ -294,7 +300,8 @@ const Tweet = new Lang.Class({
 		    if(this.profileImage == undefined)
 		    {
 			this.profileImage = new Gtk.ToggleButton();
-			this.profileImage.image = create_image(this.tweetObject.http(this.tweet.user.profile_image_url_https));
+			var url = this.tweet.user.profile_image_url_https;
+			this.profileImage.image = create_image(this.tweetObject.http(url), -1, -1, true);
 			var _profileImage_toggled = function(self) {
 			    if(self.get_active())
 			    {
@@ -356,34 +363,58 @@ const Tweet = new Lang.Class({
 			    this.repliedToButton.show();
 		    }
 
+		    if(this.tweet.entities &&
+		       this.tweet.entities.media &&
+		       this.tweet.entities.media[0] &&
+		       this.tweet.entities.media[0].media_url_https)
+		    {
+			if(this.mediaButton == undefined)
+			{
+			    this.mediaButton = new Gtk.ToggleButton({label: "Media"});
+			    var _mediaButton_toggled = function(self) {
+				if(self.get_active())
+				{
+				    if(this.mediaImage == undefined)
+				    {
+					var url = this.tweet.entities.media[0].media_url_https
+					this.mediaImage = create_image(this.tweetObject.http(url), 400, 400, true);
+					this.mediaImage.width = 60;
+					this.mediaImage.height = 60;
+					this.mediaBoxWrap.pack_start(this.mediaImage, false, false, 0);
+					this.mediaImage.show();
+				    }
+				    else
+					this.mediaImage.show();
+				}
+				else
+				{
+				    if(this.mediaImage)
+					this.mediaImage.hide();
+				}
+			    }
+			    this.mediaButton.connect("toggled", Lang.bind(this, _mediaButton_toggled));
+			    this.profileImageBox.pack_start(this.mediaButton, false, false, 0);
+			    this.mediaButton.show();
+			}
+			else
+			    this.mediaButton.show();
+		    }
+
 		    if(this.controlBox == undefined)
 		    {
 			this.controlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-			if(this.tweet.user.following)
+			if(this.tweet.user.id == this.twitterClient.owner.userObject.id)
 			{
-			    var unfollow = new Gtk.Button({label: "Unfollow"});
-			    var _unfollow_clicked = function(self) {
-				var jsonText = this.tweetObject.unfollow(null, this.tweet.user.id_str);
+			    var deleteButton = new Gtk.Button({label: "Delete"});
+			    var _deleteButton_clicked = function(self) {
+				var jsonText = this.tweetObject.destroy(this.tweet.id_str);
 				var jsonObject = JSON.parse(jsonText);
 				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				this.status("you are now unfollowing " + this.tweet.user.name);
+				this.twitterClient.homeTimeline.refreshButton.emit("clicked");
 			    }
-			    unfollow.connect("clicked", Lang.bind(this, _unfollow_clicked));
-			    this.controlBox.pack_end(unfollow, false, false, 0);
-			    unfollow.show();
-			}
-			else
-			{
-			    var follow = new Gtk.Button({label: "Follow"});
-			    var _follow_clicked = function(self) {
-				var jsonText = this.tweetObject.follow(null, this.tweet.user.id_str);
-				var jsonObject = JSON.parse(jsonText);
-				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				this.status("you are now following " + this.tweet.user.name);
-			    }
-			    follow.connect("clicked", Lang.bind(this, _follow_clicked));
-			    this.controlBox.pack_end(follow, false, false, 0);
-			    follow.show();
+			    deleteButton.connect("clicked", Lang.bind(this, _deleteButton_clicked));
+			    this.controlBox.pack_end(deleteButton, false, false, 0);
+			    deleteButton.show();
 			}
 
 			var updateButton = new Gtk.Button({label: "Reply"});
@@ -395,49 +426,65 @@ const Tweet = new Lang.Class({
 			this.controlBox.pack_end(updateButton, false, false, 0);
 			updateButton.show();
 
-			if(this.tweet.user.id == this.twitterClient.owner.userObject.id)
+			if(this.tweet.user.id != this.twitterClient.owner.userObject.id)
 			{
-			    var deleteButton = new Gtk.Button({label: "Delete"});
-			    var _deleteButton_clicked = function(self) {
-				var jsonText = this.tweetObject.destroy(this.tweet.id_str);
-				var jsonObject = JSON.parse(jsonText);
-				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				this.box.hide();
+			    if(this.tweet.user.following)
+			    {
+				var unfollow = new Gtk.Button({label: "Unfollow"});
+				var _unfollow_clicked = function(self) {
+				    var jsonText = this.tweetObject.unfollow(null, this.tweet.user.id_str);
+				    var jsonObject = JSON.parse(jsonText);
+				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				    this.status("you are now unfollowing " + this.tweet.user.name);
+				}
+				unfollow.connect("clicked", Lang.bind(this, _unfollow_clicked));
+				this.controlBox.pack_end(unfollow, false, false, 0);
+				unfollow.show();
 			    }
-			    deleteButton.connect("clicked", Lang.bind(this, _deleteButton_clicked));
-			    this.controlBox.pack_end(deleteButton, false, false, 0);
-			    deleteButton.show();
-			}
+			    else
+			    {
+				var follow = new Gtk.Button({label: "Follow"});
+				var _follow_clicked = function(self) {
+				    var jsonText = this.tweetObject.follow(null, this.tweet.user.id_str);
+				    var jsonObject = JSON.parse(jsonText);
+				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				    this.status("you are now following " + this.tweet.user.name);
+				}
+				follow.connect("clicked", Lang.bind(this, _follow_clicked));
+				this.controlBox.pack_end(follow, false, false, 0);
+				follow.show();
+			    }
 
-			var jsonText = this.tweetObject.showstatus(this.tweet.id_str);
-			var jsonObject = JSON.parse(jsonText);
-			if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-			var statusObject = jsonObject;
-			if(statusObject.retweeted)
-			{
-			    var retweet = new Gtk.Button({label: "Unretweet"});
-			    var _retweet_clicked = function(self, statusObject) {
-				var jsonText = this.tweetObject.destroy(statusObject.current_user_retweet.id_str);
-				var jsonObject = JSON.parse(jsonText);
-				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				this.twitterClient.homeTimeline.refreshButton.clicked();
+			    var jsonText = this.tweetObject.showstatus(this.tweet.id_str);
+			    var jsonObject = JSON.parse(jsonText);
+			    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+			    var statusObject = jsonObject;
+			    if(statusObject.retweeted)
+			    {
+				var retweet = new Gtk.Button({label: "Unretweet"});
+				var _retweet_clicked = function(self, statusObject) {
+				    var jsonText = this.tweetObject.destroy(statusObject.current_user_retweet.id_str);
+				    var jsonObject = JSON.parse(jsonText);
+				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				    this.twitterClient.homeTimeline.refreshButton.emit("clicked");
+				}
+				retweet.connect("clicked", Lang.bind(this, _retweet_clicked, statusObject));
+				this.controlBox.pack_end(retweet, false, false, 0);
+				retweet.show();
 			    }
-			    retweet.connect("clicked", Lang.bind(this, _retweet_clicked, statusObject));
-			    this.controlBox.pack_end(retweet, false, false, 0);
-			    retweet.show();
-			}
-			else
-			{
-			    var retweet = new Gtk.Button({label: "Retweet"});
-			    var _retweet_clicked = function(self, statusObject) {
-				var jsonText = this.tweetObject.retweet(statusObject.id_str);
-				var jsonObject = JSON.parse(jsonText);
-				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				this.twitterClient.homeTimeline.refreshButton.clicked();
+			    else
+			    {
+				var retweet = new Gtk.Button({label: "Retweet"});
+				var _retweet_clicked = function(self, statusObject) {
+				    var jsonText = this.tweetObject.retweet(statusObject.id_str);
+				    var jsonObject = JSON.parse(jsonText);
+				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				    this.twitterClient.homeTimeline.refreshButton.emit("clicked");
+				}
+				retweet.connect("clicked", Lang.bind(this, _retweet_clicked, statusObject));
+				this.controlBox.pack_end(retweet, false, false, 0);
+				retweet.show();
 			    }
-			    retweet.connect("clicked", Lang.bind(this, _retweet_clicked, statusObject));
-			    this.controlBox.pack_end(retweet, false, false, 0);
-			    retweet.show();
 			}
 			this.controlBoxWrap.pack_end(this.controlBox, false, false, 0);
 			this.controlBox.show();
@@ -450,6 +497,11 @@ const Tweet = new Lang.Class({
 		    self.image = this.leftArrow;
 		    this.profileImage.set_active(false);
 		    this.profileImage.hide();
+		    if(this.mediaButton)
+		    {
+			this.mediaButton.set_active(false);
+			this.mediaButton.hide();
+		    }
 		    if(this.repliedToButton)
 		    {
 			this.repliedToButton.set_active(false);
@@ -468,11 +520,13 @@ const Tweet = new Lang.Class({
 	    this.vbox.pack_start(this.retweetedByBox, false, false, 2);
 	    this.vbox.pack_start(this.textBox, false, false, 2);
 	    this.vbox.pack_start(this.userBoxWrap, false, false, 2);
+	    this.vbox.pack_start(this.mediaBoxWrap, false, false, 2);
 	    this.controlBoxWrap.show();
 	    this.headerBox.show();
 	    this.retweetedByBox.show();
 	    this.textBox.show();
 	    this.userBoxWrap.show();
+	    this.mediaBoxWrap.show();
 	    this.hbox.pack_start(this.profileImageBox, false, false, 2);
 	    this.hbox.pack_start(this.vbox, true, true, 2);
 	    this.profileImageBox.show();
@@ -546,7 +600,8 @@ const Owner = new Lang.Class({
 	    var updateButton = new Gtk.Button({label: "Tweet"});
 
 	    var _profileImage_show = function(self, twitterClient) {
-		self.image = create_image(twitterClient.tweetObject.http(this.userObject.profile_image_url_https));
+		var url = this.userObject.profile_image_url_https;
+		self.image = create_image(twitterClient.tweetObject.http(url), -1, -1, true);
 	    }
 	    profileImage.connect("show", Lang.bind(this, _profileImage_show, this.twitterClient));
 	    var _profileImage_toggled = function(self, usermini, userfull) {
@@ -636,7 +691,7 @@ const HomeTimeline = new Lang.Class({
 		tweetArray.forEach(Lang.bind(this, _foreach));
 	    }
 	    this.refreshButton.connect("clicked", Lang.bind(this, _refreshButton_clicked));
-	    this.refreshButton.clicked();
+	    this.refreshButton.emit("clicked");
 
 	    this.controlBox.pack_start(this.refreshButton, true, true, 0);
 	    this.homeBox.pack_start(this.controlBox, false, false, 0);
@@ -788,13 +843,12 @@ const UpdateBox = new Lang.Class({
 		    var jsonObject = JSON.parse(jsonText);
 		    if(jsonErrorShow(this, jsonObject)) return;
 		}
-		var tweet  = new Tweet(this.twitterClient, jsonObject);
+		var tweet = new Tweet(this.twitterClient, jsonObject);
 		var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
 		this.twitterClient.homeTimeline.tweetBox.pack_end(tweet.drawTweet(), false, false, 0);
 		this.twitterClient.homeTimeline.tweetBox.pack_end(separator, false, false, 0);
 		tweet.show();
 		separator.show();
-		this.twitterClient.homeTimeline.homeIcon.set_active(true);
 		this.cancel.clicked();
 	    }
 	    this.ok.connect("clicked", Lang.bind(this, _ok_clicked, this.post_id));
