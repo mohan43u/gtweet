@@ -115,12 +115,6 @@ const Image = new Lang.Class({
     },
     drawImage: function() {
 	this.data = this.tweetObject.http(this.url);
-	this.file;
-	this.fileIOStream;
-	[this.file, this.fileIOStream] = Gio.File.new_tmp(null, this.fileIOStream, null);
-	this.fileIOStream.get_output_stream().write(this.data, null);
-	
-
 	this.memoryInputStream = Gio.MemoryInputStream.new_from_data(this.data, this.data.length);
 	this.pixBuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(this.memoryInputStream,
 							       this.width,
@@ -132,6 +126,11 @@ const Image = new Lang.Class({
 	return this.image;
     },
     showAppDialog: function() {
+	this.file;
+	this.fileIOStream;
+	[this.file, this.fileIOStream] = Gio.File.new_tmp(null, this.fileIOStream, null);
+	this.fileIOStream.get_output_stream().write(this.data, null);
+	
 	var dialog = Gtk.AppChooserDialog.new(null, Gtk.DialogFlags.MODAL, this.file);
 	var _dialog_response = function(self, response, userdata) {
 	    if(response == Gtk.ResponseType.OK)
@@ -366,17 +365,9 @@ const Tweet = new Lang.Class({
 			    }
 			}
 			this.profileImageButton.connect("toggled", Lang.bind(this, _profileImageButton_toggled));
-			this.profileImageButton.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
-			this.profileImageFileButton = new Gtk.Button({label: "FullView"});
-			var _profileImageFileButton_clicked = function(self) {
-			    this.profileImage.showAppDialog();
-			}
-			this.profileImageFileButton.connect("clicked", Lang.bind(this, _profileImageFileButton_clicked));
 			this.profileImageBox.pack_start(this.profileImageButton, false, false, 0);
-			this.profileImageBox.pack_start(this.profileImageFileButton, false, false, 0);
 			this.controlBoxVWrap.pack_start(this.profileImageBox, false, false, 2);
 			this.profileImageButton.show();
-			this.profileImageFileButton.show();
 			this.profileImageBox.show();
 		    }
 		    else
@@ -432,16 +423,32 @@ const Tweet = new Lang.Class({
 				    {
 					var url = this.tweet.entities.media[0].media_url_https
 					this.mediaImage = new Image(this.twitterClient, url, 350, 350, true);
+					this.mediaImageButton = new Gtk.Button({label: "Open"});
+					this.mediaControlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+					var _mediaImageButton_clicked = function(self) {
+					    this.mediaImage.showAppDialog();
+					}
+					this.mediaImageButton.connect("clicked", Lang.bind(this, _mediaImageButton_clicked));
 					this.mediaBoxWrap.pack_start(this.mediaImage.drawImage(), false, false, 0);
+					this.mediaControlBox.pack_end(this.mediaImageButton, false, false, 0);
+					this.mediaBoxWrap.pack_start(this.mediaControlBox, false, false, 0);
 					this.mediaImage.show();
+					this.mediaImageButton.show();
+					this.mediaControlBox.show();
 				    }
 				    else
+				    {
 					this.mediaImage.show();
+					this.mediaControlBox.show();
+				    }
 				}
 				else
 				{
 				    if(this.mediaImage)
+				    {
 					this.mediaImage.hide();
+					this.mediaControlBox.hide();
+				    }
 				}
 			    }
 			    this.mediaButton.connect("toggled", Lang.bind(this, _mediaButton_toggled));
