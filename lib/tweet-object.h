@@ -109,11 +109,18 @@ gchar* gtweet_object_usertimeline(GtweetObject *tweetObject,
 gchar* gtweet_object_usersettings(GtweetObject *tweetObject);
 
 /**
+ * gtweet_object_woeid:
+ * @countryname: country name to get woeid
+ */
+gchar *gtweet_object_woeid(GtweetObject *tweetObject,
+			   gchar *countryname);
+
+/**
  * gtweet_object_trends:
- * @countryname: countryname to retrive trends
+ * @woeid: countryname to retrive trends
  */
 gchar* gtweet_object_trends(GtweetObject *tweetObject,
-			    gchar *countryname);
+			    gchar *woeid);
 
 /**
  * gtweet_object_tweetsearch:

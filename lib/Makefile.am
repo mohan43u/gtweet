@@ -4,13 +4,11 @@ lib_LTLIBRARIES = libgtweet.la
 pkginclude_HEADERS = tweet-object.h \
 			tweet.h \
 			tweet-soup.h \
-			tweet-json.h \
 			tweet-oauth.h \
 			tweet-twitter.h
 
 libgtweet_la_SOURCES = tweet-object.c \
 			tweet-soup.c \
-			tweet-json.c \
 			tweet-oauth.c \
 			tweet-twitter.c
 

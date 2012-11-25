@@ -218,23 +218,8 @@ gchar* tweet_twitter_r_woeid(gchar *countryname)
 			    countryname,
 			    YAHOO_APPID);
       result = tweet_soup_sync(url, NULL, FALSE);
-      if(result && strlen(result) && result[0] == '{')
-      	{
-      	  JsonParser *parser = tweet_json_parser();
-      	  JsonNode *node = tweet_json_decode(parser, result);
-      	  woeid = tweet_json_get_value(node, "$..woeid|int");
-	  g_object_unref(parser);
-      	}
-      else
-	woeid = NULL;
-
-      g_free(url);
-      g_free(result);
     }
-  else
-    woeid = NULL;
-
-  return woeid;
+  return result;
 }
 
 gchar* tweet_twitter_r_trends(gchar *consumer_key,

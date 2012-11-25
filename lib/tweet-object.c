@@ -418,14 +418,19 @@ gchar* gtweet_object_usersettings(GtweetObject *tweetObject)
   return result;
 }
 
+gchar *gtweet_object_woeid(GtweetObject *tweetObject,
+			   gchar *countryname)
+{
+  return tweet_twitter_r_woeid(countryname);
+}
+
 gchar* gtweet_object_trends(GtweetObject *tweetObject,
-			    gchar *countryname)
+			    gchar *woeid)
 {
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
-  gchar *woeid = NULL;
   gchar *result = NULL;
 
   g_object_get(G_OBJECT(tweetObject),
@@ -435,7 +440,6 @@ gchar* gtweet_object_trends(GtweetObject *tweetObject,
 	       "access_secret", &access_secret,
 	       NULL);
 
-  woeid = tweet_twitter_r_woeid(countryname);
   result = tweet_twitter_r_trends(consumer_key,
 				  consumer_secret,
 				  access_key,
@@ -446,7 +450,6 @@ gchar* gtweet_object_trends(GtweetObject *tweetObject,
   g_free(consumer_secret);
   g_free(access_key);
   g_free(access_secret);
-  g_free(woeid);
 
   return result;
 }

@@ -3,10 +3,10 @@
 
 #include <stdio.h>
 #include <glib-unix.h>
+#include <gio/gio.h>
 #include <string.h>
 #include <tweet-oauth.h>
 #include <tweet-twitter.h>
-#include <tweet-json.h>
 #include <tweet-object.h>
 #include <tweet-soup.h>
 
