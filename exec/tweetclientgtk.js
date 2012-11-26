@@ -146,7 +146,7 @@ const Image = new Lang.Class({
     }
 });
 
- var create_pair = function(key, value, markup) {
+var create_pair = function(key, value, markup) {
     var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
     var keyLabel = new Gtk.Label({label: key});
     var valueLabel = new Gtk.Label({label: value.toString()});
@@ -489,6 +489,43 @@ const Tweet = new Lang.Class({
 		    if(this.controlBox == undefined)
 		    {
 			this.controlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+
+			var timelineButton = new Gtk.Button({label: "Timeline"});
+			var _timelineButton_clicked = function(self) {
+			    this.twitterClient.userFind.userFindIcon.set_active(true);
+			    this.twitterClient.userFind.findBox.entry.set_text("id:" + this.tweet.user.id_str);
+			    this.twitterClient.userFind.findBox.button.emit("clicked");
+			}
+			timelineButton.connect("clicked", Lang.bind(this, _timelineButton_clicked));
+			this.controlBox.pack_start(timelineButton, false, false, 0);
+			timelineButton.show();
+
+			var friendsButton = new Gtk.Button({label: "Friends"});
+			var _friendsButton_clicked = function(self) {
+			    this.twitterClient.userFind.userFindIcon.set_active(true);
+			    this.twitterClient.userFind.userId = this.tweet.user.id_str;
+			    this.twitterClient.userFind.iter = 0;
+			    this.twitterClient.userFind.isFriends = true;
+			    this.twitterClient.userFind.populateUsers();
+			    this.twitterClient.userFind.userCombo.set_active(0);
+			}
+			friendsButton.connect("clicked", Lang.bind(this, _friendsButton_clicked));
+			this.controlBox.pack_start(friendsButton, false, false, 0);
+			friendsButton.show();
+
+			var followersButton = new Gtk.Button({label: "Followers"});
+			var _followersButton_clicked = function(self) {
+			    this.twitterClient.userFind.userFindIcon.set_active(true);
+			    this.twitterClient.userFind.userId = this.tweet.user.id_str;
+			    this.twitterClient.userFind.iter = 0;
+			    this.twitterClient.userFind.isFriends = false;
+			    this.twitterClient.userFind.populateUsers();
+			    this.twitterClient.userFind.userCombo.set_active(0);
+			}
+			followersButton.connect("clicked", Lang.bind(this, _followersButton_clicked));
+			this.controlBox.pack_start(followersButton, false, false, 0);
+			followersButton.show();
+
 			if(this.tweet.user.id == this.twitterClient.owner.userObject.id)
 			{
 			    var deleteButton = new Gtk.Button({label: "Delete"});
@@ -496,7 +533,7 @@ const Tweet = new Lang.Class({
 				var jsonText = this.tweetObject.destroy(this.tweet.id_str);
 				var jsonObject = JSON.parse(jsonText);
 				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				this.twitterClient.homeTimeline.refreshButton.emit("clicked");
+				this.box.hide();
 			    }
 			    deleteButton.connect("clicked", Lang.bind(this, _deleteButton_clicked));
 			    this.controlBox.pack_start(deleteButton, false, false, 0);
@@ -629,13 +666,13 @@ const Tweet = new Lang.Class({
     }
 });
 
-var create_radio_tool_button = function(twitterClient, box, stock_id) {
+var create_radio_tool_button = function(twitterClient, box, iconName) {
     var icon;
     if(twitterClient.lastIcon == undefined)
 	icon = new Gtk.RadioToolButton();
     else
 	icon = Gtk.RadioToolButton.new_from_widget(twitterClient.lastIcon, Gtk.IconSize.SMALL_TOOLBAR);
-    icon.set_stock_id(stock_id);
+    icon.set_icon_name(iconName);
 
     var _icon_toggled = function(self, box) {
 	if(self.get_active())
@@ -757,7 +794,7 @@ const HomeTimeline = new Lang.Class({
 	    this.controlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.tweetWindow = new Gtk.ScrolledWindow();
 	    this.tweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.homeIcon = create_radio_tool_button(this.twitterClient, this.homeBox, Gtk.STOCK_HOME);
+	    this.homeIcon = create_radio_tool_button(this.twitterClient, this.homeBox, "gtk-home");
 
 	    var _refreshButton_clicked = function(self, userdata){
 		this.tweetBox.foreach(function(child, userdata){child.destroy()});
@@ -855,7 +892,7 @@ const TweetFind = new Lang.Class({
 	    this.countryButton = create_search_button();
 	    this.trendsCombo = new Gtk.ComboBoxText();
 	    this.trendsButton = create_search_button();
-	    this.tweetFindIcon = create_radio_tool_button(this.twitterClient, this.tweetFindBox, Gtk.STOCK_FIND);
+	    this.tweetFindIcon = create_radio_tool_button(this.twitterClient, this.tweetFindBox, "gtk-find");
 
 	    this.countryComboEntry.set_size_request(100, -1);
 	    this.countryComboEntry.append_text(this.twitterClient.owner.userSettings.trend_location[0].name);
@@ -931,6 +968,157 @@ const TweetFind = new Lang.Class({
 	    this.tweetFindWindow.show();
 	}
 	return this.tweetFindBox;
+    }
+});
+
+const UserFind = new Lang.Class({
+    Name: "userFind",
+    _init: function(twitterClient) {
+	this.twitterClient = twitterClient;
+	this.tweetObject = twitterClient.tweetObject;
+    },
+    show: function() {
+	this.userFindBox.show();
+    },
+    hide: function() {
+	this.userFindBox.hide();
+    },
+    destroy: function() {
+	this.userFindBox.destroy();
+    },
+    populateUsers: function() {
+	if(this.iter == 0)
+	{
+	    this.userCombo.remove_all();
+	    this.ids = [];
+	}
+	print("iter: " + this.iter);
+	print("ids.length: " + this.ids.length);
+	print("cursor: " + this.cursor);
+	print("isFriends: " + this.isFriends);
+	if(this.iter >= this.ids.length)
+	{
+	    if(this.isFriends)
+		var jsonText = this.tweetObject.following(this.userId,
+							  null,
+							  this.cursor);
+	    else
+		var jsonText = this.tweetObject.followers(this.userId,
+							  null,
+							  this.cursor);
+	    var jsonObject = JSON.parse(jsonText);
+	    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+	    if(this.ids == undefined)
+		this.ids = jsonObject.ids;
+	    else
+		this.ids = this.ids.concat(jsonObject.ids);
+	    if(jsonObject.next_cursor_str == "0")
+		this.cursor = null;
+	    else
+		this.cursor = jsonObject.next_cursor_str;
+	}
+
+	var max = (this.ids.length > 100 ? 100 : this.ids.length)
+	var lookupIds = this.ids.slice(this.iter, this.iter + max);
+	var jsonText = this.tweetObject.lookup(null, lookupIds.join(","));
+	var jsonObject = JSON.parse(jsonText);
+	if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+	var userArray = jsonObject;
+	var _userArray_foreach = function(element, index, array) {
+	    this.userCombo.append(element.id_str, element.screen_name);
+	}
+	userArray.forEach(_userArray_foreach, this);
+	this.iter += max;
+
+	if(this.iter < this.ids.length || this.cursor != null)
+	    this.userCombo.append("more", "more..");
+    },
+    drawUserFind: function() {
+	if(this.userFindBox == undefined)
+	{
+	    this.userId = this.twitterClient.owner.userObject.id_str;
+	    this.iter = 0;
+	    this.ids = [];
+	    this.cursor = null;
+	    this.isFriends = false;
+	    this.userFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    this.userFindIcon = create_radio_tool_button(this.twitterClient, this.userFindBox, "user-info");
+	    this.usersBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+	    this.findBox = new FindBox("type query string here..");
+	    this.userCombo = new Gtk.ComboBoxText();
+	    this.userComboButton = create_search_button();
+	    this.userFindWindow = new Gtk.ScrolledWindow();
+	    this.userFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
+
+	    this.usersBox.pack_start(this.userCombo, true, true, 0);
+	    var _userComboButton_clicked = function(self) {
+		var activeId = this.userCombo.get_active_id();
+		if(activeId == null)
+		    this.populateUsers();
+		else if(activeId == "more")
+		{
+		    var index = this.userCombo.get_active();
+		    this.userCombo.remove(index);
+		    this.userCombo.set_active(index - 1);
+		    this.populateUsers();
+		}
+		else
+		{
+		    this.findBox.entry.set_text("id:" + activeId);
+		    this.findBox.button.emit("clicked");
+		}
+	    }
+	    this.userComboButton.connect("clicked", Lang.bind(this, _userComboButton_clicked));
+	    this.usersBox.pack_start(this.userComboButton, false, false, 0);
+	    this.userCombo.show();
+	    this.userComboButton.show();
+
+	    var _findBox_button_clicked = function(self, userdata) {
+		this.userFindTweetBox.foreach(function(child, userdata){child.destroy()});
+		var searchText = this.findBox.entry.get_text();
+		var jsonText;
+		if(searchText.search(/^id:/g) != -1)
+		{
+		    jsonText = this.tweetObject.usertimeline(searchText.substring(3, searchText.length),
+								 null,
+								 null,
+								 null,
+								 null);
+		}
+		else
+		{
+		    jsonText = this.tweetObject.usertimeline(null,
+							     this.findBox.entry.get_text(),
+							     null,
+							     null,
+							     null);
+		}
+		var jsonObject = JSON.parse(jsonText);
+		if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		var tweetArray = jsonObject;
+		tweetArray.reverse();
+		var _tweetArray_foreach = function(element, index, array) {
+		    var tweet  = new Tweet(this.twitterClient, element);
+		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+		    this.userFindTweetBox.pack_end(tweet.drawTweet(), false, false, 0);
+		    this.userFindTweetBox.pack_end(separator, false, false, 0);
+		    tweet.show();
+		    separator.show();
+		}
+		tweetArray.forEach(Lang.bind(this, _tweetArray_foreach));
+	    }
+	    this.findBox.button.connect("clicked", Lang.bind(this, _findBox_button_clicked));
+
+	    this.userFindBox.pack_start(this.usersBox, false, false, 0);
+	    this.userFindBox.pack_start(this.findBox.hbox, false, false, 0);
+	    this.userFindWindow.add_with_viewport(this.userFindTweetBox);
+	    this.userFindBox.pack_start(this.userFindWindow, true, true, 0);
+	    this.usersBox.show();
+	    this.findBox.show();
+	    this.userFindTweetBox.show();
+	    this.userFindWindow.show();
+	}
+	return this.userFindBox;
     }
 });
 
@@ -1027,6 +1215,7 @@ const TwitterClient = new Lang.Class({
 	this.updateBox = new UpdateBox(this);
 	this.homeTimeline = new HomeTimeline(this);
 	this.tweetFind = new TweetFind(this);
+	this.userFind = new UserFind(this);
 	if(!this.tweetObject.initkeys())
 	{
 	    var message = "libgtweet requires you to register a new app with twitter. Here is the steps\n\n";
@@ -1089,12 +1278,14 @@ const TwitterClient = new Lang.Class({
 	    this.mainBox.pack_start(this.updateBox.drawUpdateBox(), false, false, 0);
 	    this.mainBox.pack_start(this.homeTimeline.drawHomeTimeline(), true, true, 0);
 	    this.mainBox.pack_start(this.tweetFind.drawTweetFind(), true, true, 0);
+	    this.mainBox.pack_start(this.userFind.drawUserFind(), true, true, 0);
 	    this.toolBar.show();
 	    this.statusBox.show();
 	    this.owner.show();
 	    this.updateBox.hide();
 	    this.homeTimeline.show();
 	    this.tweetFind.hide();
+	    this.userFind.hide();
 	}
 	return this.mainBox;
     },
