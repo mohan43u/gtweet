@@ -316,7 +316,7 @@ const Tweet = new Lang.Class({
 
 
 	    var headerContent = this.tweet.user.name + " (@" + this.tweet.user.screen_name + ")";
-	    headerContent += (new Date(this.tweet.created_at)).toLocaleFormat(" On %a %b %dth, At %I:%M %p");
+	    headerContent += (new Date(this.tweet.created_at)).toLocaleFormat(" On %a %b %dth %Y, At %I:%M %p");
 	    if(this.tweet.user.location) headerContent += ", From " + this.tweet.user.location;
 	    headerContent += ", Using " + this.tweet.source.replace(/<a *href="([^"]*)"[^>]*>/g, "<a href=\"$1\">");
 	    this.headerBox.set_markup(headerContent);
@@ -472,7 +472,8 @@ const Tweet = new Lang.Class({
 				hashTagButton.set_alignment(0, 0);
 				var _hashTagButton_clicked = function(self) {
 				    this.twitterClient.tweetFind.tweetFindIcon.set_active(true);
-				    this.twitterClient.tweetFind.findBox.entry.set_text(self.label);
+				    this.twitterClient.tweetFind.findBox.comboEntry.prepend_text(self.label);
+				    this.twitterClient.tweetFind.findBox.comboEntry.set_active(0);
 				    this.twitterClient.tweetFind.findBox.button.emit("clicked");
 				}
 				hashTagButton.connect("clicked", Lang.bind(this, _hashTagButton_clicked));
@@ -493,7 +494,10 @@ const Tweet = new Lang.Class({
 			var timelineButton = new Gtk.Button({label: "Timeline"});
 			var _timelineButton_clicked = function(self) {
 			    this.twitterClient.userFind.userFindIcon.set_active(true);
-			    this.twitterClient.userFind.findBox.entry.set_text("id:" + this.tweet.user.id_str);
+			    var id = this.tweet.user.id_str;
+			    var name = this.tweet.user.screen_name;
+			    this.twitterClient.userFind.findBox.comboEntry.prepend(id, name);
+			    this.twitterClient.userFind.findBox.comboEntry.set_active(0);
 			    this.twitterClient.userFind.findBox.button.emit("clicked");
 			}
 			timelineButton.connect("clicked", Lang.bind(this, _timelineButton_clicked));
@@ -841,14 +845,13 @@ const create_search_button = function() {
 
 var FindBox = new Lang.Class({
     Name: "findBox",
-    _init: function(text) {
+    _init: function() {
 	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-	this.entry = new Gtk.Entry();
-	this.entry.set_placeholder_text(text);
+	this.comboEntry = Gtk.ComboBoxText.new_with_entry();
 	this.button = create_search_button();
-	this.hbox.pack_start(this.entry, true, true, 0);
+	this.hbox.pack_start(this.comboEntry, true, true, 0);
 	this.hbox.pack_start(this.button, false, false, 0);
-	this.entry.show();
+	this.comboEntry.show();
 	this.button.show();
     },
     show: function() {
@@ -861,7 +864,7 @@ var FindBox = new Lang.Class({
 	this.hbox.destroy();
     },
     get_text: function() {
-	return this.entry.get_text();
+	return this.comboEntry.get_active_text();
     }
 });
 
@@ -884,7 +887,7 @@ const TweetFind = new Lang.Class({
 	if(this.tweetFindBox == undefined)
 	{
 	    this.tweetFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.findBox = new FindBox("type query string here..");
+	    this.findBox = new FindBox();
 	    this.tweetFindWindow = new Gtk.ScrolledWindow();
 	    this.tweetFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
 	    this.trendsBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 5});
@@ -918,7 +921,8 @@ const TweetFind = new Lang.Class({
 	    this.countryButton.connect("clicked", Lang.bind(this, _countryButton_clicked));
 
 	    var _trendsButton_clicked = function(self) {
-		this.findBox.entry.set_text(this.trendsCombo.get_active_text());
+		this.findBox.comboEntry.prepend_text(this.trendsCombo.get_active_text());
+		this.findBox.comboEntry.set_active(0);
 		this.findBox.button.emit("clicked");
 	    }
 	    this.trendsButton.connect("clicked", Lang.bind(this, _trendsButton_clicked));
@@ -1044,7 +1048,7 @@ const UserFind = new Lang.Class({
 	    this.userFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.userFindIcon = create_radio_tool_button(this.twitterClient, this.userFindBox, "user-info");
 	    this.usersBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-	    this.findBox = new FindBox("type query string here..");
+	    this.findBox = new FindBox();
 	    this.userCombo = new Gtk.ComboBoxText();
 	    this.userComboButton = create_search_button();
 	    this.userFindWindow = new Gtk.ScrolledWindow();
@@ -1052,9 +1056,13 @@ const UserFind = new Lang.Class({
 
 	    this.usersBox.pack_start(this.userCombo, true, true, 0);
 	    var _userComboButton_clicked = function(self) {
+		var activeText = this.userCombo.get_active_text();
 		var activeId = this.userCombo.get_active_id();
 		if(activeId == null)
+		{
 		    this.populateUsers();
+		    this.userCombo.set_active(0);
+		}
 		else if(activeId == "more")
 		{
 		    var index = this.userCombo.get_active();
@@ -1064,7 +1072,8 @@ const UserFind = new Lang.Class({
 		}
 		else
 		{
-		    this.findBox.entry.set_text("id:" + activeId);
+		    this.findBox.comboEntry.prepend(activeId, activeText);
+		    this.findBox.comboEntry.set_active(0);
 		    this.findBox.button.emit("clicked");
 		}
 	    }
@@ -1075,20 +1084,21 @@ const UserFind = new Lang.Class({
 
 	    var _findBox_button_clicked = function(self, userdata) {
 		this.userFindTweetBox.foreach(function(child, userdata){child.destroy()});
-		var searchText = this.findBox.entry.get_text();
+		var searchId = this.findBox.comboEntry.get_active_id();
+		var searchText = this.findBox.comboEntry.get_active_text();
 		var jsonText;
-		if(searchText.search(/^id:/g) != -1)
+		if(searchId)
 		{
-		    jsonText = this.tweetObject.usertimeline(searchText.substring(3, searchText.length),
-								 null,
-								 null,
-								 null,
-								 null);
+		    jsonText = this.tweetObject.usertimeline(searchId,
+							     null,
+							     null,
+							     null,
+							     null);
 		}
 		else
 		{
 		    jsonText = this.tweetObject.usertimeline(null,
-							     this.findBox.entry.get_text(),
+							     searchText,
 							     null,
 							     null,
 							     null);
