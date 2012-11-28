@@ -244,7 +244,7 @@ const create_user = function(user, isfull) {
 	url.show();
     }
 
-    if(isfull && user.description)
+    if(user.description)
     {
 	var desc = create_pair("description", user.description);
 	vbox.pack_start(desc, false, false, 0);
@@ -670,13 +670,14 @@ const Tweet = new Lang.Class({
     }
 });
 
-var create_radio_tool_button = function(twitterClient, box, iconName) {
+var create_radio_tool_button = function(twitterClient, box, iconName, tooltip) {
     var icon;
     if(twitterClient.lastIcon == undefined)
 	icon = new Gtk.RadioToolButton();
     else
 	icon = Gtk.RadioToolButton.new_from_widget(twitterClient.lastIcon, Gtk.IconSize.SMALL_TOOLBAR);
     icon.set_icon_name(iconName);
+    icon.set_tooltip_text(tooltip);
 
     var _icon_toggled = function(self, box) {
 	if(self.get_active())
@@ -727,6 +728,8 @@ const Owner = new Lang.Class({
 	    var profileImageBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    var profileImageButton = new Gtk.ToggleButton();
 	    var controlVbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    var friendsButton = new Gtk.Button({label: "Friends"});
+	    var followersButton = new Gtk.Button({label: "Followers"});
 	    var updateButton = new Gtk.Button({label: "Tweet"});
 
 	    var url = this.userObject.profile_image_url_https;
@@ -748,6 +751,26 @@ const Owner = new Lang.Class({
 	    profileImageBox.pack_start(profileImageButton, false, false, 0);
 	    profileImageButton.show();
 
+	    var _friendsButton_clicked = function(self) {
+		this.twitterClient.userFind.userFindIcon.set_active(true);
+		this.twitterClient.userFind.userId = this.userObject.id_str;
+		this.twitterClient.userFind.iter = 0;
+		this.twitterClient.userFind.isFriends = true;
+		this.twitterClient.userFind.populateUsers();
+		this.twitterClient.userFind.userCombo.set_active(0);
+	    }
+	    friendsButton.connect("clicked", Lang.bind(this, _friendsButton_clicked));
+
+	    var _followersButton_clicked = function(self) {
+		this.twitterClient.userFind.userFindIcon.set_active(true);
+		this.twitterClient.userFind.userId = this.userObject.id_str;
+		this.twitterClient.userFind.iter = 0;
+		this.twitterClient.userFind.isFriends = false;
+		this.twitterClient.userFind.populateUsers();
+		this.twitterClient.userFind.userCombo.set_active(0);
+	    }
+	    followersButton.connect("clicked", Lang.bind(this, _followersButton_clicked));
+
 	    var _updateButton_clicked = function(self, post_id) {
 		this.updateBox.setPostId(post_id);
 		this.updateBox.show();
@@ -757,6 +780,8 @@ const Owner = new Lang.Class({
 	    imageBox.pack_start(profileImageBox, false, false, 5);
 	    vbox.pack_start(usermini, false, false, 0);
 	    vbox.pack_start(userfull, false, false, 0);
+	    controlVbox.pack_start(friendsButton, false, false, 0);
+	    controlVbox.pack_start(followersButton, false, false, 0);
 	    controlVbox.pack_start(updateButton, false, false, 0);
 	    hbox.pack_start(imageBox, false, false, 0);
 	    hbox.pack_start(vbox, true, true, 0);
@@ -765,6 +790,8 @@ const Owner = new Lang.Class({
 	    profileImageBox.show();
 	    usermini.show();
 	    userfull.hide();
+	    friendsButton.show();
+	    followersButton.show();
 	    updateButton.show();
 	    imageBox.show();
 	    vbox.show();
@@ -798,7 +825,7 @@ const HomeTimeline = new Lang.Class({
 	    this.controlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.tweetWindow = new Gtk.ScrolledWindow();
 	    this.tweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.homeIcon = create_radio_tool_button(this.twitterClient, this.homeBox, "gtk-home");
+	    this.homeIcon = create_radio_tool_button(this.twitterClient, this.homeBox, "gtk-home", "Home Timeline");
 
 	    var _refreshButton_clicked = function(self, userdata){
 		this.tweetBox.foreach(function(child, userdata){child.destroy()});
@@ -836,19 +863,20 @@ const HomeTimeline = new Lang.Class({
     }
 });
 
-const create_search_button = function() {
+const create_search_button = function(tooltip) {
     var image = Gtk.Image.new_from_stock(Gtk.STOCK_FIND, Gtk.IconSize.SMALL_TOOLBAR);
     var button = new Gtk.Button();
     button.set_image(image);
+    button.set_tooltip_text(tooltip);
     return button;
 }
 
 var FindBox = new Lang.Class({
     Name: "findBox",
-    _init: function() {
+    _init: function(tooltip) {
 	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	this.comboEntry = Gtk.ComboBoxText.new_with_entry();
-	this.button = create_search_button();
+	this.button = create_search_button(tooltip);
 	this.hbox.pack_start(this.comboEntry, true, true, 0);
 	this.hbox.pack_start(this.button, false, false, 0);
 	this.comboEntry.show();
@@ -887,15 +915,15 @@ const TweetFind = new Lang.Class({
 	if(this.tweetFindBox == undefined)
 	{
 	    this.tweetFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.findBox = new FindBox();
+	    this.findBox = new FindBox("search");
 	    this.tweetFindWindow = new Gtk.ScrolledWindow();
 	    this.tweetFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
-	    this.trendsBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 5});
+	    this.trendsBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.countryComboEntry = Gtk.ComboBoxText.new_with_entry();
-	    this.countryButton = create_search_button();
+	    this.countryButton = create_search_button("trends");
 	    this.trendsCombo = new Gtk.ComboBoxText();
-	    this.trendsButton = create_search_button();
-	    this.tweetFindIcon = create_radio_tool_button(this.twitterClient, this.tweetFindBox, "gtk-find");
+	    this.trendsButton = create_search_button("tweets");
+	    this.tweetFindIcon = create_radio_tool_button(this.twitterClient, this.tweetFindBox, "gtk-find", "Tweet Search");
 
 	    this.countryComboEntry.set_size_request(100, -1);
 	    this.countryComboEntry.append_text(this.twitterClient.owner.userSettings.trend_location[0].name);
@@ -996,10 +1024,6 @@ const UserFind = new Lang.Class({
 	    this.userCombo.remove_all();
 	    this.ids = [];
 	}
-	print("iter: " + this.iter);
-	print("ids.length: " + this.ids.length);
-	print("cursor: " + this.cursor);
-	print("isFriends: " + this.isFriends);
 	if(this.iter >= this.ids.length)
 	{
 	    if(this.isFriends)
@@ -1046,11 +1070,11 @@ const UserFind = new Lang.Class({
 	    this.cursor = null;
 	    this.isFriends = false;
 	    this.userFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.userFindIcon = create_radio_tool_button(this.twitterClient, this.userFindBox, "user-info");
+	    this.userFindIcon = create_radio_tool_button(this.twitterClient, this.userFindBox, "user-info", "User Timeline");
 	    this.usersBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-	    this.findBox = new FindBox();
+	    this.findBox = new FindBox("timeline");
 	    this.userCombo = new Gtk.ComboBoxText();
-	    this.userComboButton = create_search_button();
+	    this.userComboButton = create_search_button("timeline");
 	    this.userFindWindow = new Gtk.ScrolledWindow();
 	    this.userFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
 
@@ -1282,20 +1306,20 @@ const TwitterClient = new Lang.Class({
 	if(this.mainBox == undefined)
 	{
 	    this.mainBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.mainBox.pack_start(this.toolBar, false, false, 0);
 	    this.mainBox.pack_start(this.statusBox, false, false, 0);
+	    this.mainBox.pack_start(this.toolBar, false, false, 0);
 	    this.mainBox.pack_start(this.owner.drawOwner(), false, false, 0);
 	    this.mainBox.pack_start(this.updateBox.drawUpdateBox(), false, false, 0);
 	    this.mainBox.pack_start(this.homeTimeline.drawHomeTimeline(), true, true, 0);
-	    this.mainBox.pack_start(this.tweetFind.drawTweetFind(), true, true, 0);
 	    this.mainBox.pack_start(this.userFind.drawUserFind(), true, true, 0);
-	    this.toolBar.show();
+	    this.mainBox.pack_start(this.tweetFind.drawTweetFind(), true, true, 0);
 	    this.statusBox.show();
+	    this.toolBar.show();
 	    this.owner.show();
 	    this.updateBox.hide();
 	    this.homeTimeline.show();
-	    this.tweetFind.hide();
 	    this.userFind.hide();
+	    this.tweetFind.hide();
 	}
 	return this.mainBox;
     },
