@@ -1,3 +1,3 @@
 #doc makefile
 
-man_MANS = gtweet.3
+dist_man_MANS = gtweet.3

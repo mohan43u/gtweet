@@ -9,5 +9,6 @@
 #include <tweet-twitter.h>
 #include <tweet-object.h>
 #include <tweet-soup.h>
+#include <config.h>
 
 #endif /* __TWEET_H__ */
