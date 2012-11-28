@@ -9,7 +9,7 @@
 #define REQ_TOKEN_URL "https://api.twitter.com/oauth/request_token"
 #define AUTH_URL "https://api.twitter.com/oauth/authorize"
 #define ACCESS_TOKEN_URL "https://api.twitter.com/oauth/access_token"
-#define OAUTHFILE "~/.tweetpts"
+#define OAUTHFILE "~/.gtweet"
 
 gchar* tweet_oauth_expandfilename(gchar *filename);
 gchar* tweet_oauth_sign(gchar *consumer_key,

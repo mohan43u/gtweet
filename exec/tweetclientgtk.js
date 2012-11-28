@@ -36,7 +36,8 @@ const dialogbox = function(message) {
     var dialog = new Gtk.Dialog({title: "twitterClient", type: Gtk.WindowType.TOPLEVEL});
     var label = new Gtk.Label({label: message});
     var contentarea = dialog.get_content_area();
-    contentarea.add(label);
+    label.set_padding(10, 10);
+    contentarea.pack_start(label, false, false, 5);
     dialog.add_button("Ok", Gtk.ResponseType.OK);
     dialog.show_all();
     dialog.grab_focus();
@@ -1252,6 +1253,7 @@ const TwitterClient = new Lang.Class({
 	this.userFind = new UserFind(this);
 	if(!this.tweetObject.initkeys())
 	{
+	    GLib.spawn_command_line_sync("xdg-open 'http://dev.twitter.com'");
 	    var message = "libgtweet requires you to register a new app with twitter. Here is the steps\n\n";
 	    message += "1. Go to https://dev.twitter.com\n";
 	    message += "2. Sign-in with your twitter account\n";
@@ -1269,6 +1271,8 @@ const TwitterClient = new Lang.Class({
 	    get_consumer_keys_from_user(this);
 	    if(this.consumer_key && this.consumer_secret)
 	    {
+		var authurl = this.tweetObject.gen_authurl(this.consumer_key, this.consumer_secret)
+		GLib.spawn_command_line_sync("xdg-open '" + authurl + "'");
 		message = "libgtweet requires authorization from you to access you twitter data. Here is the steps\n\n";
 		message += "1. You will be redirected to Authorization page\n";
 		message += "2. Sign-in with your twitter account, If you already logged-in, then follow next step\n";
@@ -1276,8 +1280,6 @@ const TwitterClient = new Lang.Class({
 		message += "4. A PIN number will appear, type it in next Dialog box\n\n";
 		message += "Click \"Ok\" to proceed\n\n"
 		dialogbox(message);
-		var authurl = this.tweetObject.gen_authurl(this.consumer_key, this.consumer_secret)
-		GLib.spawn_command_line_sync("xdg-open '" + authurl + "'");
 		get_pin_from_user(this);
 		if(this.pin)
 		    this.tweetObject.auth(this.pin);
@@ -1324,7 +1326,6 @@ const TwitterClient = new Lang.Class({
 	return this.mainBox;
     },
     main: function(argc, argv) {
-	Gtk.init(argc, argv);
 	this.twitterClientWindow = new Gtk.Window({title: "twitterClient"});
 	var stylecontext = this.twitterClientWindow.get_style_context();
 	var cssProvider = new Gtk.CssProvider();
@@ -1342,5 +1343,6 @@ const TwitterClient = new Lang.Class({
     }
 });
 
+Gtk.init(null, null);
 var twitterClient = new TwitterClient();
 twitterClient.main(null, null);
