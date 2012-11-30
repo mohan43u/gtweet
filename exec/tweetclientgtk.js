@@ -305,7 +305,7 @@ const Tweet = new Lang.Class({
 	    this.leftArrow = Gtk.Arrow.new(Gtk.ArrowType.LEFT, Gtk.ShadowType.IN);
 	    this.rightArrow = Gtk.Arrow.new(Gtk.ArrowType.RIGHT, Gtk.ShadowType.IN);
 	    this.userBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.mediaBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	    this.mediaBoxWrap = new Gtk.EventBox();
 	    this.headerBox = new Gtk.Label();
 	    this.textBox = new Gtk.Label();
 
@@ -360,6 +360,13 @@ const Tweet = new Lang.Class({
 			    }
 			}
 			this.profileImageButton.connect("toggled", Lang.bind(this, _profileImageButton_toggled));
+			this.profileImageButton.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
+			var _profileImageButton_press_event = function(self, event, image) {
+			    var button;
+			    [isbutton, button] = event.get_button(button);
+			    if(button == 3) this.profileImage.showAppDialog();
+			}
+			this.profileImageButton.connect("button-press-event", Lang.bind(this, _profileImageButton_press_event));
 			this.profileImageBox.pack_start(this.profileImageButton, false, false, 0);
 			this.controlBoxVWrap.pack_start(this.profileImageBox, false, false, 2);
 			this.profileImageButton.show();
@@ -418,33 +425,21 @@ const Tweet = new Lang.Class({
 				    {
 					var url = this.tweet.entities.media[0].media_url_https
 					this.mediaImage = new Image(this.twitterClient, url, 350, 350, true);
-					this.mediaImageButton = new Gtk.Button({label: "Open"});
-					this.mediaControlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-					var _mediaImageButton_clicked = function(self) {
-					    this.mediaImage.showAppDialog();
+					this.mediaBoxWrap.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
+					var _mediaBoxWrap_press_event = function(self, event, data) {
+					    var button;
+					    [isbutton, button] = event.get_button(button);
+					    if(button == 3) this.mediaImage.showAppDialog();
 					}
-					this.mediaImageButton.connect("clicked", Lang.bind(this, _mediaImageButton_clicked));
-					this.mediaBoxWrap.pack_start(this.mediaImage.drawImage(), false, false, 0);
-					this.mediaControlBox.pack_end(this.mediaImageButton, false, false, 0);
-					this.mediaBoxWrap.pack_start(this.mediaControlBox, false, false, 0);
+					this.mediaBoxWrap.connect("button-press-event", Lang.bind(this, _mediaBoxWrap_press_event));
+					this.mediaBoxWrap.add(this.mediaImage.drawImage());
 					this.mediaImage.show();
-					this.mediaImageButton.show();
-					this.mediaControlBox.show();
 				    }
 				    else
-				    {
 					this.mediaImage.show();
-					this.mediaControlBox.show();
-				    }
 				}
 				else
-				{
-				    if(this.mediaImage)
-				    {
-					this.mediaImage.hide();
-					this.mediaControlBox.hide();
-				    }
-				}
+				    if(this.mediaImage) this.mediaImage.hide();
 			    }
 			    this.mediaButton.connect("toggled", Lang.bind(this, _mediaButton_toggled));
 			    this.controlBoxVWrap.pack_start(this.mediaButton, false, false, 0);
@@ -557,7 +552,7 @@ const Tweet = new Lang.Class({
 				    var jsonText = this.tweetObject.unfollow(null, this.tweet.user.id_str);
 				    var jsonObject = JSON.parse(jsonText);
 				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				    this.status("you are now unfollowing " + this.tweet.user.name);
+				    this.twitterClient.status("you are now unfollowing " + this.tweet.user.name);
 				}
 				unfollow.connect("clicked", Lang.bind(this, _unfollow_clicked));
 				this.controlBox.pack_start(unfollow, false, false, 0);
@@ -570,7 +565,7 @@ const Tweet = new Lang.Class({
 				    var jsonText = this.tweetObject.follow(null, this.tweet.user.id_str);
 				    var jsonObject = JSON.parse(jsonText);
 				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				    this.status("you are now following " + this.tweet.user.name);
+				    this.twitterClient.status("you are now following " + this.tweet.user.name);
 				}
 				follow.connect("clicked", Lang.bind(this, _follow_clicked));
 				this.controlBox.pack_start(follow, false, false, 0);
@@ -643,7 +638,7 @@ const Tweet = new Lang.Class({
 	    this.vbox.pack_start(this.retweetedByBox, false, false, 2);
 	    this.vbox.pack_start(this.textBox, false, false, 2);
 	    this.vbox.pack_start(this.userBoxWrap, false, false, 2);
-	    this.vbox.pack_start(this.mediaBoxWrap, false, false, 2);
+	    this.vbox.pack_start(this.mediaBoxWrap, false, false, 0);
 	    this.headerBox.show();
 	    this.retweetedByBox.show();
 	    this.textBox.show();
@@ -740,6 +735,13 @@ const Owner = new Lang.Class({
 		}
 	    }
 	    profileImageButton.connect("toggled", Lang.bind(twitterClient, _profileImageButton_toggled, usermini, userfull));
+	    profileImageButton.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
+	    var _profileImageButton_press_event = function(self, event, image) {
+		var button;
+		[isbutton, button] = event.get_button(button);
+		if(button == 3) image.showAppDialog();
+	    }
+	    profileImageButton.connect("button-press-event", Lang.bind(this, _profileImageButton_press_event, image));
 	    profileImageBox.pack_start(profileImageButton, false, false, 0);
 	    profileImageButton.show();
 
