@@ -24,16 +24,13 @@ const InputField = new Lang.Class({
     hide: function() {
 	this.hbox.hide();
     },
-    destroy: function() {
-	this.hbox.destroy();
-    },
     get_text: function() {
 	return this.entry.get_text()
     }
 });
 
 const dialogbox = function(message) {
-    var dialog = new Gtk.Dialog({title: "twitterClient", type: Gtk.WindowType.TOPLEVEL});
+    var dialog = new Gtk.Dialog({title: "libgtweet", type: Gtk.WindowType.TOPLEVEL});
     var label = new Gtk.Label({label: message});
     var contentarea = dialog.get_content_area();
     label.set_padding(10, 10);
@@ -61,7 +58,7 @@ const consumer_keys_cb = function(self, response_id, consumer_key, consumer_secr
 }
 
 const get_consumer_keys_from_user = function(twitterClient) {
-    var dialog = new Gtk.Dialog({title: "twitterClient", type: Gtk.WindowType.TOPLEVEL});
+    var dialog = new Gtk.Dialog({title: "libgtweet", type: Gtk.WindowType.TOPLEVEL});
     var consumer_key = new InputField("consumer_key");
     var consumer_secret = new InputField("consumer_secret");
     var contentarea = dialog.get_content_area();
@@ -83,7 +80,7 @@ const pin_cb = function(self, response_id, pin) {
 }
 
 const get_pin_from_user = function(twitterClient) {
-    var dialog = new Gtk.Dialog({title: "twitterClient", type: Gtk.WindowType.TOPLEVEL});
+    var dialog = new Gtk.Dialog({title: "libgtweet", type: Gtk.WindowType.TOPLEVEL});
     var pin = new InputField("pin");
     var contentarea = dialog.get_content_area();
     contentarea.add(pin.hbox);
@@ -110,9 +107,6 @@ const Image = new Lang.Class({
     },
     hide: function() {
 	this.image.hide();
-    },
-    destroy: function() {
-	this.image.destroy();
     },
     drawImage: function() {
 	this.data = this.tweetObject.http(this.url);
@@ -706,9 +700,6 @@ const Owner = new Lang.Class({
     hide: function() {
 	this.ownerBox.hide();
     },
-    destroy: function() {
-	this.ownerBox.destroy();
-    },
     drawOwner: function() {
 	if(this.ownerBox == undefined)
 	{
@@ -815,9 +806,6 @@ const HomeTimeline = new Lang.Class({
     hide: function() {
 	this.homeBox.hide();
     },
-    destroy: function() {
-	this.homeBox.destroy();
-    },
     drawHomeTimeline: function() {
 	if(this.homeBox == undefined)
 	{
@@ -889,9 +877,6 @@ var FindBox = new Lang.Class({
     hide: function() {
 	this.hbox.hide();
     },
-    destroy: function() {
-	this.hbox.destroy();
-    },
     get_text: function() {
 	return this.comboEntry.get_active_text();
     }
@@ -908,9 +893,6 @@ const TweetFind = new Lang.Class({
     },
     hide: function() {
 	this.tweetFindBox.hide();
-    },
-    destroy: function() {
-	this.tweetFindBox.destroy();
     },
     drawTweetFind: function() {
 	if(this.tweetFindBox == undefined)
@@ -1016,9 +998,6 @@ const UserFind = new Lang.Class({
     hide: function() {
 	this.userFindBox.hide();
     },
-    destroy: function() {
-	this.userFindBox.destroy();
-    },
     getUsers: function() {
 	if(this.iter == 0)
 	{
@@ -1071,7 +1050,7 @@ const UserFind = new Lang.Class({
 	    this.cursor = null;
 	    this.isFriends = false;
 	    this.userFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.userFindIcon = create_radio_tool_button(this.twitterClient, this.userFindBox, "user-info", "User Timeline");
+	    this.userFindIcon = create_radio_tool_button(this.twitterClient, this.userFindBox, "user-info", "User Search");
 	    this.findBox = new FindBox("search");
 	    this.usersBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.userCombo = new Gtk.ComboBoxText();
@@ -1212,9 +1191,6 @@ const UpdateBox = new Lang.Class({
     },
     hide: function() {
 	this.box.hide();
-    },
-    destroy: function() {
-	this.box.destroy();
     },
     drawUpdateBox: function() {
 	if(this.box == undefined)
@@ -1367,19 +1343,13 @@ const TwitterClient = new Lang.Class({
 	return this.mainBox;
     },
     main: function(argc, argv) {
-	this.twitterClientWindow = new Gtk.Window({title: "twitterClient"});
-	var stylecontext = this.twitterClientWindow.get_style_context();
-	var cssProvider = new Gtk.CssProvider();
-	var css = "GtkLabel { background-color: blue }";
-
-	cssProvider.load_from_data(css, css.length);
-	stylecontext.add_provider(cssProvider, Gtk.GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	this.twitterClientWindow = new Gtk.Window({title: "libgtweet"});
 	this.twitterClientWindow.set_default_size(500, 800);
 	this.twitterClientWindow.add(this.getMainBox());
 	this.getMainBox().show();
 	this.twitterClientWindow.show();
 
-	this.twitterClientWindow.connect("destroy", Gtk.main_quit);
+	this.twitterClientWindow.connect("delete-event", Gtk.main_quit);
 	Gtk.main();
     }
 });

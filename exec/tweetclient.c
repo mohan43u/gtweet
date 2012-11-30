@@ -6,18 +6,18 @@ static void stream_cb(GObject *source_object,
 {
   GtweetObject *tweetObject = GTWEET_OBJECT(source_object);
   GCancellable *cancel = G_CANCELLABLE(user_data);
-  GString *stream_response = NULL;
+  gchar *stream_response = NULL;
   static guint count = 0;
 
   g_object_get(GTWEET_OBJECT(source_object),
 	       "stream_response", &stream_response,
 	       NULL);
-  g_print("%s\n", stream_response->str);
+  g_print("%s\n", stream_response);
   count++;
   if(count >= 10)
     g_cancellable_cancel(cancel);
     
-  g_string_free(stream_response, TRUE);
+  g_free(stream_response);
 }
 
 int main(int argc, char *argv[])
@@ -57,15 +57,13 @@ int main(int argc, char *argv[])
       g_free(pin);
     }
 
-  /* 
-   * gtweet_object_filterstream(tweetObject,
-   * 			     cancel,
-   * 			     stream_cb,
-   * 			     cancel,
-   * 			     "linux,unix",
-   * 			     NULL,
-   * 			     NULL);
-   */
+  gtweet_object_filterstream(tweetObject,
+  			     cancel,
+  			     stream_cb,
+  			     cancel,
+  			     "linux,unix",
+  			     NULL,
+  			     NULL);
   /* 
    * gtweet_object_hometimeline(tweetObject,
    * 			     NULL,
@@ -83,7 +81,7 @@ int main(int argc, char *argv[])
    * 			    NULL,
    * 			    NULL);
    */
-  gtweet_object_usersettings(tweetObject);
+  /* gtweet_object_usersettings(tweetObject); */
 		       
   return 0;
 }

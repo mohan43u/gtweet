@@ -61,8 +61,8 @@ gboolean gtweet_object_initkeys(GtweetObject *tweetObject);
 
 /**
  * gtweet_object_gen_authurl:
- * @consumer_key: your twitter app consumer key
- * @consumer_secret: your twitter app consumer secret
+ * @consumer_key: twitter app consumer key
+ * @consumer_secret: twitter app consumer secret
  */
 gchar* gtweet_object_gen_authurl(GtweetObject *tweetObject,
 				 gchar *consumer_key,
