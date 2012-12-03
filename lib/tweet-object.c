@@ -59,9 +59,6 @@ static void gtweet_object_set_property(GObject *object,
     case ACCESS_SECRET:
       tweetObject->access_secret = g_value_dup_string(value);
       break;
-    case STREAM_RESPONSE:
-	tweetObject->stream_response = g_value_dup_string(value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
     }
@@ -95,9 +92,6 @@ static void gtweet_object_get_property(GObject *object,
       break;
     case ACCESS_SECRET:
       g_value_set_string(value, tweetObject->access_secret);
-      break;
-    case STREAM_RESPONSE:
-	g_value_take_string(value, tweetObject->stream_response);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -154,13 +148,6 @@ static void gtweet_object_class_init(GtweetObjectClass *klass)
 						      "will be used to sign",
 						      NULL,
 						      G_PARAM_READABLE|G_PARAM_WRITABLE));
-  g_object_class_install_property(gobjectClass,
-				  STREAM_RESPONSE,
-				  g_param_spec_string("stream_response",
-						     "http response chunk",
-						     "will be used on stream api calls",
-						     NULL,
-						     G_PARAM_READABLE|G_PARAM_WRITABLE));
 }
 
 GtweetObject* gtweet_object_new(void)
@@ -176,7 +163,6 @@ static void print_properties(GtweetObject *tweetObject)
   gchar *request_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
-  gchar *stream_response = NULL;
 
   g_object_get(tweetObject,
 	       "consumer_key", &consumer_key,
@@ -185,7 +171,6 @@ static void print_properties(GtweetObject *tweetObject)
 	       "request_secret", &request_secret,
 	       "access_key", &access_key,
 	       "access_secret", &access_secret,
-	       "stream_response", &stream_response,
 	       NULL);
 
   g_printerr("consumer_key = %s\n"
@@ -1082,31 +1067,43 @@ gchar* gtweet_object_pimage(GtweetObject *tweetObject,
 
 static gboolean gtweet_generic_callback(gchar *string, gsize length, gpointer user_data)
 {
-  GSimpleAsyncResult *result = (GSimpleAsyncResult *) user_data;
-  GCancellable *cancel = g_simple_async_result_get_source_tag(result);
-  GObject *tweetObject = g_async_result_get_source_object(G_ASYNC_RESULT(result));
+  GPtrArray *cargs = (GPtrArray *) user_data;
 
-  g_object_set(tweetObject,
-	       "stream_response", string,
-	       NULL);
-  g_simple_async_result_complete(result);
+  glong fd = (glong) g_ptr_array_index(cargs, 0);
+  GCancellable *cancel = g_ptr_array_index(cargs, 1);
 
-  if(!g_cancellable_is_cancelled(cancel))
-    return TRUE;
-  else
+  GIOChannel *channel = g_io_channel_unix_new(fd);
+  g_io_channel_write_chars(channel, string, length, NULL, NULL);
+  g_io_channel_write_chars(channel, "\n", 1, NULL, NULL);
+  g_io_channel_unref(channel);
+
+  if(g_cancellable_is_cancelled(cancel))
     return FALSE;
+  else
+    return TRUE;
 }
 
-void gtweet_object_samplestream(GtweetObject *tweetObject,
-				GCancellable *cancel,
-				GAsyncReadyCallback callback,
-				gpointer user_data)
+static gpointer samplestream_func(gpointer userdata)
 {
+  GMainContext *context = NULL;
+  GPtrArray *cargs = NULL;
+  GtweetObject *tweetObject = NULL;
+  glong fd = 0;
+  GCancellable *cancel = NULL;
+
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
-  GSimpleAsyncResult *result = NULL;
+  GPtrArray *gcargs = NULL;
+
+  context = g_main_context_new();
+  g_main_context_push_thread_default(context);
+
+  cargs = (GPtrArray *) userdata;
+  tweetObject = g_ptr_array_index(cargs, 0);
+  fd = (glong) g_ptr_array_index(cargs, 1);
+  cancel = g_ptr_array_index(cargs, 2);
 
   g_object_get(G_OBJECT(tweetObject),
 	       "consumer_key", &consumer_key,
@@ -1114,109 +1111,187 @@ void gtweet_object_samplestream(GtweetObject *tweetObject,
 	       "access_key", &access_key,
 	       "access_secret", &access_secret,
 	       NULL);
-  result = g_simple_async_result_new(G_OBJECT(tweetObject),
-				     callback,
-				     user_data,
-				     cancel);
-  g_simple_async_result_set_check_cancellable(result,
-					      cancel);
+
+  gcargs = g_ptr_array_new();
+  g_ptr_array_add(gcargs, (gpointer) fd);
+  g_ptr_array_add(gcargs, cancel);
+
   tweet_twitter_s_stat_sample(consumer_key,
 			      consumer_secret,
 			      access_key,
 			      access_secret,
 			      gtweet_generic_callback,
-			      result);
+			      gcargs);
 
   g_free(consumer_key);
   g_free(consumer_secret);
   g_free(access_key);
   g_free(access_secret);
-  g_object_unref(result);
+  g_ptr_array_free(gcargs, FALSE);
+  g_ptr_array_free(cargs, FALSE);
+  g_main_context_pop_thread_default(context);
+  g_main_context_unref(context);
+}
+
+void gtweet_object_samplestream(GtweetObject *tweetObject,
+				glong fd,
+				GCancellable *cancel)
+{
+  GPtrArray *cargs = g_ptr_array_new();
+  g_ptr_array_add(cargs, tweetObject);
+  g_ptr_array_add(cargs, (gpointer) fd);
+  g_ptr_array_add(cargs, cancel);
+  g_thread_new("samplestream", samplestream_func, cargs);
+}
+
+static gpointer filterstream_func(gpointer userdata)
+{
+  GMainContext *context = NULL;
+  GPtrArray *cargs = NULL;
+  GtweetObject *tweetObject = NULL;
+  glong fd = 0;
+  GCancellable *cancel = NULL;
+  gchar *track = NULL;
+  gchar *follow = NULL;
+  gchar *locations = NULL;
+
+  gchar *consumer_key = NULL;
+  gchar *consumer_secret = NULL;
+  gchar *access_key = NULL;
+  gchar *access_secret = NULL;
+  GPtrArray *gcargs = NULL;
+
+  context = g_main_context_new();
+  g_main_context_push_thread_default(context);
+
+  cargs = (GPtrArray *) userdata;
+  tweetObject = g_ptr_array_index(cargs, 0);
+  fd = (glong) g_ptr_array_index(cargs, 1);
+  cancel = g_ptr_array_index(cargs, 2);
+  track = g_ptr_array_index(cargs, 3);
+  follow = g_ptr_array_index(cargs, 4);
+  locations = g_ptr_array_index(cargs, 5);
+
+  g_object_get(G_OBJECT(tweetObject),
+  	       "consumer_key", &consumer_key,
+  	       "consumer_secret", &consumer_secret,
+  	       "access_key", &access_key,
+  	       "access_secret", &access_secret,
+  	       NULL);
+  
+  gcargs = g_ptr_array_new();
+  g_ptr_array_add(gcargs, (gpointer) fd);
+  g_ptr_array_add(gcargs, cancel);
+  tweet_twitter_s_stat_filter(consumer_key,
+			      consumer_secret,
+			      access_key,
+			      access_secret,
+			      track,
+			      follow,
+			      locations,
+			      gtweet_generic_callback,
+			      gcargs);
+
+  g_free(consumer_key);
+  g_free(consumer_secret);
+  g_free(access_key);
+  g_free(access_secret);
+  g_free(track);
+  g_free(follow);
+  g_free(locations);
+  g_ptr_array_free(gcargs, FALSE);
+  g_ptr_array_free(cargs, FALSE);
+  g_main_context_pop_thread_default(context);
+  g_main_context_unref(context);
 }
 
 void gtweet_object_filterstream(GtweetObject *tweetObject,
+				glong fd,
 				GCancellable *cancel,
-				GAsyncReadyCallback callback,
-				gpointer user_data,
 				gchar *track,
 				gchar *follow,
 				gchar *locations)
 {
+  GPtrArray *cargs = g_ptr_array_new();
+  g_ptr_array_add(cargs, tweetObject);
+  g_ptr_array_add(cargs, (gpointer) fd);
+  g_ptr_array_add(cargs, cancel);
+  g_ptr_array_add(cargs, g_strdup(track));
+  g_ptr_array_add(cargs, g_strdup(follow));
+  g_ptr_array_add(cargs, g_strdup(locations));
+  g_thread_new("filterstream", filterstream_func, cargs);
+}
+
+static gpointer homestream_func(gpointer userdata)
+{
+  GMainContext *context = NULL;
+  GPtrArray *cargs = NULL;
+  GtweetObject *tweetObject = NULL;
+  glong fd = 0;
+  GCancellable *cancel = NULL;
+  gchar *track = NULL;
+  gchar *locations = NULL;
+
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
-  GSimpleAsyncResult *result = NULL;
+  GPtrArray *gcargs = NULL;
+
+  context = g_main_context_new();
+  g_main_context_push_thread_default(context);
+
+  cargs = (GPtrArray *) userdata;
+  tweetObject = g_ptr_array_index(cargs, 0);
+  fd = (glong) g_ptr_array_index(cargs, 1);
+  cancel = g_ptr_array_index(cargs, 2);
+  track = g_ptr_array_index(cargs, 3);
+  locations = g_ptr_array_index(cargs, 4);
 
   g_object_get(G_OBJECT(tweetObject),
-	       "consumer_key", &consumer_key,
-	       "consumer_secret", &consumer_secret,
-	       "access_key", &access_key,
-	       "access_secret", &access_secret,
-	       NULL);
-  result = g_simple_async_result_new(G_OBJECT(tweetObject),
-				     callback,
-				     user_data,
-				     cancel);
-  g_simple_async_result_set_check_cancellable(result,
-					      cancel);
-
-  tweet_twitter_s_stat_filter(consumer_key,
-  			      consumer_secret,
-  			      access_key,
-  			      access_secret,
-  			      track,
-  			      follow,
-  			      locations,
-  			      gtweet_generic_callback,
-  			      result);
+  	       "consumer_key", &consumer_key,
+  	       "consumer_secret", &consumer_secret,
+  	       "access_key", &access_key,
+  	       "access_secret", &access_secret,
+  	       NULL);
+  
+  gcargs = g_ptr_array_new();
+  g_ptr_array_add(gcargs, (gpointer) fd);
+  g_ptr_array_add(gcargs, cancel);
+  tweet_twitter_s_htimeline(consumer_key,
+  			    consumer_secret,
+  			    access_key,
+  			    access_secret,
+  			    track,
+  			    locations,
+  			    gtweet_generic_callback,
+  			    gcargs);
 
   g_free(consumer_key);
   g_free(consumer_secret);
   g_free(access_key);
   g_free(access_secret);
-  g_object_unref(result);
+  g_free(track);
+  g_free(locations);
+  g_ptr_array_free(gcargs, FALSE);
+  g_ptr_array_free(cargs, FALSE);
+  g_main_context_pop_thread_default(context);
+  g_main_context_unref(context);
 }
 
 void gtweet_object_homestream(GtweetObject *tweetObject,
+			      glong fd,
 			      GCancellable *cancel,
-			      GAsyncReadyCallback callback,
-			      gpointer user_data,
 			      gchar *track,
 			      gchar *locations)
 {
-  gchar *consumer_key = NULL;
-  gchar *consumer_secret = NULL;
-  gchar *access_key = NULL;
-  gchar *access_secret = NULL;
-  GSimpleAsyncResult *result = NULL;
-
-  g_object_get(G_OBJECT(tweetObject),
-	       "consumer_key", &consumer_key,
-	       "consumer_secret", &consumer_secret,
-	       "access_key", &access_key,
-	       "access_secret", &access_secret,
-	       NULL);
-  result = g_simple_async_result_new(G_OBJECT(tweetObject),
-				     callback,
-				     user_data,
-				     cancel);
-  g_simple_async_result_set_check_cancellable(result,
-					      cancel);
-  tweet_twitter_s_htimeline(consumer_key,
-			    consumer_secret,
-			    access_key,
-			    access_secret,
-			    track,
-			    locations,
-			    gtweet_generic_callback,
-			    result);
-
-  g_free(consumer_key);
-  g_free(consumer_secret);
-  g_free(access_key);
-  g_free(access_secret);
-  g_object_unref(result);
+  GPtrArray *cargs = g_ptr_array_new();
+  g_ptr_array_add(cargs, tweetObject);
+  g_ptr_array_add(cargs, (gpointer) fd);
+  g_ptr_array_add(cargs, cancel);
+  g_ptr_array_add(cargs, g_strdup(track));
+  g_ptr_array_add(cargs, g_strdup(locations));
+  g_thread_new("homestream", homestream_func, cargs);
 }
 
 GByteArray* gtweet_object_http(GtweetObject *tweetObject,

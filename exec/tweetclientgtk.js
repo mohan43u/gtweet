@@ -849,6 +849,9 @@ const HomeTimeline = new Lang.Class({
 	    this.controlBox.show();
 	    this.tweetWindow.show();
 	    this.tweetBox.show();
+
+	    this.cancel = new Gio.Cancellable();
+	    this.tweetObject.homestream(1, this.cancel, "linux,unix", null);
 	}
 	return this.homeBox;
     }

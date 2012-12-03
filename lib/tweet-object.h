@@ -32,7 +32,6 @@ struct _GtweetObject
   gchar *request_secret;
   gchar *access_key;
   gchar *access_secret;
-  gchar *stream_response;
 };
 
 enum
@@ -43,8 +42,7 @@ enum
     REQUEST_KEY,
     REQUEST_SECRET,
     ACCESS_KEY,
-    ACCESS_SECRET,
-    STREAM_RESPONSE
+    ACCESS_SECRET
   };
 
 GType gtweet_object_get_type(void) G_GNUC_CONST;
@@ -301,30 +299,25 @@ gchar* gtweet_object_pimage(GtweetObject *tweetObject,
 /**
  * gtweet_object_samplestream:
  * @tweetObject: a #TweetObject
- * @cancel: a cancellable object
- * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
- * @user_data: (closure) (allow-none): data to be sent to the callback.
+ * @fd: pipe fd to write data
+ * @cancel: a cancellable
  */
 void gtweet_object_samplestream(GtweetObject *tweetObject,
-				GCancellable *cancel,
-				GAsyncReadyCallback callback,
-				gpointer user_data);
+				glong fd,
+				GCancellable *cancel);
 
 /**
  * gtweet_object_filterstream:
  * @tweetObject: a #TweetObject
- * @cancel: a cancellable object
- * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
- * @user_data: (closure) (allow-none): data to be sent to the callback
+ * @fd: pipe fd to write data
+ * @cancel: a cancellable
  * @track: (allow-none): string used to filter tweets
  * @follow: (allow-none): userid used to filter tweets
  * @locations: (allow-none): location string used to filter tweets
  */
-
 void gtweet_object_filterstream(GtweetObject *tweetObject,
+				glong fd,
 				GCancellable *cancel,
-				GAsyncReadyCallback callback,
-				gpointer user_data,
 				gchar *track,
 				gchar *follow,
 				gchar *locations);
@@ -332,16 +325,14 @@ void gtweet_object_filterstream(GtweetObject *tweetObject,
 /**
  * gtweet_object_homestream:
  * @tweetObject: a #TweetObject
- * @cancel: a cancellable object
- * @callback: (closure user_data) (scope async): a callback function to invoke for every tweet
- * @user_data: (closure) (allow-none): data to be sent to the callback
+ * @fd: pipe fd to write data
+ * @cancel: a cancellable
  * @track: (allow-none): string used to filter tweets
  * @locations: (allow-none): location string used to filter tweets
  */
 void gtweet_object_homestream(GtweetObject *tweetObject,
+			      glong fd,
 			      GCancellable *cancel,
-			      GAsyncReadyCallback callback,
-			      gpointer user_data,
 			      gchar *track,
 			      gchar *locations);
 

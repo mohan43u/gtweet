@@ -1,34 +1,13 @@
 #include <tweet.h>
 
-static void stream_cb(GObject *source_object,
-		      GAsyncResult *res,
-		      gpointer user_data)
-{
-  GtweetObject *tweetObject = GTWEET_OBJECT(source_object);
-  GCancellable *cancel = G_CANCELLABLE(user_data);
-  gchar *stream_response = NULL;
-  static guint count = 0;
-
-  g_object_get(GTWEET_OBJECT(source_object),
-	       "stream_response", &stream_response,
-	       NULL);
-  g_print("%s\n", stream_response);
-  count++;
-  if(count >= 10)
-    g_cancellable_cancel(cancel);
-    
-  g_free(stream_response);
-}
-
 int main(int argc, char *argv[])
 {
   GtweetObject *tweetObject = NULL;
-  GCancellable *cancel = NULL;
+  gint fds[2];
 
   g_type_init();
 
   tweetObject = GTWEET_OBJECT(gtweet_object_new());
-  cancel = g_cancellable_new();
   if(!gtweet_object_initkeys(tweetObject))
     {
       gchar *consumer_key = NULL;
@@ -57,19 +36,18 @@ int main(int argc, char *argv[])
       g_free(pin);
     }
 
-  gtweet_object_filterstream(tweetObject,
-  			     cancel,
-  			     stream_cb,
-  			     cancel,
-  			     "linux,unix",
-  			     NULL,
-  			     NULL);
   /* 
-   * gtweet_object_hometimeline(tweetObject,
-   * 			     NULL,
-   * 			     NULL,
-   * 			     NULL);
+   * gtweet_object_homestream(tweetObject,
+   * 			   1,
+   * 			   NULL,
+   * 			   "linux,unix",
+   * 			   NULL);
    */
+  gtweet_object_hometimeline(tweetObject,
+  			     NULL,
+  			     NULL,
+  			     NULL,
+			     NULL);
   /* 
    * gtweet_object_updatemedia(tweetObject,
    * 			    "test upload",
