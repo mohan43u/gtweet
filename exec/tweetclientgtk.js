@@ -103,22 +103,35 @@ const Image = new Lang.Class({
 	this.tweetObject = twitterClient.tweetObject;
     },
     show: function() {
-	this.image.show();
+	this.imageBox.show();
     },
     hide: function() {
-	this.image.hide();
+	this.imageBox.hide();
     },
     drawImage: function() {
-	this.data = this.tweetObject.http(this.url);
-	this.memoryInputStream = Gio.MemoryInputStream.new_from_data(this.data, this.data.length);
-	this.pixBuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(this.memoryInputStream,
-							       this.width,
-							       this.height,
-							       this.preserve_aspect_ratio,
-							       null,
-							       null);
-	this.image = Gtk.Image.new_from_pixbuf(this.pixBuf);
-	return this.image;
+	this.imageBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	this.fds = this.tweetObject.pipe();
+	this.inputStream = Gio.UnixInputStream.new(this.fds[0], true);
+	this.source = this.inputStream.create_source(null);
+	var _pollableSourceFunc = function() {
+	    var bytes = this.tweetObject.read_base64(this.inputStream, null);
+	    var memoryInputStream = Gio.MemoryInputStream.new_from_data(bytes, bytes.length, null);
+	    this.pixBuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(memoryInputStream,
+								    this.width,
+								    this.height,
+								    this.preserve_aspect_ratio,
+								    null,
+								    null);
+	    this.image = Gtk.Image.new_from_pixbuf(this.pixBuf);
+	    this.imageBox.pack_start(this.image, false, false, 0);
+	    this.image.show();
+	    return true;
+	}
+	this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
+	this.source.attach(GLib.MainContext.get_thread_default());
+	this.tweetObject.http(this.url, this.fds[1]);
+
+	return this.imageBox;
     },
     showAppDialog: function() {
 	this.file;
@@ -250,21 +263,18 @@ const create_user = function(user, isfull) {
 }
 
 const jsonErrorShow = function(twitterClient, jsonObject) {
+    var message;
+
     if(jsonObject.errors)
+	message = jsonObject.errors[0].message + "(" + jsonObject.errors[0].code + ")"; 
+    if(jsonObject.delete)
+	message = "tweet (id=" + jsonObject.delete.status.id_str + ") has been deleted";
+
+    if(message)
     {
-	if(typeof(jsonObject.errors) == "string")
-	{
-	    twitterClient.status(jsonObject.errors);
-	    return 1;
-	}
-	if(typeof(jsonObject.errors) == "object")
-	{
-	    var message = jsonObject.errors[0].message + "(" + jsonObject.errors[0].code + ")"; 
-	    twitterClient.status(message);
-	    throw new Error(message);
-	}
+	twitterClient.status(message);
+	throw new Error(message);
     }
-    return 0;
 }
 
 const Tweet = new Lang.Class({
@@ -302,8 +312,7 @@ const Tweet = new Lang.Class({
 	    this.box = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.controlBoxVWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.controlBoxHWrap = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
+	    this.controlBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.arrowButton = new Gtk.ToggleButton();
 	    this.leftArrow = Gtk.Arrow.new(Gtk.ArrowType.LEFT, Gtk.ShadowType.IN);
 	    this.rightArrow = Gtk.Arrow.new(Gtk.ArrowType.RIGHT, Gtk.ShadowType.IN);
@@ -329,21 +338,22 @@ const Tweet = new Lang.Class({
 	    this.textBox.set_line_wrap(true);
 	    this.textBox.set_alignment(0, 0);
 
-	    this.arrowButton.image = this.rightArrow;
-	    this.controlBoxHWrap.pack_start(this.arrowButton, false, false, 0);
+	    var url = this.tweet.user.profile_image_url_https;
+	    this.profileImage = new Image(this.twitterClient, url, -1, -1, true);
+	    this.profileImageBox = this.profileImage.drawImage();
+
+	    this.arrowButton.image = this.leftArrow;
+	    this.controlBoxWrap.pack_start(this.arrowButton, false, false, 0);
 	    var _arrowButton_toggled = function(self)
 	    {
 		if(self.get_active())
 		{
-		    self.image = this.leftArrow;
-		    if(this.profileImageBox == undefined)
+		    self.image = this.rightArrow;
+		    if(this.controlBoxVWrap == undefined)
 		    {
-			this.profileImageBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-			this.profileImageButton = new Gtk.ToggleButton();
-			var url = this.tweet.user.profile_image_url_https;
-			this.profileImage = new Image(this.twitterClient, url, -1, -1, true);
-			this.profileImageButton.image = this.profileImage.drawImage();
-			var _profileImageButton_toggled = function(self) {
+			this.controlBoxVWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+			this.userDetailsButton = new Gtk.ToggleButton({label: "UserInfo"});
+			var _userDetailsButton_toggled = function(self) {
 			    if(self.get_active())
 			    {
 				if(this.userBox == undefined)
@@ -362,25 +372,11 @@ const Tweet = new Lang.Class({
 				    this.userBox.hide();
 			    }
 			}
-			this.profileImageButton.connect("toggled", Lang.bind(this, _profileImageButton_toggled));
-			this.profileImageButton.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
-			var _profileImageButton_press_event = function(self, event, image) {
-			    var button;
-			    [isbutton, button] = event.get_button(button);
-			    if(button == 3) this.profileImage.showAppDialog();
-			}
-			this.profileImageButton.connect("button-press-event", Lang.bind(this, _profileImageButton_press_event));
-			this.profileImageBox.pack_start(this.profileImageButton, false, false, 0);
-			this.controlBoxVWrap.pack_start(this.profileImageBox, false, false, 2);
-			this.profileImageButton.show();
-			this.profileImageBox.show();
-		    }
-		    else
-			this.profileImageBox.show();
+			this.userDetailsButton.connect("toggled", Lang.bind(this, _userDetailsButton_toggled));
+			this.controlBoxVWrap.pack_start(this.userDetailsButton, false, false, 0);
+			this.userDetailsButton.show();
 
-		    if(this.tweet.in_reply_to_status_id_str)
-		    {
-			if(this.repliedToButton == undefined)
+			if(this.tweet.in_reply_to_status_id_str)
 			{
 			    this.repliedToButton = new Gtk.ToggleButton({label: "Replied To"});
 			    var _repliedToButton_toggled = function(self) {
@@ -390,7 +386,7 @@ const Tweet = new Lang.Class({
 				    {
 					var jsonText = this.tweetObject.showstatus(this.tweet.in_reply_to_status_id_str);
 					var jsonObject = JSON.parse(jsonText);
-					if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+					jsonErrorShow(this.twitterClient, jsonObject);
 					var tweet = new Tweet(this.twitterClient, jsonObject);
 					this.box.pack_start(tweet.drawTweet(), false, false, 0);
 					this.repliedToBox = tweet.box;
@@ -409,16 +405,11 @@ const Tweet = new Lang.Class({
 			    this.controlBoxVWrap.pack_start(this.repliedToButton, false, false, 0);
 			    this.repliedToButton.show();
 			}
-			else
-			    this.repliedToButton.show();
-		    }
 
-		    if(this.tweet.entities &&
-		       this.tweet.entities.media &&
-		       this.tweet.entities.media[0] &&
-		       this.tweet.entities.media[0].media_url_https)
-		    {
-			if(this.mediaButton == undefined)
+			if(this.tweet.entities &&
+			   this.tweet.entities.media &&
+			   this.tweet.entities.media[0] &&
+			   this.tweet.entities.media[0].media_url_https)
 			{
 			    this.mediaButton = new Gtk.ToggleButton({label: "Media"});
 			    var _mediaButton_toggled = function(self) {
@@ -448,14 +439,9 @@ const Tweet = new Lang.Class({
 			    this.controlBoxVWrap.pack_start(this.mediaButton, false, false, 0);
 			    this.mediaButton.show();
 			}
-			else
-			    this.mediaButton.show();
-		    }
 
-		    if(this.tweet.entities &&
-		       this.tweet.entities.hashtags)
-		    {
-			if(this.hashTagsBox == undefined)
+			if(this.tweet.entities &&
+			   this.tweet.entities.hashtags)
 			{
 			    this.hashTagsBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 			    for(var iter = 0; iter <  this.tweet.entities.hashtags.length; iter++)
@@ -476,13 +462,6 @@ const Tweet = new Lang.Class({
 			    this.controlBoxVWrap.pack_start(this.hashTagsBox, false, false, 0);
 			    this.hashTagsBox.show();
 			}
-			else
-			    this.hashTagsBox.show();
-		    }
-
-		    if(this.controlBox == undefined)
-		    {
-			this.controlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 
 			var timelineButton = new Gtk.Button({label: "Timeline"});
 			var _timelineButton_clicked = function(self) {
@@ -494,7 +473,7 @@ const Tweet = new Lang.Class({
 			    this.twitterClient.userFind.findBox.button.emit("clicked");
 			}
 			timelineButton.connect("clicked", Lang.bind(this, _timelineButton_clicked));
-			this.controlBox.pack_start(timelineButton, false, false, 0);
+			this.controlBoxVWrap.pack_start(timelineButton, false, false, 0);
 			timelineButton.show();
 
 			var friendsButton = new Gtk.Button({label: "Friends"});
@@ -507,7 +486,7 @@ const Tweet = new Lang.Class({
 			    this.twitterClient.userFind.userCombo.set_active(0);
 			}
 			friendsButton.connect("clicked", Lang.bind(this, _friendsButton_clicked));
-			this.controlBox.pack_start(friendsButton, false, false, 0);
+			this.controlBoxVWrap.pack_start(friendsButton, false, false, 0);
 			friendsButton.show();
 
 			var followersButton = new Gtk.Button({label: "Followers"});
@@ -520,7 +499,7 @@ const Tweet = new Lang.Class({
 			    this.twitterClient.userFind.userCombo.set_active(0);
 			}
 			followersButton.connect("clicked", Lang.bind(this, _followersButton_clicked));
-			this.controlBox.pack_start(followersButton, false, false, 0);
+			this.controlBoxVWrap.pack_start(followersButton, false, false, 0);
 			followersButton.show();
 
 			if(this.tweet.user.id == this.twitterClient.owner.userObject.id)
@@ -529,11 +508,11 @@ const Tweet = new Lang.Class({
 			    var _deleteButton_clicked = function(self) {
 				var jsonText = this.tweetObject.destroy(this.tweet.id_str);
 				var jsonObject = JSON.parse(jsonText);
-				if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				jsonErrorShow(this.twitterClient, jsonObject);
 				this.box.hide();
 			    }
 			    deleteButton.connect("clicked", Lang.bind(this, _deleteButton_clicked));
-			    this.controlBox.pack_start(deleteButton, false, false, 0);
+			    this.controlBoxVWrap.pack_start(deleteButton, false, false, 0);
 			    deleteButton.show();
 			}
 
@@ -543,7 +522,7 @@ const Tweet = new Lang.Class({
 			    this.twitterClient.updateBox.show();
 			}
 			updateButton.connect("clicked", Lang.bind(this, _updateButton_clicked));
-			this.controlBox.pack_start(updateButton, false, false, 0);
+			this.controlBoxVWrap.pack_start(updateButton, false, false, 0);
 			updateButton.show();
 
 			if(this.tweet.user.id != this.twitterClient.owner.userObject.id)
@@ -554,11 +533,11 @@ const Tweet = new Lang.Class({
 				var _unfollow_clicked = function(self) {
 				    var jsonText = this.tweetObject.unfollow(null, this.tweet.user.id_str);
 				    var jsonObject = JSON.parse(jsonText);
-				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				    jsonErrorShow(this.twitterClient, jsonObject);
 				    this.twitterClient.status("you are now unfollowing " + this.tweet.user.name);
 				}
 				unfollow.connect("clicked", Lang.bind(this, _unfollow_clicked));
-				this.controlBox.pack_start(unfollow, false, false, 0);
+				this.controlBoxVWrap.pack_start(unfollow, false, false, 0);
 				unfollow.show();
 			    }
 			    else
@@ -567,17 +546,17 @@ const Tweet = new Lang.Class({
 				var _follow_clicked = function(self) {
 				    var jsonText = this.tweetObject.follow(null, this.tweet.user.id_str);
 				    var jsonObject = JSON.parse(jsonText);
-				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+				    jsonErrorShow(this.twitterClient, jsonObject);
 				    this.twitterClient.status("you are now following " + this.tweet.user.name);
 				}
 				follow.connect("clicked", Lang.bind(this, _follow_clicked));
-				this.controlBox.pack_start(follow, false, false, 0);
+				this.controlBoxVWrap.pack_start(follow, false, false, 0);
 				follow.show();
 			    }
 
 			    var jsonText = this.tweetObject.showstatus(this.tweet.id_str);
 			    var jsonObject = JSON.parse(jsonText);
-			    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+			    jsonErrorShow(this.twitterClient, jsonObject);
 			    var statusObject = jsonObject;
 			    if(statusObject.retweeted)
 			    {
@@ -585,11 +564,10 @@ const Tweet = new Lang.Class({
 				var _retweet_clicked = function(self, statusObject) {
 				    var jsonText = this.tweetObject.destroy(statusObject.current_user_retweet.id_str);
 				    var jsonObject = JSON.parse(jsonText);
-				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				    this.twitterClient.homeTimeline.refreshButton.emit("clicked");
+				    jsonErrorShow(this.twitterClient, jsonObject);
 				}
 				retweet.connect("clicked", Lang.bind(this, _retweet_clicked, statusObject));
-				this.controlBox.pack_start(retweet, false, false, 0);
+				this.controlBoxVWrap.pack_start(retweet, false, false, 0);
 				retweet.show();
 			    }
 			    else
@@ -598,38 +576,28 @@ const Tweet = new Lang.Class({
 				var _retweet_clicked = function(self, statusObject) {
 				    var jsonText = this.tweetObject.retweet(statusObject.id_str);
 				    var jsonObject = JSON.parse(jsonText);
-				    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-				    this.twitterClient.homeTimeline.refreshButton.emit("clicked");
+				    jsonErrorShow(this.twitterClient, jsonObject);
 				    this.twitterClient.homeTimeline.homeIcon.set_active(true);
 				}
 				retweet.connect("clicked", Lang.bind(this, _retweet_clicked, statusObject));
-				this.controlBox.pack_start(retweet, false, false, 0);
+				this.controlBoxVWrap.pack_start(retweet, false, false, 0);
 				retweet.show();
 			    }
 			}
-			this.controlBoxHWrap.pack_start(this.controlBox, false, false, 0);
-			this.controlBox.show();
+			this.controlBoxWrap.pack_start(this.controlBoxVWrap, false, false, 0);
+			this.controlBoxVWrap.show();
 		    }
 		    else
-			this.controlBox.show();
+			this.controlBoxVWrap.show();
 		}
 		else
 		{
-		    self.image = this.rightArrow;
-		    this.profileImageButton.set_active(false);
-		    this.profileImageBox.hide();
-		    if(this.mediaButton)
-		    {
-			this.mediaButton.set_active(false);
-			this.mediaButton.hide();
-		    }
+		    self.image = this.leftArrow;
+		    if(this.userDetailsButton)this.userDetailsButton.set_active(false);
+		    if(this.mediaButton) this.mediaButton.set_active(false);
 		    if(this.hashTagsBox) this.hashTagsBox.hide();
-		    if(this.repliedToButton)
-		    {
-			this.repliedToButton.set_active(false);
-			this.repliedToButton.hide();
-		    }
-		    this.controlBox.hide();
+		    if(this.repliedToButton) this.repliedToButton.set_active(false);
+		    this.controlBoxVWrap.hide();
 		}
 	    }
 	    this.arrowButton.connect("toggled", Lang.bind(this, _arrowButton_toggled));
@@ -641,19 +609,19 @@ const Tweet = new Lang.Class({
 	    this.vbox.pack_start(this.retweetedByBox, false, false, 2);
 	    this.vbox.pack_start(this.textBox, false, false, 2);
 	    this.vbox.pack_start(this.userBoxWrap, false, false, 2);
-	    this.vbox.pack_start(this.mediaBoxWrap, false, false, 0);
+	    this.vbox.pack_start(this.mediaBoxWrap, false, false, 2);
 	    this.headerBox.show();
 	    this.retweetedByBox.show();
 	    this.textBox.show();
 	    this.userBoxWrap.show();
 	    this.mediaBoxWrap.show();
-	    this.hbox.pack_start(this.controlBoxVWrap, false, false, 2);
+	    this.hbox.pack_start(this.profileImageBox, false, false, 2);
 	    this.hbox.pack_start(this.vbox, true, true, 2);
-	    this.controlBoxVWrap.show();
+	    this.hbox.pack_start(this.controlBoxWrap, false, false, 0);
+	    this.profileImageBox.show();
 	    this.vbox.show();
-	    this.box.pack_start(this.controlBoxHWrap, false, false, 0);
+	    this.controlBoxWrap.show();
 	    this.box.pack_start(this.hbox, false, false, 0);
-	    this.controlBoxHWrap.show();
 	    this.hbox.show();
 
 	    return this.box;
@@ -702,98 +670,31 @@ const Owner = new Lang.Class({
 	if(this.ownerBox == undefined)
 	{
 	    this.ownerBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+
 	    var jsonText = this.tweetObject.usersettings();
 	    this.userSettings = JSON.parse(jsonText);
-	    if(jsonErrorShow(this.twitterClient, this.userSettings)) return null;
+	    jsonErrorShow(this.twitterClient, this.userSettings);
 
 	    var jsonText = this.tweetObject.show(null, this.userSettings.screen_name);
 	    this.userObject = JSON.parse(jsonText);
-	    if(jsonErrorShow(this.twitterClient, this.userObject)) return null;
+	    jsonErrorShow(this.twitterClient, this.userObject);
 
-	    var imageBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
-	    var vbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    var usermini = create_user(this.userObject, false);
-	    var userfull = create_user(this.userObject, true);
-	    var profileImageBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    var profileImageButton = new Gtk.ToggleButton();
-	    var controlVbox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    var friendsButton = new Gtk.Button({label: "Friends"});
-	    var followersButton = new Gtk.Button({label: "Followers"});
+	    var jsonText = this.tweetObject.showstatus(this.userObject.status.id_str);
+	    var jsonObject = JSON.parse(jsonText);
+	    jsonErrorShow(this.twitterClient, jsonObject);
+	    if(jsonObject.retweeted_status) delete jsonObject.retweeted_status;
+	    var tweet = new Tweet(this.twitterClient, jsonObject);
+	    this.ownerBox.pack_start(tweet.drawTweet(), false, false, 0);
+	    tweet.show();
+
 	    var updateButton = new Gtk.Button({label: "Tweet"});
-
-	    var url = this.userObject.profile_image_url_https;
-	    var image = new Image(this.twitterClient, url, -1, -1, true);
-	    profileImageButton.image = image.drawImage();
-	    var _profileImageButton_toggled = function(self, usermini, userfull) {
-		if(self.get_active())
-		{
-		    usermini.hide();
-		    userfull.show();
-		}
-		else
-		{
-		    usermini.show();
-		    userfull.hide();
-		}
-	    }
-	    profileImageButton.connect("toggled", Lang.bind(twitterClient, _profileImageButton_toggled, usermini, userfull));
-	    profileImageButton.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
-	    var _profileImageButton_press_event = function(self, event, image) {
-		var button;
-		[isbutton, button] = event.get_button(button);
-		if(button == 3) image.showAppDialog();
-	    }
-	    profileImageButton.connect("button-press-event", Lang.bind(this, _profileImageButton_press_event, image));
-	    profileImageBox.pack_start(profileImageButton, false, false, 0);
-	    profileImageButton.show();
-
-	    var _friendsButton_clicked = function(self) {
-		this.twitterClient.userFind.userFindIcon.set_active(true);
-		this.twitterClient.userFind.userId = this.userObject.id_str;
-		this.twitterClient.userFind.iter = 0;
-		this.twitterClient.userFind.isFriends = true;
-		this.twitterClient.userFind.getUsers();
-		this.twitterClient.userFind.userCombo.set_active(0);
-	    }
-	    friendsButton.connect("clicked", Lang.bind(this, _friendsButton_clicked));
-
-	    var _followersButton_clicked = function(self) {
-		this.twitterClient.userFind.userFindIcon.set_active(true);
-		this.twitterClient.userFind.userId = this.userObject.id_str;
-		this.twitterClient.userFind.iter = 0;
-		this.twitterClient.userFind.isFriends = false;
-		this.twitterClient.userFind.getUsers();
-		this.twitterClient.userFind.userCombo.set_active(0);
-	    }
-	    followersButton.connect("clicked", Lang.bind(this, _followersButton_clicked));
-
 	    var _updateButton_clicked = function(self, post_id) {
 		this.updateBox.setPostId(post_id);
 		this.updateBox.show();
 	    }
 	    updateButton.connect("clicked", Lang.bind(twitterClient, _updateButton_clicked, null));
-
-	    imageBox.pack_start(profileImageBox, false, false, 5);
-	    vbox.pack_start(usermini, false, false, 0);
-	    vbox.pack_start(userfull, false, false, 0);
-	    controlVbox.pack_start(friendsButton, false, false, 0);
-	    controlVbox.pack_start(followersButton, false, false, 0);
-	    controlVbox.pack_start(updateButton, false, false, 0);
-	    hbox.pack_start(imageBox, false, false, 0);
-	    hbox.pack_start(vbox, true, true, 0);
-	    hbox.pack_start(controlVbox, false, false, 0);
-	    this.ownerBox.pack_start(hbox, true, true, 0);
-	    profileImageBox.show();
-	    usermini.show();
-	    userfull.hide();
-	    friendsButton.show();
-	    followersButton.show();
+	    this.ownerBox.pack_start(updateButton, false, false, 0);
 	    updateButton.show();
-	    imageBox.show();
-	    vbox.show();
-	    controlVbox.show();
-	    hbox.show();
 	}
 	return this.ownerBox;
     }
@@ -835,29 +736,19 @@ const HomeTimeline = new Lang.Class({
 	if(this.homeBox == undefined)
 	{
 	    this.homeBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	    this.refreshButton = Gtk.Button.new_from_stock(Gtk.STOCK_REFRESH);
-	    this.controlBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.tweetWindow = new Gtk.ScrolledWindow();
 	    this.tweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.homeIcon = create_radio_tool_button(this.twitterClient, this.homeBox, "gtk-home", "Home Timeline");
 
-	    var _refreshButton_clicked = function(self, userdata){
-		this.tweetBox.foreach(function(child, userdata){child.destroy()});
-		var jsonText = this.tweetObject.hometimeline(null,
-							     null,
-							     null,
-							     null);
-		var jsonObject = JSON.parse(jsonText);
-		if(jsonErrorShow(this.twitterClient, jsonObject)) return;
-		tweetArray = jsonObject;
-		tweetArray.reverse();
-		var _foreach = function(element, index, array) {
-		    this.genTweet(element);
-		}
-		tweetArray.forEach(Lang.bind(this, _foreach));
+	    var jsonText = this.tweetObject.hometimeline(null, null, null, null);
+	    var jsonObject = JSON.parse(jsonText);
+	    jsonErrorShow(this.twitterClient, jsonObject);
+	    tweetArray = jsonObject;
+	    tweetArray.reverse();
+	    var _foreach = function(element, index, array) {
+		this.genTweet(element);
 	    }
-	    this.refreshButton.connect("clicked", Lang.bind(this, _refreshButton_clicked));
-	    this.refreshButton.emit("clicked");
+	    tweetArray.forEach(Lang.bind(this, _foreach));
 
 	    if(this.cancel)
 	    {
@@ -876,24 +767,17 @@ const HomeTimeline = new Lang.Class({
 		    print("Exception: " + exception.message);
 		    return true;
 		};
-		if(jsonErrorShow(this.twitterClient, jsonObject)) return false;
+		jsonErrorShow(this.twitterClient, jsonObject);
 		if(jsonObject.friends) return true;
 		this.genTweet(jsonObject);
 		return true;
 	    }
 	    this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
 	    this.source.attach(GLib.MainContext.get_thread_default());
-	    this.tweetObject.homestream(this.fds[1],
-					this.cancel,
-					null,
-					null);
+	    this.tweetObject.homestream(this.fds[1], this.cancel, null, null);
 
-	    this.controlBox.pack_start(this.refreshButton, true, true, 0);
-	    this.homeBox.pack_start(this.controlBox, false, false, 0);
 	    this.tweetWindow.add_with_viewport(this.tweetBox);
 	    this.homeBox.pack_start(this.tweetWindow, true, true, 0);
-	    this.refreshButton.show();
-	    this.controlBox.show();
 	    this.tweetWindow.show();
 	    this.tweetBox.show();
 	}
@@ -983,12 +867,12 @@ const TweetFind = new Lang.Class({
 	    var _countryButton_clicked = function(self) {
 		var jsonText = this.tweetObject.woeid(this.countryComboEntry.get_active_text());
 		var jsonObject = JSON.parse(jsonText);
-		if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		jsonErrorShow(this.twitterClient, jsonObject);
 		var woeid = jsonObject.places.place[0].woeid;
 
 		var jsonText = this.tweetObject.trends(woeid.toString());
 		var jsonObject = JSON.parse(jsonText);
-		if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		jsonErrorShow(this.twitterClient, jsonObject);
 		var trends = jsonObject[0].trends;
 		this.trendsCombo.remove_all();
 		for(var iter = 0; iter < trends.length; iter++)
@@ -1027,7 +911,7 @@ const TweetFind = new Lang.Class({
 							    null,
 							    null);
 		var jsonObject = JSON.parse(jsonText);
-		if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		jsonErrorShow(this.twitterClient, jsonObject);
 		var tweetArray = jsonObject.statuses;
 		tweetArray.reverse();
 		var _tweetArray_foreach = function(element, index, array) {
@@ -1052,7 +936,7 @@ const TweetFind = new Lang.Class({
 			print("Exception: " + exception.message);
 			return true;
 		    };
-		    if(jsonErrorShow(this.twitterClient, jsonObject)) return false;
+		    jsonErrorShow(this.twitterClient, jsonObject);
 		    if(jsonObject.friends) return true;
 		    this.genTweet(jsonObject);
 		    return true;
@@ -1129,7 +1013,7 @@ const UserFind = new Lang.Class({
 							  null,
 							  this.cursor);
 	    var jsonObject = JSON.parse(jsonText);
-	    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+	    jsonErrorShow(this.twitterClient, jsonObject);
 	    if(this.ids == undefined)
 		this.ids = jsonObject.ids;
 	    else
@@ -1144,7 +1028,7 @@ const UserFind = new Lang.Class({
 	var lookupIds = this.ids.slice(this.iter, this.iter + max);
 	var jsonText = this.tweetObject.lookup(null, lookupIds.join(","));
 	var jsonObject = JSON.parse(jsonText);
-	if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+	jsonErrorShow(this.twitterClient, jsonObject);
 	var userArray = jsonObject;
 	var _userArray_foreach = function(element, index, array) {
 	    this.userCombo.append(element.id_str, element.name + " (@" + element.screen_name + ")");
@@ -1179,7 +1063,7 @@ const UserFind = new Lang.Class({
 		{
 		    var jsonText = this.tweetObject.show(searchId, null);
 		    var jsonObject = JSON.parse(jsonText);
-		    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		    jsonErrorShow(this.twitterClient, jsonObject);
 		    if(jsonObject.length == 0) return;
 		    this.userCombo.remove_all();
 		    this.userCombo.append(jsonObject.id_str, jsonObject.name + " (@" + jsonObject.screen_name + ")");
@@ -1189,7 +1073,7 @@ const UserFind = new Lang.Class({
 		{
 		    var jsonText = this.tweetObject.show(null, searchText);
 		    var jsonObject = JSON.parse(jsonText);
-		    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		    jsonErrorShow(this.twitterClient, jsonObject);
 		    if(jsonObject.length == 0) return;
 		    this.userCombo.remove_all();
 		    this.userCombo.append(jsonObject.id_str, jsonObject.name + " (@" + jsonObject.screen_name + ")");
@@ -1203,7 +1087,7 @@ const UserFind = new Lang.Class({
 								   iter.toString(),
 								   "20");
 			var jsonObject = JSON.parse(jsonText);
-			if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+			jsonErrorShow(this.twitterClient, jsonObject);
 			if(jsonObject.length == 0) return;
 			var userArray = jsonObject;
 
@@ -1259,7 +1143,7 @@ const UserFind = new Lang.Class({
 								 null);
 		    }
 		    var jsonObject = JSON.parse(jsonText);
-		    if(jsonErrorShow(this.twitterClient, jsonObject)) return;
+		    jsonErrorShow(this.twitterClient, jsonObject);
 		    var tweetArray = jsonObject;
 		    tweetArray.reverse();
 		    var _tweetArray_foreach = function(element, index, array) {
@@ -1286,7 +1170,7 @@ const UserFind = new Lang.Class({
 				print("Exception: " + exception.message);
 				return true;
 			    };
-			    if(jsonErrorShow(this.twitterClient, jsonObject)) return false;
+			    jsonErrorShow(this.twitterClient, jsonObject);
 			    if(jsonObject.friends) return true;
 			    this.genTweet(jsonObject);
 			    return true;
@@ -1357,20 +1241,14 @@ const UpdateBox = new Lang.Class({
 		{
 		    var jsonText = this.tweetObject.updatemedia(updateText, filename, this.post_id);
 		    var jsonObject = JSON.parse(jsonText);
-		    if(jsonErrorShow(this, jsonObject)) return;
+		    jsonErrorShow(this, jsonObject);
 		}
 		else
 		{
 		    var jsonText = this.tweetObject.update(updateText, this.post_id);
 		    var jsonObject = JSON.parse(jsonText);
-		    if(jsonErrorShow(this, jsonObject)) return;
+		    jsonErrorShow(this, jsonObject);
 		}
-		var tweet = new Tweet(this.twitterClient, jsonObject);
-		var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-		this.twitterClient.homeTimeline.tweetBox.pack_end(tweet.drawTweet(), false, false, 0);
-		this.twitterClient.homeTimeline.tweetBox.pack_end(separator, false, false, 0);
-		tweet.show();
-		separator.show();
 		this.cancel.clicked();
 	    }
 	    this.ok.connect("clicked", Lang.bind(this, _ok_clicked, this.post_id));

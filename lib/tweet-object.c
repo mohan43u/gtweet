@@ -1065,16 +1065,18 @@ gchar* gtweet_object_pimage(GtweetObject *tweetObject,
   return result;
 }
 
-static gboolean gtweet_generic_callback(gchar *string, gsize length, gpointer user_data)
+static gboolean gtweet_generic_base64(gchar *string, gsize length, gpointer user_data)
 {
   GPtrArray *cargs = (GPtrArray *) user_data;
   glong fd = (glong) g_ptr_array_index(cargs, 0);
   GCancellable *cancel = g_ptr_array_index(cargs, 1);
 
   GIOChannel *channel = g_io_channel_unix_new(fd);
-  g_io_channel_write_chars(channel, string, length, NULL, NULL);
+  gchar *base64 = g_base64_encode(string, length);
+  g_io_channel_write_chars(channel, base64, strlen(base64), NULL, NULL);
   g_io_channel_unref(channel);
 
+  g_free(base64);
   if(g_cancellable_is_cancelled(cancel))
     return FALSE;
   else
@@ -1118,7 +1120,7 @@ static gpointer samplestream_func(gpointer userdata)
 			      consumer_secret,
 			      access_key,
 			      access_secret,
-			      gtweet_generic_callback,
+			      gtweet_generic_base64,
 			      gcargs);
 
   g_free(consumer_key);
@@ -1187,7 +1189,7 @@ static gpointer filterstream_func(gpointer userdata)
 			      track,
 			      follow,
 			      locations,
-			      gtweet_generic_callback,
+			      gtweet_generic_base64,
 			      gcargs);
 
   g_free(consumer_key);
@@ -1262,7 +1264,7 @@ static gpointer homestream_func(gpointer userdata)
   			    access_secret,
   			    track,
   			    locations,
-  			    gtweet_generic_callback,
+  			    gtweet_generic_base64,
   			    gcargs);
 
   g_free(consumer_key);
@@ -1292,12 +1294,29 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
   g_thread_new("homestream", homestream_func, cargs);
 }
 
-GByteArray* gtweet_object_http(GtweetObject *tweetObject,
-			       gchar *url)
+static gpointer httpfunc(gpointer userdata)
 {
+  GPtrArray *cargs = (GPtrArray *) userdata;
+  gchar *url = (gchar *) g_ptr_array_index(cargs, 0);
+  glong fd = (glong) g_ptr_array_index(cargs, 1);
+
   GString *buffer = tweet_soup_gstring_sync(url, NULL, FALSE);
-  GByteArray *array = g_byte_array_new_take(buffer->str, buffer->len);
-  return array;
+  GIOChannel *channel = g_io_channel_unix_new(fd);
+  gchar *base64 = g_base64_encode(buffer->str, buffer->len);
+  g_io_channel_write_chars(channel, base64, strlen(base64), NULL, NULL);
+  g_io_channel_unref(channel);
+
+  g_free(url);
+  g_free(base64);
+  g_ptr_array_free(cargs, FALSE);
+}
+
+void gtweet_object_http(GtweetObject *tweetObject, gchar *url, glong fd)
+{
+  GPtrArray *cargs = g_ptr_array_new();
+  g_ptr_array_add(cargs, g_strdup(url));
+  g_ptr_array_add(cargs, (gpointer) fd);
+  g_thread_new("http", httpfunc, cargs);
 }
 
 gint* gtweet_object_pipe(GtweetObject *tweetObject)
@@ -1309,12 +1328,14 @@ gint* gtweet_object_pipe(GtweetObject *tweetObject)
     return NULL;
 }
 
-gchar* gtweet_object_read(GtweetObject *tweetObject,
-			  GInputStream *inputStream,
-			  GCancellable *cancel)
+GByteArray* gtweet_object_read_base64(GtweetObject *tweetObject,
+				      GInputStream *inputStream,
+				      GCancellable *cancel)
 {
-  GString *string = g_string_new(NULL);
-  gchar *result = NULL;
+  GString *response = g_string_new(NULL);
+  GByteArray *result = g_byte_array_new();
+  gsize length = 0;
+  gchar *base64 = NULL;
 
   while(TRUE)
     {
@@ -1325,12 +1346,28 @@ gchar* gtweet_object_read(GtweetObject *tweetObject,
 				   4096,
 				   cancel,
 				   NULL);
-      g_string_append_len(string, buffer, length);
+      g_string_append_len(response, buffer, length);
       g_free(buffer);
       if(length != 4096)
 	break;
     }
-  result = g_strdup(string->str);
+  base64 = g_base64_decode(response->str, &length);
+  g_byte_array_append(result, base64, length);
+
+  g_free(base64);
+  g_string_free(response, TRUE);
+  return(result);
+}
+
+gchar* gtweet_object_read(GtweetObject *tweetObject,
+			  GInputStream *inputStream,
+			  GCancellable *cancel)
+{
+  GByteArray *bytes = gtweet_object_read_base64(tweetObject, inputStream, cancel);
+  GString *string = g_string_new_len(bytes->data, bytes->len);
+  gchar *result = g_strdup(string->str);
+
+  g_byte_array_free(bytes, TRUE);
   g_string_free(string, TRUE);
   return(result);
 }

@@ -340,11 +340,9 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
  * gtweet_object_http:
  * @tweetObject: a #TweetObject
  * @url: url to request
- *
- * Returns: (transfer full): response
+ * @fd: pipe fd to write data
  */
-GByteArray* gtweet_object_http(GtweetObject *tweetObject,
-			       gchar *url);
+void gtweet_object_http(GtweetObject *tweetObject, gchar *url, glong fd);
 
 /**
  * gtweet_object_pipe:
@@ -355,10 +353,23 @@ GByteArray* gtweet_object_http(GtweetObject *tweetObject,
 gint* gtweet_object_pipe(GtweetObject *tweetObject);
 
 /**
+ * gtweet_object_read_base64:
+ * @tweetObject: a #TweetObject
+ * @inputStream: a GUnixInputStream Object
+ * @cancel: (allow-none): a GCancellable object
+ *
+ * Returns: (transfer full): a GByteArray contains data
+ */
+GByteArray* gtweet_object_read_base64(GtweetObject *tweetObject,
+				      GInputStream *inputStream,
+				      GCancellable *cancel);
+
+
+/**
  * gtweet_object_read:
  * @tweetObject: a #TweetObject
  * @inputStream: a GUnixInputStream Object
- * @cancel: a GCancellable object
+ * @cancel: (allow-none): a GCancellable object
  */
 gchar* gtweet_object_read(GtweetObject *tweetObject,
 			  GInputStream *inputStream,
