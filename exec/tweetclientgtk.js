@@ -280,6 +280,9 @@ const Tweet = new Lang.Class({
     hide: function() {
 	this.box.hide();
     },
+    destroy: function() {
+	this.box.destroy();
+    },
     drawTweet: function() {
 	if(this.box == undefined)
 	{
@@ -801,12 +804,32 @@ const HomeTimeline = new Lang.Class({
     _init: function(twitterClient) {
 	this.twitterClient = twitterClient;
 	this.tweetObject = twitterClient.tweetObject;
+	this.tweetQ = new Array();
+	this.tweetQMax = 20;
     },
     show: function() {
 	this.homeBox.show();
     },
     hide: function() {
 	this.homeBox.hide();
+    },
+    genTweet: function(element) {
+	print(JSON.stringify(element));
+	var tweet = new Tweet(this.twitterClient, element);
+	var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+	var tweetObjects = new Array(tweet, separator);
+	this.tweetBox.pack_end(tweet.drawTweet(), false, false, 0);
+	this.tweetBox.pack_end(separator, false, false, 0);
+	tweet.show();
+	separator.show();
+
+	this.tweetQ.push(tweetObjects);
+	if(this.tweetQ.length > this.tweetQMax)
+	{
+	    var firstTweetObjects = this.tweetQ.shift();
+	    firstTweetObjects[0].destroy();
+	    firstTweetObjects[1].destroy();
+	}
     },
     drawHomeTimeline: function() {
 	if(this.homeBox == undefined)
@@ -829,17 +852,41 @@ const HomeTimeline = new Lang.Class({
 		tweetArray = jsonObject;
 		tweetArray.reverse();
 		var _foreach = function(element, index, array) {
-		    var tweet = new Tweet(this.twitterClient, element);
-		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-		    this.tweetBox.pack_end(tweet.drawTweet(), false, false, 0);
-		    this.tweetBox.pack_end(separator, false, false, 0);
-		    tweet.show();
-		    separator.show();
+		    this.genTweet(element);
 		}
 		tweetArray.forEach(Lang.bind(this, _foreach));
 	    }
 	    this.refreshButton.connect("clicked", Lang.bind(this, _refreshButton_clicked));
 	    this.refreshButton.emit("clicked");
+
+	    if(this.cancel)
+	    {
+		this.cancel.cancel();
+		this.source.destroy();
+	    }
+	    this.cancel = new Gio.Cancellable();
+	    this.fds = this.tweetObject.pipe();
+	    this.inputStream = Gio.UnixInputStream.new(this.fds[0], true);
+	    this.source = this.inputStream.create_source(this.cancel);
+	    var _pollableSourceFunc = function() {
+		var jsonText = this.tweetObject.read(this.inputStream, this.cancel);
+		try {
+		    var jsonObject = JSON.parse(jsonText);
+		} catch(exception) {
+		    print("Exception: " + exception.message);
+		    return true;
+		};
+		if(jsonErrorShow(this.twitterClient, jsonObject)) return false;
+		if(jsonObject.friends) return true;
+		this.genTweet(jsonObject);
+		return true;
+	    }
+	    this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
+	    this.source.attach(GLib.MainContext.get_thread_default());
+	    this.tweetObject.homestream(this.fds[1],
+					this.cancel,
+					null,
+					null);
 
 	    this.controlBox.pack_start(this.refreshButton, true, true, 0);
 	    this.homeBox.pack_start(this.controlBox, false, false, 0);
@@ -849,9 +896,6 @@ const HomeTimeline = new Lang.Class({
 	    this.controlBox.show();
 	    this.tweetWindow.show();
 	    this.tweetBox.show();
-
-	    this.cancel = new Gio.Cancellable();
-	    this.tweetObject.homestream(1, this.cancel, "linux,unix", null);
 	}
 	return this.homeBox;
     }
@@ -892,6 +936,8 @@ const TweetFind = new Lang.Class({
     _init: function(twitterClient) {
 	this.twitterClient = twitterClient;
 	this.tweetObject = twitterClient.tweetObject;
+	this.tweetQ = new Array();
+	this.tweetQMax = 20;
     },
     show: function() {
 	this.tweetFindBox.show();
@@ -899,13 +945,31 @@ const TweetFind = new Lang.Class({
     hide: function() {
 	this.tweetFindBox.hide();
     },
+    genTweet: function(element) {
+	print(JSON.stringify(element));
+	var tweet = new Tweet(this.twitterClient, element);
+	var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+	var tweetObjects = new Array(tweet, separator);
+	this.tweetFindTweetBox.pack_end(tweet.drawTweet(), false, false, 0);
+	this.tweetFindTweetBox.pack_end(separator, false, false, 0);
+	tweet.show();
+	separator.show();
+
+	this.tweetQ.push(tweetObjects);
+	if(this.tweetQ.length > this.tweetQMax)
+	{
+	    var firstTweetObjects = this.tweetQ.shift();
+	    firstTweetObjects[0].destroy();
+	    firstTweetObjects[1].destroy();
+	}
+    },
     drawTweetFind: function() {
 	if(this.tweetFindBox == undefined)
 	{
 	    this.tweetFindBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.findBox = new FindBox("search");
 	    this.tweetFindWindow = new Gtk.ScrolledWindow();
-	    this.tweetFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 5});
+	    this.tweetFindTweetBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
 	    this.trendsBox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
 	    this.countryComboEntry = Gtk.ComboBoxText.new_with_entry();
 	    this.countryButton = create_search_button("trends");
@@ -967,14 +1031,39 @@ const TweetFind = new Lang.Class({
 		var tweetArray = jsonObject.statuses;
 		tweetArray.reverse();
 		var _tweetArray_foreach = function(element, index, array) {
-		    var tweet  = new Tweet(this.twitterClient, element);
-		    var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-		    this.tweetFindTweetBox.pack_end(tweet.drawTweet(), false, false, 0);
-		    this.tweetFindTweetBox.pack_end(separator, false, false, 0);
-		    tweet.show();
-		    separator.show();
+		    this.genTweet(element);
 		}
 		tweetArray.forEach(Lang.bind(this, _tweetArray_foreach));
+
+		if(this.cancel)
+		{
+		    this.cancel.cancel();
+		    this.source.destroy();
+		}
+		this.cancel = new Gio.Cancellable();
+		this.fds = this.tweetObject.pipe();
+		this.inputStream = Gio.UnixInputStream.new(this.fds[0], true);
+		this.source = this.inputStream.create_source(this.cancel);
+		var _pollableSourceFunc = function() {
+		    var jsonText = this.tweetObject.read(this.inputStream, this.cancel);
+		    try {
+			var jsonObject = JSON.parse(jsonText);
+		    } catch(exception) {
+			print("Exception: " + exception.message);
+			return true;
+		    };
+		    if(jsonErrorShow(this.twitterClient, jsonObject)) return false;
+		    if(jsonObject.friends) return true;
+		    this.genTweet(jsonObject);
+		    return true;
+		}
+		this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
+		this.source.attach(GLib.MainContext.get_thread_default());
+		this.tweetObject.filterstream(this.fds[1],
+					      this.cancel,
+					      this.findBox.get_text(),
+					      null,
+					      null);
 	    }
 	    this.findBox.button.connect("clicked", Lang.bind(this, _findBox_button_clicked));
 
@@ -996,12 +1085,32 @@ const UserFind = new Lang.Class({
     _init: function(twitterClient) {
 	this.twitterClient = twitterClient;
 	this.tweetObject = twitterClient.tweetObject;
+	this.tweetQ = new Array();
+	this.tweetQMax = 20;
     },
     show: function() {
 	this.userFindBox.show();
     },
     hide: function() {
 	this.userFindBox.hide();
+    },
+    genTweet: function(element) {
+	print(JSON.stringify(element));
+	var tweet = new Tweet(this.twitterClient, element);
+	var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
+	var tweetObjects = new Array(tweet, separator);
+	this.userFindTweetBox.pack_end(tweet.drawTweet(), false, false, 0);
+	this.userFindTweetBox.pack_end(separator, false, false, 0);
+	tweet.show();
+	separator.show();
+
+	this.tweetQ.push(tweetObjects);
+	if(this.tweetQ.length > this.tweetQMax)
+	{
+	    var firstTweetObjects = this.tweetQ.shift();
+	    firstTweetObjects[0].destroy();
+	    firstTweetObjects[1].destroy();
+	}
     },
     getUsers: function() {
 	if(this.iter == 0)
@@ -1154,14 +1263,42 @@ const UserFind = new Lang.Class({
 		    var tweetArray = jsonObject;
 		    tweetArray.reverse();
 		    var _tweetArray_foreach = function(element, index, array) {
-			var tweet  = new Tweet(this.twitterClient, element);
-			var separator = new Gtk.Separator({orientation: Gtk.Orientation.HORIZONTAL});
-			this.userFindTweetBox.pack_end(tweet.drawTweet(), false, false, 0);
-			this.userFindTweetBox.pack_end(separator, false, false, 0);
-			tweet.show();
-			separator.show();
+			this.genTweet(element);
 		    }
 		    tweetArray.forEach(Lang.bind(this, _tweetArray_foreach));
+		    
+		    if(searchId)
+		    {
+			if(this.cancel)
+			{
+			    this.cancel.cancel();
+			    this.source.destroy();
+			}
+			this.cancel = new Gio.Cancellable();
+			this.fds = this.tweetObject.pipe();
+			this.inputStream = Gio.UnixInputStream.new(this.fds[0], true);
+			this.source = this.inputStream.create_source(this.cancel);
+			var _pollableSourceFunc = function() {
+			    var jsonText = this.tweetObject.read(this.inputStream, this.cancel);
+			    try {
+				var jsonObject = JSON.parse(jsonText);
+			    } catch(exception) {
+				print("Exception: " + exception.message);
+				return true;
+			    };
+			    if(jsonErrorShow(this.twitterClient, jsonObject)) return false;
+			    if(jsonObject.friends) return true;
+			    this.genTweet(jsonObject);
+			    return true;
+			}
+			this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
+			this.source.attach(GLib.MainContext.get_thread_default());
+			this.tweetObject.filterstream(this.fds[1],
+						      this.cancel,
+						      null,
+						      searchId,
+						      null);
+		    }
 		}
 	    }
 	    this.userComboButton.connect("clicked", Lang.bind(this, _userComboButton_clicked));

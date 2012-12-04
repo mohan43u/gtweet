@@ -346,6 +346,24 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
 GByteArray* gtweet_object_http(GtweetObject *tweetObject,
 			       gchar *url);
 
+/**
+ * gtweet_object_pipe:
+ * @tweetObject: a #TweetObject
+ *
+ * Returns: (array fixed-size=2) (element-type gint) (transfer full): pipe file destriptors
+ */
+gint* gtweet_object_pipe(GtweetObject *tweetObject);
+
+/**
+ * gtweet_object_read:
+ * @tweetObject: a #TweetObject
+ * @inputStream: a GUnixInputStream Object
+ * @cancel: a GCancellable object
+ */
+gchar* gtweet_object_read(GtweetObject *tweetObject,
+			  GInputStream *inputStream,
+			  GCancellable *cancel);
+
 G_END_DECLS
 
 #endif /* __GTWEET_OBJECT_H__ */

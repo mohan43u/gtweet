@@ -1068,13 +1068,11 @@ gchar* gtweet_object_pimage(GtweetObject *tweetObject,
 static gboolean gtweet_generic_callback(gchar *string, gsize length, gpointer user_data)
 {
   GPtrArray *cargs = (GPtrArray *) user_data;
-
   glong fd = (glong) g_ptr_array_index(cargs, 0);
   GCancellable *cancel = g_ptr_array_index(cargs, 1);
 
   GIOChannel *channel = g_io_channel_unix_new(fd);
   g_io_channel_write_chars(channel, string, length, NULL, NULL);
-  g_io_channel_write_chars(channel, "\n", 1, NULL, NULL);
   g_io_channel_unref(channel);
 
   if(g_cancellable_is_cancelled(cancel))
@@ -1300,4 +1298,39 @@ GByteArray* gtweet_object_http(GtweetObject *tweetObject,
   GString *buffer = tweet_soup_gstring_sync(url, NULL, FALSE);
   GByteArray *array = g_byte_array_new_take(buffer->str, buffer->len);
   return array;
+}
+
+gint* gtweet_object_pipe(GtweetObject *tweetObject)
+{
+  gint *fds = g_new0(gint, 2);
+  if(g_unix_open_pipe(fds, 0, NULL))
+    return fds;
+  else
+    return NULL;
+}
+
+gchar* gtweet_object_read(GtweetObject *tweetObject,
+			  GInputStream *inputStream,
+			  GCancellable *cancel)
+{
+  GString *string = g_string_new(NULL);
+  gchar *result = NULL;
+
+  while(TRUE)
+    {
+      gchar *buffer = g_strnfill(4096, '\0');
+      gsize length = 0;
+      length = g_input_stream_read(inputStream,
+				   buffer,
+				   4096,
+				   cancel,
+				   NULL);
+      g_string_append_len(string, buffer, length);
+      g_free(buffer);
+      if(length != 4096)
+	break;
+    }
+  result = g_strdup(string->str);
+  g_string_free(string, TRUE);
+  return(result);
 }
