@@ -16,6 +16,7 @@ packages='gio-unix-2.0 gobject-2.0 gtk+-3.0 gdk-3.0 oauth gobject-introspection-
 AC_SUBST([packages], [$packages])
 PKG_CHECK_MODULES([PKGCFG], [$packages])
 LDFLAGS='-lreadline'
+CFLAGS='-O0 -ggdb'
 
 # GObject Introspection
 GOBJECT_INTROSPECTION_CHECK([1.30.0])

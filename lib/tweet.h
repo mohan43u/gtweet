@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <glib-unix.h>
 #include <gio/gio.h>
+#include <gio/gunixinputstream.h>
+#include <gio/gunixoutputstream.h>
 #include <string.h>
 #include <tweet-oauth.h>
 #include <tweet-twitter.h>

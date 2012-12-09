@@ -1356,7 +1356,7 @@ GByteArray* gtweet_object_read_base64(GtweetObject *tweetObject,
 
   g_free(base64);
   g_string_free(response, TRUE);
-  return(result);
+  return result;
 }
 
 gchar* gtweet_object_read(GtweetObject *tweetObject,
@@ -1369,5 +1369,5 @@ gchar* gtweet_object_read(GtweetObject *tweetObject,
 
   g_byte_array_free(bytes, TRUE);
   g_string_free(string, TRUE);
-  return(result);
+  return result;
 }

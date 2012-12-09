@@ -11514,6 +11514,7 @@ $as_echo "yes" >&6; }
 
 fi
 LDFLAGS='-lreadline'
+CFLAGS='-O0 -ggdb'
 
 # GObject Introspection
 
