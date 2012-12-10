@@ -1131,6 +1131,7 @@ static gpointer samplestream_func(gpointer userdata)
   g_ptr_array_free(cargs, FALSE);
   g_main_context_pop_thread_default(context);
   g_main_context_unref(context);
+  g_thread_unref(g_thread_self());
 }
 
 void gtweet_object_samplestream(GtweetObject *tweetObject,
@@ -1203,6 +1204,7 @@ static gpointer filterstream_func(gpointer userdata)
   g_ptr_array_free(cargs, FALSE);
   g_main_context_pop_thread_default(context);
   g_main_context_unref(context);
+  g_thread_unref(g_thread_self());
 }
 
 void gtweet_object_filterstream(GtweetObject *tweetObject,
@@ -1277,6 +1279,7 @@ static gpointer homestream_func(gpointer userdata)
   g_ptr_array_free(cargs, FALSE);
   g_main_context_pop_thread_default(context);
   g_main_context_unref(context);
+  g_thread_unref(g_thread_self());
 }
 
 void gtweet_object_homestream(GtweetObject *tweetObject,
@@ -1296,19 +1299,27 @@ void gtweet_object_homestream(GtweetObject *tweetObject,
 
 static gpointer httpfunc(gpointer userdata)
 {
+  GMainContext *context = NULL;
   GPtrArray *cargs = (GPtrArray *) userdata;
   gchar *url = (gchar *) g_ptr_array_index(cargs, 0);
   glong fd = (glong) g_ptr_array_index(cargs, 1);
 
+  context = g_main_context_new();
+  g_main_context_push_thread_default(context);
+  
   GString *buffer = tweet_soup_gstring_sync(url, NULL, FALSE);
   GIOChannel *channel = g_io_channel_unix_new(fd);
   gchar *base64 = g_base64_encode(buffer->str, buffer->len);
   g_io_channel_write_chars(channel, base64, strlen(base64), NULL, NULL);
   g_io_channel_unref(channel);
 
-  g_free(url);
   g_free(base64);
+  g_string_free(buffer, TRUE);
+  g_free(url);
   g_ptr_array_free(cargs, FALSE);
+  g_main_context_pop_thread_default(context);
+  g_main_context_unref(context);
+  g_thread_unref(g_thread_self());
 }
 
 void gtweet_object_http(GtweetObject *tweetObject, gchar *url, glong fd)

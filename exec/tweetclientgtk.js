@@ -100,16 +100,17 @@ const delPipes = function(parentObject) {
     {
 	parentObject.pipeRead.close(null);
 	parentObject.pipeWrite.close(null);
+	delete parentObject.pipeRead;
+	delete parentObject.pipeWrite;
     }
 }
 
 const Image = new Lang.Class({
     Name: "Image",
-    _init: function(twitterClient, url, width, height, preserve_aspect_ratio) {
+    _init: function(twitterClient, url, width, height) {
 	this.url = url;
 	this.width = width;
 	this.height = height;
-	this.preserve_aspect_ratio = preserve_aspect_ratio;
 	this.twitterClient = twitterClient;
 	this.tweetObject = twitterClient.tweetObject;
     },
@@ -121,6 +122,8 @@ const Image = new Lang.Class({
     },
     destroy: function() {
 	this.imageBoxWrap.destroy();
+	delete this.bytes;
+	delete this.pixBufLoader;
 	if(this.file) this.file.delete(null);
     },
     drawImage: function() {
@@ -132,14 +135,16 @@ const Image = new Lang.Class({
 	this.source = this.pipeRead.create_source(null);
 	var _pollableSourceFunc = function() {
 	    this.bytes = this.tweetObject.read_base64(this.pipeRead, null);
-	    this.memoryInputStream = Gio.MemoryInputStream.new_from_data(this.bytes, this.bytes.length, null);
-	    this.pixBuf = GdkPixbuf.Pixbuf.new_from_stream_at_scale(this.memoryInputStream,
-								    this.width,
-								    this.height,
-								    this.preserve_aspect_ratio,
-								    null,
-								    null);
-	    this.image = Gtk.Image.new_from_pixbuf(this.pixBuf);
+	    this.pixBufLoader = new GdkPixbuf.PixbufLoader();
+	    var _pixBufLoader_size_prepared = function(self, width, height, data) {
+		if(this.width < 0) this.width = width;
+		if(this.height < 0) this.height = height;
+		self.set_size(this.width, this.height);
+	    }
+	    this.pixBufLoader.connect("size-prepared", Lang.bind(this, _pixBufLoader_size_prepared));
+	    this.pixBufLoader.write(this.bytes, this.bytes.length);
+	    this.pixBufLoader.close();
+	    this.image = Gtk.Image.new_from_pixbuf(this.pixBufLoader.get_pixbuf());
 	    this.imageBox.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
 	    var _imageBox_press_event = function(self, event, data) {
 		var button;
@@ -151,9 +156,7 @@ const Image = new Lang.Class({
 	    this.image.show();
 	    this.imageBoxWrap.pack_start(this.imageBox, false, false, 0);
 	    this.imageBox.show();
-
 	    delPipes(this);
-	    this.memoryInputStream.close(null);
 	    return false;
 	}
 	this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
@@ -385,7 +388,7 @@ const Tweet = new Lang.Class({
 	    this.textBox.set_alignment(0, 0);
 
 	    var url = this.tweet.user.profile_image_url_https;
-	    this.profileImage = new Image(this.twitterClient, url, -1, -1, true);
+	    this.profileImage = new Image(this.twitterClient, url, -1, -1);
 	    this.profileImageBox = this.profileImage.drawImage();
 
 	    this.arrowButton.image = this.leftArrow;
@@ -463,7 +466,7 @@ const Tweet = new Lang.Class({
 				    if(this.mediaBox == undefined)
 				    {
 					var url = this.tweet.entities.media[0].media_url_https
-					this.mediaImage = new Image(this.twitterClient, url, 325, 325, true);
+					this.mediaImage = new Image(this.twitterClient, url, 320, 200);
 					this.mediaBox = this.mediaImage.drawImage();
 					this.mediaBoxWrap.pack_start(this.mediaBox, false, false, 0);
 					this.mediaBox.show();
@@ -477,28 +480,6 @@ const Tweet = new Lang.Class({
 			    this.mediaButton.connect("toggled", Lang.bind(this, _mediaButton_toggled));
 			    this.controlBoxVWrap.pack_start(this.mediaButton, false, false, 0);
 			    this.mediaButton.show();
-			}
-
-			if(this.tweet.entities &&
-			   this.tweet.entities.hashtags)
-			{
-			    this.hashTagsBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-			    for(var iter = 0; iter <  this.tweet.entities.hashtags.length; iter++)
-			    {
-				var hashtag = this.tweet.entities.hashtags[iter];
-				var hashTagButton = new Gtk.Button({label: "#" + hashtag.text});
-				hashTagButton.set_alignment(0, 0);
-				var _hashTagButton_clicked = function(self) {
-				    this.twitterClient.tweetFind.tweetFindIcon.set_active(true);
-				    this.twitterClient.tweetFind.findBox.comboEntry.prepend_text(self.label);
-				    this.twitterClient.tweetFind.findBox.comboEntry.set_active(0);
-				}
-				hashTagButton.connect("clicked", Lang.bind(this, _hashTagButton_clicked));
-				this.hashTagsBox.pack_start(hashTagButton, false, false, 0);
-				hashTagButton.show();
-			    }
-			    this.controlBoxVWrap.pack_start(this.hashTagsBox, false, false, 0);
-			    this.hashTagsBox.show();
 			}
 
 			var timelineButton = new Gtk.Button({label: "Timeline"});
@@ -620,6 +601,29 @@ const Tweet = new Lang.Class({
 			    this.controlBoxVWrap.pack_start(this.retweet, false, false, 0);
 			    if(!statusObject.retweeted) this.retweet.show();
 			}
+
+			if(this.tweet.entities &&
+			   this.tweet.entities.hashtags)
+			{
+			    this.hashTagsBox = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+			    for(var iter = 0; iter <  this.tweet.entities.hashtags.length; iter++)
+			    {
+				var hashtag = this.tweet.entities.hashtags[iter];
+				var hashTagButton = new Gtk.Button({label: "#" + hashtag.text});
+				hashTagButton.set_alignment(0, 0);
+				var _hashTagButton_clicked = function(self) {
+				    this.twitterClient.tweetFind.tweetFindIcon.set_active(true);
+				    this.twitterClient.tweetFind.findBox.comboEntry.prepend_text(self.label);
+				    this.twitterClient.tweetFind.findBox.comboEntry.set_active(0);
+				}
+				hashTagButton.connect("clicked", Lang.bind(this, _hashTagButton_clicked));
+				this.hashTagsBox.pack_start(hashTagButton, false, false, 0);
+				hashTagButton.show();
+			    }
+			    this.controlBoxVWrap.pack_start(this.hashTagsBox, false, false, 0);
+			    this.hashTagsBox.show();
+			}
+
 			this.controlBoxWrap.pack_start(this.controlBoxVWrap, false, false, 0);
 			this.controlBoxVWrap.show();
 		    }
@@ -863,7 +867,7 @@ const Owner = new Lang.Class({
 	    this.userButton.show();
 	    
 	    var url = this.userObject.profile_image_url_https;
-	    this.profileImage = new Image(this.twitterClient, url, -1, -1, true);
+	    this.profileImage = new Image(this.twitterClient, url, -1, -1);
 	    this.profileImageBox = this.profileImage.drawImage();
 
 	    this.vbox.pack_start(this.controlBox, false, false, 0);
