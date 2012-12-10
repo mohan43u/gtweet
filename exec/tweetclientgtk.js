@@ -8,30 +8,6 @@ const Gdk = imports.gi.Gdk;
 const GdkPixbuf = imports.gi.GdkPixbuf;
 const Gtweet = imports.gi.Gtweet;
 
-const InputField = new Lang.Class({
-    Name: "InputField",
-    _init: function(text, type) {
-	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 2});
-	this.hbox.set_homogeneous(true);
-	this.label = new Gtk.Label({label: text});
-	this.entry = new Gtk.Entry();
-	this.hbox.add(this.label);
-	this.hbox.add(this.entry);
-    },
-    show: function() {
-	this.hbox.show();
-    },
-    hide: function() {
-	this.hbox.hide();
-    },
-    destroy: function() {
-	this.hbox.destroy();
-    },
-    get_text: function() {
-	return this.entry.get_text()
-    }
-});
-
 const dialogbox = function(message) {
     var dialog = new Gtk.Dialog({title: "libgtweet", type: Gtk.WindowType.TOPLEVEL});
     var label = new Gtk.Label({label: message});
@@ -104,87 +80,6 @@ const delPipes = function(parentObject) {
 	delete parentObject.pipeWrite;
     }
 }
-
-const Image = new Lang.Class({
-    Name: "Image",
-    _init: function(twitterClient, url, width, height) {
-	this.url = url;
-	this.width = width;
-	this.height = height;
-	this.twitterClient = twitterClient;
-	this.tweetObject = twitterClient.tweetObject;
-    },
-    show: function() {
-	this.imageBoxWrap.show();
-    },
-    hide: function() {
-	this.imageBoxWrap.hide();
-    },
-    destroy: function() {
-	this.imageBoxWrap.destroy();
-	delete this.bytes;
-	delete this.pixBufLoader;
-	if(this.file) this.file.delete(null);
-    },
-    drawImage: function() {
-	this.imageBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
-	this.imageBox = new Gtk.EventBox();
-	this.fds = this.tweetObject.pipe();
-	this.pipeRead = Gio.UnixInputStream.new(this.fds[0], true);
-	this.pipeWrite = Gio.UnixOutputStream.new(this.fds[1], true);
-	this.source = this.pipeRead.create_source(null);
-	var _pollableSourceFunc = function() {
-	    this.bytes = this.tweetObject.read_base64(this.pipeRead, null);
-	    this.pixBufLoader = new GdkPixbuf.PixbufLoader();
-	    var _pixBufLoader_size_prepared = function(self, width, height, data) {
-		if(this.width < 0) this.width = width;
-		if(this.height < 0) this.height = height;
-		self.set_size(this.width, this.height);
-	    }
-	    this.pixBufLoader.connect("size-prepared", Lang.bind(this, _pixBufLoader_size_prepared));
-	    this.pixBufLoader.write(this.bytes, this.bytes.length);
-	    this.pixBufLoader.close();
-	    this.image = Gtk.Image.new_from_pixbuf(this.pixBufLoader.get_pixbuf());
-	    this.imageBox.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
-	    var _imageBox_press_event = function(self, event, data) {
-		var button;
-		[isbutton, button] = event.get_button(button);
-		if(button == 3) this.showAppDialog();
-	    }
-	    this.imageBox.connect("button-press-event", Lang.bind(this, _imageBox_press_event));
-	    this.imageBox.add(this.image);
-	    this.image.show();
-	    this.imageBoxWrap.pack_start(this.imageBox, false, false, 0);
-	    this.imageBox.show();
-	    delPipes(this);
-	    return false;
-	}
-	this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
-	this.source.attach(GLib.MainContext.get_thread_default());
-	this.tweetObject.http(this.url, this.fds[1]);
-
-	return this.imageBoxWrap;
-    },
-    showAppDialog: function() {
-	this.file;
-	this.fileIOStream;
-	[this.file, this.fileIOStream] = Gio.File.new_tmp(null, this.fileIOStream, null);
-	this.fileIOStream.get_output_stream().write(this.bytes, null);
-	
-	var dialog = Gtk.AppChooserDialog.new(null, Gtk.DialogFlags.MODAL, this.file);
-	var _dialog_response = function(self, response) {
-	    if(response == Gtk.ResponseType.OK)
-	    {
-		var widget = dialog.get_widget();
-		var appInfo = widget.get_app_info();
-		appInfo.launch([this.file], null, null);
-	    }
-	    self.destroy();
-	}
-	dialog.connect("response", Lang.bind(this, _dialog_response));
-	dialog.show();
-    }
-});
 
 var create_pair = function(key, value, markup) {
     var hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
@@ -317,13 +212,149 @@ const jsonErrorShow = function(twitterClient, jsonObject) {
     }
 }
 
+var create_radio_tool_button = function(twitterClient, box, iconName, tooltip) {
+    var icon;
+    if(twitterClient.lastIcon == undefined)
+	icon = new Gtk.RadioToolButton();
+    else
+	icon = Gtk.RadioToolButton.new_from_widget(twitterClient.lastIcon, Gtk.IconSize.SMALL_TOOLBAR);
+    icon.set_icon_name(iconName);
+    icon.set_tooltip_text(tooltip);
+
+    var _icon_toggled = function(self, box) {
+	if(self.get_active())
+	    box.show();
+	else
+	    box.hide();
+    }
+    icon.connect("toggled", Lang.bind(twitterClient, _icon_toggled, box));
+
+    twitterClient.toolBar.insert(icon, -1);
+    twitterClient.lastIcon = icon;
+    icon.show();
+    return icon;
+}
+
+const create_search_button = function(tooltip) {
+    var image = Gtk.Image.new_from_stock(Gtk.STOCK_FIND, Gtk.IconSize.SMALL_TOOLBAR);
+    var button = new Gtk.Button();
+    button.set_image(image);
+    button.set_tooltip_text(tooltip);
+    return button;
+}
+
+const Image = new Lang.Class({
+    Name: "Image",
+    _init: function(twitterClient, url, width, height) {
+	this.url = url;
+	this.width = width;
+	this.height = height;
+	this.twitterClient = twitterClient;
+	this.tweetObject = twitterClient.tweetObject;
+    },
+    show: function() {
+	this.imageBoxWrap.show();
+    },
+    hide: function() {
+	this.imageBoxWrap.hide();
+    },
+    destroy: function() {
+	this.imageBoxWrap.destroy();
+	delete this.bytes;
+	delete this.pixBufLoader;
+	if(this.file) this.file.delete(null);
+    },
+    drawImage: function() {
+	this.imageBoxWrap = new Gtk.Box({orientation: Gtk.Orientation.VERTICAL, spacing: 0});
+	this.imageBox = new Gtk.EventBox();
+	this.fds = this.tweetObject.pipe();
+	this.pipeRead = Gio.UnixInputStream.new(this.fds[0], true);
+	this.pipeWrite = Gio.UnixOutputStream.new(this.fds[1], true);
+	this.source = this.pipeRead.create_source(null);
+	var _pollableSourceFunc = function() {
+	    this.bytes = this.tweetObject.read_base64(this.pipeRead, null);
+	    this.pixBufLoader = new GdkPixbuf.PixbufLoader();
+	    var _pixBufLoader_size_prepared = function(self, width, height, data) {
+		if(this.width < 0) this.width = width;
+		if(this.height < 0) this.height = height;
+		self.set_size(this.width, this.height);
+	    }
+	    this.pixBufLoader.connect("size-prepared", Lang.bind(this, _pixBufLoader_size_prepared));
+	    this.pixBufLoader.write(this.bytes, this.bytes.length);
+	    this.pixBufLoader.close();
+	    this.image = Gtk.Image.new_from_pixbuf(this.pixBufLoader.get_pixbuf());
+	    this.imageBox.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
+	    var _imageBox_press_event = function(self, event, data) {
+		var button;
+		[isbutton, button] = event.get_button(button);
+		if(button == 3) this.showAppDialog();
+	    }
+	    this.imageBox.connect("button-press-event", Lang.bind(this, _imageBox_press_event));
+	    this.imageBox.add(this.image);
+	    this.image.show();
+	    this.imageBoxWrap.pack_start(this.imageBox, false, false, 0);
+	    this.imageBox.show();
+	    delPipes(this);
+	    return false;
+	}
+	this.source.set_callback(Lang.bind(this, _pollableSourceFunc));
+	this.source.attach(GLib.MainContext.get_thread_default());
+	this.tweetObject.http(this.url, this.fds[1]);
+
+	return this.imageBoxWrap;
+    },
+    showAppDialog: function() {
+	this.file;
+	this.fileIOStream;
+	[this.file, this.fileIOStream] = Gio.File.new_tmp(null, this.fileIOStream, null);
+	this.fileIOStream.get_output_stream().write(this.bytes, null);
+	
+	var dialog = Gtk.AppChooserDialog.new(null, Gtk.DialogFlags.MODAL, this.file);
+	var _dialog_response = function(self, response) {
+	    if(response == Gtk.ResponseType.OK)
+	    {
+		var widget = dialog.get_widget();
+		var appInfo = widget.get_app_info();
+		appInfo.launch([this.file], null, null);
+	    }
+	    self.destroy();
+	}
+	dialog.connect("response", Lang.bind(this, _dialog_response));
+	dialog.show();
+    }
+});
+
+const InputField = new Lang.Class({
+    Name: "InputField",
+    _init: function(text, type) {
+	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 2});
+	this.hbox.set_homogeneous(true);
+	this.label = new Gtk.Label({label: text});
+	this.entry = new Gtk.Entry();
+	this.hbox.add(this.label);
+	this.hbox.add(this.entry);
+    },
+    show: function() {
+	this.hbox.show();
+    },
+    hide: function() {
+	this.hbox.hide();
+    },
+    destroy: function() {
+	this.hbox.destroy();
+    },
+    get_text: function() {
+	return this.entry.get_text()
+    }
+});
+
 const Tweet = new Lang.Class({
     Name: "Tweet",
     _init: function(twitterClient, tweet) {
 	this.twitterClient = twitterClient;
 	this.tweetObject = twitterClient.tweetObject;
 	this.tweet = tweet;
-	print(JSON.stringify(this.tweet));
+	//print(JSON.stringify(this.tweet));
     },
     show: function() {
 	this.box.show();
@@ -391,6 +422,34 @@ const Tweet = new Lang.Class({
 	    this.profileImage = new Image(this.twitterClient, url, -1, -1);
 	    this.profileImageBox = this.profileImage.drawImage();
 
+	    if(this.tweet.entities &&
+	       this.tweet.entities.media &&
+	       this.tweet.entities.media[0] &&
+	       this.tweet.entities.media[0].media_url_https)
+	    {
+		this.mediaButton = new Gtk.ToggleButton({label: "Media"});
+		var _mediaButton_toggled = function(self) {
+		    if(self.get_active())
+		    {
+			if(this.mediaBox == undefined)
+			{
+			    var url = this.tweet.entities.media[0].media_url_https
+			    this.mediaImage = new Image(this.twitterClient, url, 320, 200);
+			    this.mediaBox = this.mediaImage.drawImage();
+			    this.mediaBoxWrap.pack_start(this.mediaBox, false, false, 0);
+			    this.mediaBox.show();
+			}
+			else
+			    this.mediaBox.show();
+		    }
+		    else
+			if(this.mediaBox) this.mediaBox.hide();
+		}
+		this.mediaButton.connect("toggled", Lang.bind(this, _mediaButton_toggled));
+		this.controlBoxWrap.pack_start(this.mediaButton, false, false, 0);
+		this.mediaButton.show();
+	    }
+
 	    this.arrowButton.image = this.leftArrow;
 	    this.controlBoxWrap.pack_start(this.arrowButton, false, false, 0);
 	    var _arrowButton_toggled = function(self)
@@ -452,34 +511,6 @@ const Tweet = new Lang.Class({
 			    this.repliedToButton.connect("toggled", Lang.bind(this, _repliedToButton_toggled));
 			    this.controlBoxVWrap.pack_start(this.repliedToButton, false, false, 0);
 			    this.repliedToButton.show();
-			}
-
-			if(this.tweet.entities &&
-			   this.tweet.entities.media &&
-			   this.tweet.entities.media[0] &&
-			   this.tweet.entities.media[0].media_url_https)
-			{
-			    this.mediaButton = new Gtk.ToggleButton({label: "Media"});
-			    var _mediaButton_toggled = function(self) {
-				if(self.get_active())
-				{
-				    if(this.mediaBox == undefined)
-				    {
-					var url = this.tweet.entities.media[0].media_url_https
-					this.mediaImage = new Image(this.twitterClient, url, 320, 200);
-					this.mediaBox = this.mediaImage.drawImage();
-					this.mediaBoxWrap.pack_start(this.mediaBox, false, false, 0);
-					this.mediaBox.show();
-				    }
-				    else
-					this.mediaBox.show();
-				}
-				else
-				    if(this.mediaBox) this.mediaBox.hide();
-			    }
-			    this.mediaButton.connect("toggled", Lang.bind(this, _mediaButton_toggled));
-			    this.controlBoxVWrap.pack_start(this.mediaButton, false, false, 0);
-			    this.mediaButton.show();
 			}
 
 			var timelineButton = new Gtk.Button({label: "Timeline"});
@@ -634,8 +665,6 @@ const Tweet = new Lang.Class({
 		{
 		    self.image = this.leftArrow;
 		    if(this.userDetailsButton)this.userDetailsButton.set_active(false);
-		    if(this.mediaButton) this.mediaButton.set_active(false);
-		    if(this.hashTagsBox) this.hashTagsBox.hide();
 		    if(this.repliedToButton) this.repliedToButton.set_active(false);
 		    this.controlBoxVWrap.hide();
 		}
@@ -670,29 +699,6 @@ const Tweet = new Lang.Class({
 	    return this.box;
     }
 });
-
-var create_radio_tool_button = function(twitterClient, box, iconName, tooltip) {
-    var icon;
-    if(twitterClient.lastIcon == undefined)
-	icon = new Gtk.RadioToolButton();
-    else
-	icon = Gtk.RadioToolButton.new_from_widget(twitterClient.lastIcon, Gtk.IconSize.SMALL_TOOLBAR);
-    icon.set_icon_name(iconName);
-    icon.set_tooltip_text(tooltip);
-
-    var _icon_toggled = function(self, box) {
-	if(self.get_active())
-	    box.show();
-	else
-	    box.hide();
-    }
-    icon.connect("toggled", Lang.bind(twitterClient, _icon_toggled, box));
-
-    twitterClient.toolBar.insert(icon, -1);
-    twitterClient.lastIcon = icon;
-    icon.show();
-    return icon;
-}
 
 const UpdateBox = new Lang.Class({
     Name: "UpdateBox",
@@ -956,7 +962,7 @@ const HomeTimeline = new Lang.Class({
 	}
 	if(this.pauseButton == undefined)
 	{
-	    this.pauseButton = new Gtk.ToggleButton({label: "Pause Streaming"});
+	    this.pauseButton = Gtk.ToggleButton.new_with_mnemonic("Pause _Streaming");
 	    var _pauseButton_toggled = function(self) {
 		if(self.get_active())
 		    this.pause = true;
@@ -1024,15 +1030,7 @@ const HomeTimeline = new Lang.Class({
     }
 });
 
-const create_search_button = function(tooltip) {
-    var image = Gtk.Image.new_from_stock(Gtk.STOCK_FIND, Gtk.IconSize.SMALL_TOOLBAR);
-    var button = new Gtk.Button();
-    button.set_image(image);
-    button.set_tooltip_text(tooltip);
-    return button;
-}
-
-var FindBox = new Lang.Class({
+const FindBox = new Lang.Class({
     Name: "findBox",
     _init: function(tooltip) {
 	this.hbox = new Gtk.Box({orientation: Gtk.Orientation.HORIZONTAL, spacing: 0});
@@ -1130,7 +1128,7 @@ const TweetFind = new Lang.Class({
 	}
 	if(this.pauseButton == undefined)
 	{
-	    this.pauseButton = new Gtk.ToggleButton({label: "Pause Streaming"});
+	    this.pauseButton = Gtk.ToggleButton.new_with_mnemonic("Pause _Streaming");
 	    var _pauseButton_toggled = function(self) {
 		if(self.get_active())
 		    this.pause = true;
@@ -1332,7 +1330,7 @@ const UserFind = new Lang.Class({
 	}
 	if(this.pauseButton == undefined)
 	{
-	    this.pauseButton = new Gtk.ToggleButton({label: "Pause Streaming"});
+	    this.pauseButton = Gtk.ToggleButton.new_with_mnemonic("Pause _Streaming");
 	    var _pauseButton_toggled = function(self) {
 		if(self.get_active())
 		    this.pause = true;
@@ -1641,6 +1639,7 @@ const TwitterClient = new Lang.Class({
     },
     main: function(argc, argv) {
 	this.twitterClientWindow = new Gtk.Window({title: "libgtweet"});
+	this.twitterClientWindow.add_events(Gdk.EventMask.KEY_PRESS_MASK);
 	this.twitterClientWindow.set_default_size(500, 800);
 	this.twitterClientWindow.add(this.getMainBox());
 	this.getMainBox().show();

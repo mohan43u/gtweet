@@ -273,7 +273,7 @@ libgtweet_la_SOURCES = tweet-object.c \
 
 libgtweet_la_CFLAGS = $(PKGCFG_CFLAGS)
 libgtweet_la_LDFLAGS = $(PKGCFG_LIBS)
-@HAVE_INTROSPECTION_TRUE@INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) --warn-all
+@HAVE_INTROSPECTION_TRUE@INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) # --warn-all
 @HAVE_INTROSPECTION_TRUE@INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 @HAVE_INTROSPECTION_TRUE@INTROSPECTION_GIRS = Gtweet-@VERSION@.gir
 @HAVE_INTROSPECTION_TRUE@Gtweet_0_3_gir_INCLUDES = GObject-2.0 Gio-2.0
