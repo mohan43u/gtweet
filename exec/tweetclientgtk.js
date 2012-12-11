@@ -263,6 +263,7 @@ const Image = new Lang.Class({
     },
     destroy: function() {
 	this.imageBoxWrap.destroy();
+	this.pixBufLoader.close();
 	delete this.bytes;
 	delete this.pixBufLoader;
 	if(this.file) this.file.delete(null);
@@ -284,7 +285,6 @@ const Image = new Lang.Class({
 	    }
 	    this.pixBufLoader.connect("size-prepared", Lang.bind(this, _pixBufLoader_size_prepared));
 	    this.pixBufLoader.write(this.bytes, this.bytes.length);
-	    this.pixBufLoader.close();
 	    this.image = Gtk.Image.new_from_pixbuf(this.pixBufLoader.get_pixbuf());
 	    this.imageBox.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
 	    var _imageBox_press_event = function(self, event, data) {

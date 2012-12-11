@@ -22,10 +22,10 @@ INTROSPECTION_SCANNER_ARGS = --add-include-path=$(srcdir) # --warn-all
 INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
 
 INTROSPECTION_GIRS = Gtweet-@VERSION@.gir
-Gtweet_0_3_gir_INCLUDES = GObject-2.0 Gio-2.0
-Gtweet_0_3_gir_LIBS = libgtweet.la
-Gtweet_0_3_gir_PACKAGES = @packages@
-Gtweet_0_3_gir_FILES = $(pkginclude_HEADERS) $(libgtweet_la_SOURCES)
+Gtweet_0_1_gir_INCLUDES = GObject-2.0 Gio-2.0
+Gtweet_0_1_gir_LIBS = libgtweet.la
+Gtweet_0_1_gir_PACKAGES = @packages@
+Gtweet_0_1_gir_FILES = $(pkginclude_HEADERS) $(libgtweet_la_SOURCES)
 
 girdir = $(datadir)/gir-1.0
 gir_DATA = $(INTROSPECTION_GIRS)

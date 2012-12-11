@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([gtweet], [0.3], [mohan43u@gmail.com], [], [http://github.com/mohan43u/tweetpts/tree/gtweet])
+AC_INIT([gtweet], [0.1], [mohan43u@gmail.com], [], [http://github.com/mohan43u/tweetpts/tree/gtweet])
 AC_CONFIG_SRCDIR([lib/tweet-object.c])
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign])
