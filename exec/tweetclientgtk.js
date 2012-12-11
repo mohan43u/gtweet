@@ -1563,7 +1563,7 @@ const TwitterClient = new Lang.Class({
 	{
 	    GLib.spawn_command_line_sync("xdg-open 'http://dev.twitter.com'");
 	    var message = "libgtweet requires you to register a new app with twitter. Here is the steps\n\n";
-	    message += "1. Go to https://dev.twitter.com\n";
+	    message += "1. You will be redirected to https://dev.twitter.com\n";
 	    message += "2. Sign-in with your twitter account\n";
 	    message += "3. In top left corner, click on your username, a menu will appear\n";
 	    message += "4. Select \"My Applications\"\n";
