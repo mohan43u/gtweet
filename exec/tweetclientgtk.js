@@ -26,9 +26,10 @@ const close_cb = function(self) {
     Gtk.main_quit();
 }
 
-const consumer_keys_cb = function(self, response_id, consumer_key, consumer_secret) {
+const consumer_keys_cb = function(self, response_id, appname, consumer_key, consumer_secret) {
     if(response_id == Gtk.ResponseType.OK)
     {
+	this.appname = appname.get_text();
 	this.consumer_key = consumer_key.get_text();
 	this.consumer_secret = consumer_secret.get_text();
     }
@@ -38,14 +39,16 @@ const consumer_keys_cb = function(self, response_id, consumer_key, consumer_secr
 
 const get_consumer_keys_from_user = function(twitterClient) {
     var dialog = new Gtk.Dialog({title: "libgtweet", type: Gtk.WindowType.TOPLEVEL});
+    var appname = new InputField("application_name");
     var consumer_key = new InputField("consumer_key");
     var consumer_secret = new InputField("consumer_secret");
     var contentarea = dialog.get_content_area();
+    contentarea.add(appname.hbox);
     contentarea.add(consumer_key.hbox);
     contentarea.add(consumer_secret.hbox);
     dialog.add_button("Ok", Gtk.ResponseType.OK);
     dialog.add_button("Cancel", Gtk.ResponseType.CANCEL);
-    dialog.connect("response", Lang.bind(twitterClient, consumer_keys_cb, consumer_key, consumer_secret));
+    dialog.connect("response", Lang.bind(twitterClient, consumer_keys_cb, appname, consumer_key, consumer_secret));
     dialog.connect("close", Lang.bind(twitterClient, close_cb));
     dialog.show_all();
     Gtk.main();
@@ -1574,7 +1577,7 @@ const TwitterClient = new Lang.Class({
 	    message += "Click \"Ok\" to proceed\n\n"
 	    dialogbox(message);
 	    get_consumer_keys_from_user(this);
-	    if(this.consumer_key && this.consumer_secret)
+	    if(this.appname && this.consumer_key && this.consumer_secret)
 	    {
 		var authurl = this.tweetObject.gen_authurl(this.consumer_key, this.consumer_secret)
 		GLib.spawn_command_line_sync("xdg-open '" + authurl + "'");
@@ -1587,7 +1590,7 @@ const TwitterClient = new Lang.Class({
 		dialogbox(message);
 		get_pin_from_user(this);
 		if(this.pin)
-		    this.tweetObject.auth(this.pin);
+		    this.tweetObject.auth(this.appname, this.pin);
 	    }
 	}
     },
@@ -1638,7 +1641,7 @@ const TwitterClient = new Lang.Class({
 	Gtk.main_quit();
     },
     main: function(argc, argv) {
-	this.twitterClientWindow = new Gtk.Window({title: "libgtweet"});
+	this.twitterClientWindow = new Gtk.Window({title: this.tweetObject.appname});
 	this.twitterClientWindow.add_events(Gdk.EventMask.KEY_PRESS_MASK);
 	this.twitterClientWindow.set_default_size(500, 800);
 	this.twitterClientWindow.add(this.getMainBox());

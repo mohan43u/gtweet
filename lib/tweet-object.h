@@ -26,6 +26,7 @@ struct _GtweetObject
   GObject parent;
 
   /*<private>*/
+  gchar *appname;
   gchar *consumer_key;
   gchar *consumer_secret;
   gchar *request_key;
@@ -37,6 +38,7 @@ struct _GtweetObject
 enum
   {
     PROP_0,
+    APPNAME,
     CONSUMER_KEY,
     CONSUMER_SECRET,
     REQUEST_KEY,
@@ -68,10 +70,12 @@ gchar* gtweet_object_gen_authurl(GtweetObject *tweetObject,
 
 /**
  * gtweet_object_auth:
+ * @appname: application name
  * @pin: pin from twitter
  */
 gboolean gtweet_object_auth(GtweetObject *tweetObject,
-			     gchar *pin);
+			    gchar *appname,
+			    gchar *pin);
 
 /**
  * gtweet_object_hometimeline:

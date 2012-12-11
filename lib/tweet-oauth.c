@@ -161,7 +161,8 @@ void tweet_oauth_access_token(gchar *pin,
   oauth_free_array(&argc, &argv);
 }
 
-void tweet_oauth_to_file(gchar *consumer_key,
+void tweet_oauth_to_file(gchar *appname,
+			 gchar *consumer_key,
 			 gchar *consumer_secret,
 			 gchar *access_key,
 			 gchar *access_secret)
@@ -169,8 +170,10 @@ void tweet_oauth_to_file(gchar *consumer_key,
   gchar *content = NULL;
   gchar *oauthfile = NULL;
 
-  content = g_strdup_printf("consumer_key=%s&consumer_secret=%s&"
+  content = g_strdup_printf("appname=%s&"
+			    "consumer_key=%s&consumer_secret=%s&"
 			    "access_key=%s&access_secret=%s",
+			    appname,
 			    consumer_key,
 			    consumer_secret,
 			    access_key,
@@ -186,7 +189,8 @@ void tweet_oauth_to_file(gchar *consumer_key,
   g_free(oauthfile);
 }
 
-gboolean tweet_oauth_from_file(gchar **consumer_key,
+gboolean tweet_oauth_from_file(gchar **appname,
+			       gchar **consumer_key,
 			       gchar **consumer_secret,
 			       gchar **access_key,
 			       gchar **access_secret)
@@ -206,6 +210,8 @@ gboolean tweet_oauth_from_file(gchar **consumer_key,
       while(argc)
 	{
 	  pair = g_strsplit(argv[argc - 1], "=", 0);
+	  if(g_strcmp0(pair[0], "appname") == 0)
+	    *appname = g_strdup(pair[1]);
 	  if(g_strcmp0(pair[0], "consumer_key") == 0)
 	    *consumer_key = g_strdup(pair[1]);
 	  if(g_strcmp0(pair[0], "consumer_secret") == 0)
@@ -217,8 +223,11 @@ gboolean tweet_oauth_from_file(gchar **consumer_key,
 	  argc--;
 	  g_strfreev(pair);
 	}
-
-      if(consumer_key && consumer_secret && access_key && access_secret)
+      if(*appname &&
+	 *consumer_key &&
+	 *consumer_secret &&
+	 *access_key &&
+	 *access_secret)
 	result = TRUE;
 
       oauth_free_array(&argc, &argv);

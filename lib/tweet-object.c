@@ -41,6 +41,9 @@ static void gtweet_object_set_property(GObject *object,
 
   switch(property_id)
     {
+    case APPNAME:
+      tweetObject->appname = g_value_dup_string(value);
+      break;
     case CONSUMER_KEY:
       tweetObject->consumer_key = g_value_dup_string(value);
       break;
@@ -75,6 +78,9 @@ static void gtweet_object_get_property(GObject *object,
 
   switch(property_id)
     {
+    case APPNAME:
+      g_value_set_string(value, tweetObject->appname);
+      break;
     case CONSUMER_KEY:
       g_value_set_string(value, tweetObject->consumer_key);
       break;
@@ -106,6 +112,13 @@ static void gtweet_object_class_init(GtweetObjectClass *klass)
   gobjectClass->set_property = gtweet_object_set_property;
   gobjectClass->get_property = gtweet_object_get_property;
 
+  g_object_class_install_property(gobjectClass,
+				  APPNAME,
+				  g_param_spec_string("appname",
+						      "application name",
+						      "will be stored for reference",
+						      NULL,
+						      G_PARAM_READABLE|G_PARAM_WRITABLE));
   g_object_class_install_property(gobjectClass,
 				  CONSUMER_KEY,
 				  g_param_spec_string("consumer_key",
@@ -157,6 +170,7 @@ GtweetObject* gtweet_object_new(void)
 
 static void print_properties(GtweetObject *tweetObject)
 {
+  gchar *appname = NULL;
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
   gchar *request_key = NULL;
@@ -165,6 +179,7 @@ static void print_properties(GtweetObject *tweetObject)
   gchar *access_secret = NULL;
 
   g_object_get(tweetObject,
+	       "appname", &appname,
 	       "consumer_key", &consumer_key,
 	       "consumer_secret", &consumer_secret,
 	       "request_key", &request_key,
@@ -173,12 +188,14 @@ static void print_properties(GtweetObject *tweetObject)
 	       "access_secret", &access_secret,
 	       NULL);
 
-  g_printerr("consumer_key = %s\n"
+  g_printerr("appname = %s\n"
+	     "consumer_key = %s\n"
 	     "consumer_secret = %s\n"
 	     "request_key = %s\n"
 	     "request_secret = %s\n"
 	     "access_key = %s\n"
 	     "access_secret = %s\n",
+	     appname,
 	     consumer_key,
 	     consumer_secret,
 	     request_key,
@@ -186,6 +203,7 @@ static void print_properties(GtweetObject *tweetObject)
 	     access_key,
 	     access_secret);
 
+  g_free(appname);
   g_free(consumer_key);
   g_free(consumer_secret);
   g_free(request_key);
@@ -196,24 +214,28 @@ static void print_properties(GtweetObject *tweetObject)
 
 gboolean gtweet_object_initkeys(GtweetObject *tweetObject)
 {
+  gchar *appname = NULL;
   gchar *consumer_key = NULL;
   gchar *consumer_secret = NULL;
   gchar *access_key = NULL;
   gchar *access_secret = NULL;
   gboolean result = FALSE;
 
-  result = tweet_oauth_from_file(&consumer_key,
+  result = tweet_oauth_from_file(&appname,
+				 &consumer_key,
 				 &consumer_secret,
 				 &access_key,
 				 &access_secret);
   if(result == TRUE)
     g_object_set(tweetObject,
+		 "appname", appname,
 		 "consumer_key", consumer_key,
 		 "consumer_secret", consumer_secret,
 		 "access_key", access_key,
 		 "access_secret", access_secret,
 		 NULL);
 
+  g_free(appname);
   g_free(consumer_key);
   g_free(consumer_secret);
   g_free(access_key);
@@ -253,6 +275,7 @@ gchar* gtweet_object_gen_authurl(GtweetObject *tweetObject,
 }
 
 gboolean gtweet_object_auth(GtweetObject *tweetObject,
+			    gchar *appname,
 			    gchar *pin)
 {
   gboolean result = FALSE;
@@ -281,10 +304,12 @@ gboolean gtweet_object_auth(GtweetObject *tweetObject,
   if(access_key && access_secret)
     {
       g_object_set(G_OBJECT(tweetObject),
+		   "appname", appname,
 		   "access_key", access_key,
 		   "access_secret", access_secret,
 		   NULL);
-      tweet_oauth_to_file(consumer_key,
+      tweet_oauth_to_file(appname,
+			  consumer_key,
 			  consumer_secret,
 			  access_key,
 			  access_secret);

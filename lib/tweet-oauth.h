@@ -9,7 +9,7 @@
 #define REQ_TOKEN_URL "https://api.twitter.com/oauth/request_token"
 #define AUTH_URL "https://api.twitter.com/oauth/authorize"
 #define ACCESS_TOKEN_URL "https://api.twitter.com/oauth/access_token"
-#define OAUTHFILE "~/.gtweet"
+#define OAUTHFILE "~/.libgtweet"
 
 gchar* tweet_oauth_expandfilename(gchar *filename);
 gchar* tweet_oauth_sign(gchar *consumer_key,
@@ -34,11 +34,13 @@ void tweet_oauth_access_token(gchar *pin,
 			      gchar *request_secret,
 			      gchar **access_key,
 			      gchar **access_secret);
-void tweet_oauth_to_file(gchar *consumer_key,
+void tweet_oauth_to_file(gchar *appname,
+			 gchar *consumer_key,
 			 gchar *consumer_secret,
 			 gchar *access_key,
 			 gchar *access_secret);
-gboolean tweet_oauth_from_file(gchar **consumer_key,
+gboolean tweet_oauth_from_file(gchar **appname,
+			       gchar **consumer_key,
 			       gchar **consumer_secret,
 			       gchar **access_key,
 			       gchar **access_secret);

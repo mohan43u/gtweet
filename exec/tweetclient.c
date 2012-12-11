@@ -10,13 +10,14 @@ int main(int argc, char *argv[])
   tweetObject = GTWEET_OBJECT(gtweet_object_new());
   if(!gtweet_object_initkeys(tweetObject))
     {
+      gchar *appname = NULL;
       gchar *consumer_key = NULL;
       gchar *consumer_secret = NULL;
       gchar *authurl = NULL;
       gchar *cmdline = NULL;
       gchar *pin = NULL;
 
-      
+      appname = readline("appname: ");
       consumer_key = readline("consumer_key: ");
       consumer_secret = readline("consumer_secret: ");
       authurl = gtweet_object_gen_authurl(tweetObject,
@@ -26,9 +27,10 @@ int main(int argc, char *argv[])
       if(g_spawn_command_line_sync(cmdline, NULL, NULL, NULL, NULL))
 	{
 	  pin = readline("pin: ");
-	  gtweet_object_auth(tweetObject, pin);
+	  gtweet_object_auth(tweetObject, appname, pin);
 	}
 
+      g_free(appname);
       g_free(consumer_key);
       g_free(consumer_secret);
       g_free(authurl);
