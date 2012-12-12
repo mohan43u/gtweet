@@ -3,7 +3,6 @@
 
 #include <oauth.h>
 #include <wordexp.h>
-#include <readline/readline.h>
 
 #define YAHOO_APPID "5jjpbPLV34HGmMDspnGKm0CfyR2QDaEaHulep.T59NmM4eA8rdFRPhCSWvVgd8w-"
 #define REQ_TOKEN_URL "https://api.twitter.com/oauth/request_token"

@@ -15,7 +15,6 @@ AC_PROG_LIBTOOL
 packages='gio-unix-2.0 gobject-2.0 gtk+-3.0 gdk-3.0 oauth gobject-introspection-1.0 libsoup-2.4'
 AC_SUBST([packages], [$packages])
 PKG_CHECK_MODULES([PKGCFG], [$packages])
-LDFLAGS='-lreadline'
 CFLAGS='-O0 -ggdb'
 
 # GObject Introspection
