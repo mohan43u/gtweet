@@ -1,5 +1,24 @@
 #!/usr/bin/env gjs
 
+/*
+ * tweetclientgtk.js: front-end for libgtweet.so
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301, USA.
+ */
+
 const Lang = imports.lang;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
@@ -263,7 +282,6 @@ const Image = new Lang.Class({
     },
     destroy: function() {
 	this.imageBoxWrap.destroy();
-	this.pixBufLoader.close();
 	delete this.bytes;
 	delete this.pixBufLoader;
 	if(this.file) this.file.delete(null);
@@ -284,19 +302,23 @@ const Image = new Lang.Class({
 		self.set_size(this.width, this.height);
 	    }
 	    this.pixBufLoader.connect("size-prepared", Lang.bind(this, _pixBufLoader_size_prepared));
-	    this.pixBufLoader.write(this.bytes, this.bytes.length);
-	    this.image = Gtk.Image.new_from_pixbuf(this.pixBufLoader.get_pixbuf());
-	    this.imageBox.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
-	    var _imageBox_press_event = function(self, event, data) {
-		var button;
-		[isbutton, button] = event.get_button(button);
-		if(button == 3) this.showAppDialog();
+	    var _pixBufLoader_closed = function(self, data) {
+		this.image = Gtk.Image.new_from_pixbuf(this.pixBufLoader.get_pixbuf());
+		this.imageBox.add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
+		var _imageBox_press_event = function(self, event, data) {
+		    var button;
+		    [isbutton, button] = event.get_button(button);
+		    if(button == 3) this.showAppDialog();
+		}
+		this.imageBox.connect("button-press-event", Lang.bind(this, _imageBox_press_event));
+		this.imageBox.add(this.image);
+		this.image.show();
+		this.imageBoxWrap.pack_start(this.imageBox, false, false, 0);
+		this.imageBox.show();
 	    }
-	    this.imageBox.connect("button-press-event", Lang.bind(this, _imageBox_press_event));
-	    this.imageBox.add(this.image);
-	    this.image.show();
-	    this.imageBoxWrap.pack_start(this.imageBox, false, false, 0);
-	    this.imageBox.show();
+	    this.pixBufLoader.connect("closed", Lang.bind(this, _pixBufLoader_closed));
+	    this.pixBufLoader.write(this.bytes, this.bytes.length);
+	    this.pixBufLoader.close();
 	    delPipes(this);
 	    return false;
 	}
@@ -960,7 +982,6 @@ const HomeTimeline = new Lang.Class({
 	if(this.cancel)
 	{
 	    this.cancel.cancel();
-	    delPipes(this);
 	    this.source.destroy();
 	}
 	if(this.pauseButton == undefined)
@@ -1126,7 +1147,6 @@ const TweetFind = new Lang.Class({
 	if(this.cancel)
 	{
 	    this.cancel.cancel();
-	    delPipes(this);
 	    this.source.destroy();
 	}
 	if(this.pauseButton == undefined)
@@ -1328,7 +1348,6 @@ const UserFind = new Lang.Class({
 	if(this.cancel)
 	{
 	    this.cancel.cancel();
-	    delPipes(this);
 	    this.source.destroy();
 	}
 	if(this.pauseButton == undefined)
@@ -1642,7 +1661,6 @@ const TwitterClient = new Lang.Class({
     },
     main: function(argc, argv) {
 	this.twitterClientWindow = new Gtk.Window({title: this.tweetObject.appname});
-	this.twitterClientWindow.add_events(Gdk.EventMask.KEY_PRESS_MASK);
 	this.twitterClientWindow.set_default_size(500, 800);
 	this.twitterClientWindow.add(this.getMainBox());
 	this.getMainBox().show();

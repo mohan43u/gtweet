@@ -4,7 +4,7 @@
 AC_INIT([gtweet], [0.1], [mohan43u@gmail.com], [], [http://github.com/mohan43u/tweetpts/tree/gtweet])
 AC_CONFIG_SRCDIR([lib/tweet-object.c])
 AC_CONFIG_HEADERS([config.h])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([-Wportability])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
