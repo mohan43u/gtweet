@@ -296,6 +296,7 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   gchar **replypostid = NULL;
   gchar *filebasename = NULL;
   gchar *content_type = NULL;
+  GError *error = NULL;
 
   status = g_strsplit(statuspair, ":", 2);
   filename = g_strsplit(filenamepair, ":", 2);
@@ -310,7 +311,8 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
   multi = soup_multipart_new("multipart/form-data");
   if(filename)
     {
-      g_file_get_contents(filename[1], &filecontent, &filelength, NULL);
+      g_file_get_contents(filename[1], &filecontent, &filelength, &error);
+      if(error) g_printerr("%s (%d)\n", error->message, error->code);
       filebuffer = soup_buffer_new(SOUP_MEMORY_TAKE, filecontent, filelength);
 
       filebasename = g_strdup(strrchr(filename[1], '/') + 1);
