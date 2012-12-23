@@ -207,9 +207,10 @@ void tweet_soup_async(gchar *inputurl,
 
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
-  g_printerr("http: %s (%d)\n",
-	     soup_status_get_phrase(http_code),
-	     http_code);
+  if(http_code != 200)
+    g_printerr("http: %s (%d)\n",
+	       soup_status_get_phrase(http_code),
+	       http_code);
 
   g_free(url);
   g_free(params);
@@ -260,9 +261,10 @@ GString* tweet_soup_gstring_sync(gchar *inputurl,
 
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
-  g_printerr("http: %s (%d)\n",
-	     soup_status_get_phrase(http_code),
-	     http_code);
+  if(http_code != 200)
+    g_printerr("http: %s (%d)\n",
+	       soup_status_get_phrase(http_code),
+	       http_code);
   g_string_append_len(buffer,
 		      msg->response_body->data,
 		      msg->response_body->length);
@@ -338,14 +340,15 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
 			    msg->request_body);
 
   if(value)
-  soup_message_headers_append(msg->request_headers,
-			      "Authorization", value);
+    soup_message_headers_append(msg->request_headers,
+				"Authorization", value);
 
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
-  g_printerr("http: %s (%d)\n",
-	     soup_status_get_phrase(http_code),
-	     http_code);
+  if(http_code != 200)
+    g_printerr("http: %s (%d)\n",
+	       soup_status_get_phrase(http_code),
+	       http_code);
   g_string_append_len(buffer,
 		      msg->response_body->data,
 		      msg->response_body->length);
