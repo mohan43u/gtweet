@@ -207,8 +207,9 @@ void tweet_soup_async(gchar *inputurl,
 
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
-  if(http_code >= 400)
-    g_printerr("error: http_code returned as %d\n", http_code);
+  g_printerr("http: %s (%d)\n",
+	     soup_status_get_phrase(http_code),
+	     http_code);
 
   g_free(url);
   g_free(params);
@@ -259,8 +260,9 @@ GString* tweet_soup_gstring_sync(gchar *inputurl,
 
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
-  if(http_code >= 400)
-    g_printerr("error: http_code returned as %d\n", http_code);
+  g_printerr("http: %s (%d)\n",
+	     soup_status_get_phrase(http_code),
+	     http_code);
   g_string_append_len(buffer,
 		      msg->response_body->data,
 		      msg->response_body->length);
@@ -341,8 +343,9 @@ gchar* tweet_soup_sync_media(gchar *inputurl,
 
   http_code = soup_session_send_message(tweet_soup_session,
 					msg);
-  if(http_code >= 400)
-      g_printerr("error: http_code returned as %d\n", http_code);
+  g_printerr("http: %s (%d)\n",
+	     soup_status_get_phrase(http_code),
+	     http_code);
   g_string_append_len(buffer,
 		      msg->response_body->data,
 		      msg->response_body->length);
